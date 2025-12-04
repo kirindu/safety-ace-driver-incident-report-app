@@ -40,6 +40,7 @@ const storeTruck = useTrucksStore();
 import { useDriversStore } from "@/stores/drivers.js";
 import { is } from "@vee-validate/rules";
 import DriverAPI from "@/api/DriverAPI";
+import TruckAPI from "@/api/TruckAPI";
 import RouteAPI from "@/api/RouteAPI";
 
 const user = ref(null);
@@ -60,13 +61,12 @@ const props = defineProps({
 // Con esto hacemos los props reactivos
 const reactiveProps = toRefs(props);
 
-// Route
-const routeName = ref("");
-const lob = ref("");
+// Truck
+const truckNumber = ref("");
 
-const errorsRoute = ref({
-  routeName_er: "",
-  lob_er: "",
+
+const errorsTruck = ref({
+  truckNumber_er: "",
 });
 
 
@@ -77,41 +77,35 @@ const onSubmit = async (event) => {
   formSubmitted.value = true;
 
   // Limpiar errores anteriores
-  errorsRoute.value.routeName_er = "";
-  errorsRoute.value.lob_er = "";
+  errorsTruck.value.truckNumber_er = "";
 
   let hasError = false;
 
-  if (!routeName.value) {
-    errorsRoute.value.routeName_er = "Required field";
+  if (!truckNumber.value) {
+    errorsTruck.value.truckNumber_er = "Required field";
     hasError = true;
   }
 
-  if (!lob.value) {
-    errorsRoute.value.lob_er = "Required field";
-    hasError = true;
-  }
 
 
   if (hasError) {
     return;
   }
 
-  const routeData = {
-    routeName: routeName.value,
-    lob: lob.value,
+  const truckData = {
+    truckNumber: truckNumber.value,
     active: true, // Assuming you want to set the route as active by default
   };
 
 
   try {
       
-    let route_id =  props.item.id ?? null;
-    const response = await RouteAPI.edit(route_id, routeData);
+    let truck_id =  props.item.id ?? null;
+    const response = await TruckAPI.edit(truck_id, truckData);
 
     if (response.data.ok) {
       showSweetAlert({
-        title: "Route edited successfully!",
+        title: "Truck edited successfully!",
         icon: "success",
         showDenyButton: false,
         showCancelButton: false,
@@ -126,7 +120,7 @@ const onSubmit = async (event) => {
       });
     } else {
       showSweetAlert({
-        title: "Error editing Route!",
+        title: "Error editing Truck!",
         icon: "warning",
         showDenyButton: false,
         showCancelButton: false,
@@ -140,7 +134,7 @@ const onSubmit = async (event) => {
    
   } catch (error) {
     showSweetAlert({
-      title: "Error editing Route!",
+      title: "Error editing Trck!",
       icon: "warning",
       showDenyButton: false,
       showCancelButton: false,
@@ -156,11 +150,9 @@ const onSubmit = async (event) => {
 onMounted(async () => {
 
   if (props.item) {
-    routeName.value = props.item.routeName;
-    lob.value = props.item.lob;
+    truckNumber.value = props.item.truckNumber;
   } else {
-    routeName.value = "";
-    lob.value = "";
+    truckNumber.value = "";
   }
   
 
@@ -203,16 +195,16 @@ onMounted(async () => {
 
               <div class="row">
                 <div class="mb-3 col-md-3">
-                  <label class="form-label">Route Name</label>
+                  <label class="form-label">Truck Number</label>
                   <input
                     type="text"
-                    v-model="routeName"
+                    v-model="truckNumber"
                     class="form-control form-control-sm border border-primary"
                   />
-                  <small v-if="errorsRoute.routeName_er" class="text-danger">{{errorsRoute.routeName_er}}</small>
+                  <small v-if="errorsTruck.truckNumber_er" class="text-danger">{{errorsTruck.truckNumber_er}}</small>
                 </div>
 
-                <div class="mb-3 col-md-3">
+                <!-- <div class="mb-3 col-md-3">
                   <label class="form-label">Lob</label>
                   <input
                     type="text"
@@ -220,13 +212,13 @@ onMounted(async () => {
                     class="form-control form-control-sm border border-primary"
                   />
                   <small v-if="errorsRoute.lob_er" class="text-danger">{{errorsRoute.lob_er}}</small>
-                </div>
+                </div> -->
 
               </div>
 
 
               <button type="submit" class="btn btn-primary">
-                Update Route
+                Update Truck
               </button>
 
               <button

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
 
-const links_disabled = ref(true); // Establécelo en `true` para deshabilitar temporalmente
+const links_disabled = ref(false); // Establécelo en `true` para deshabilitar temporalmente
 
 const user = ref(null)
 const router = useRouter() // Instanciamos el router
