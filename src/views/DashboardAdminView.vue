@@ -2,8 +2,8 @@
 import { ref, onMounted } from "vue";
 import { defineAsyncComponent } from "vue";
 
-import { useRouter } from "vue-router"; // Importamos useRouter para manejar la redirección
-const router = useRouter(); // Instanciamos el router
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 // Importamos utilidades
 import { DateTime } from "luxon";
@@ -51,7 +51,6 @@ const storeTrailer = useTrailersStore();
 import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
 const storeTypeDowntime = useTypeDownTimeStore();
 
-
 import { useLandFillsStore } from "@/stores/landfills";
 const storeLandFill = useLandFillsStore();
 
@@ -77,7 +76,6 @@ const sortCoverSheetList = (key) => {
     let valueA = a[key] || "";
     let valueB = b[key] || "";
 
-    // Convert to number for truckNumber, otherwise treat as string
     if (key === "truckNumber" || key === "trailerNumber") {
       valueA = parseInt(valueA, 10) || 0;
       valueB = parseInt(valueB, 10) || 0;
@@ -85,7 +83,6 @@ const sortCoverSheetList = (key) => {
       valueA = valueA.toLowerCase();
       valueB = valueB.toLowerCase();
     }
-    
 
     if (sortOrder.value === "asc") {
       return valueA > valueB ? 1 : -1;
@@ -105,9 +102,9 @@ if (storedUser) {
     const parsed = JSON.parse(storedUser);
 
     if (parsed.data.user) {
-      user.value = parsed.data.user; // ADMIN
+      user.value = parsed.data.user;
     } else {
-      user.value = parsed.data; // DRIVER
+      user.value = parsed.data;
     }
   } catch (e) {
     console.error("Error al parsear USER desde localStorage:", e);
@@ -120,68 +117,95 @@ const selectedTrailer = ref("");
 const selectedTruck = ref("");
 const selectedDriver = ref("");
 
-const date = ref(new Date());
+const startDate = ref(new Date());
+const endDate = ref(new Date());
 
 const coverSheetList = ref([]);
+const isLoading = ref(false);
 
 const formSubmitted = ref(false);
 
 const errors = ref({
-  date_er: "",
+  startDate_er: "",
+  endDate_er: "",
 });
 
-// Modo de edición de la informaciongeneral para el coversheet
 const isEditModeCoverShet = ref(false);
 
 const SearchCoverSheet = async (event) => {
   if (event) {
     event.preventDefault();
   }
+  
   // Limpiar errores anteriores
-  errors.value.date_er = "";
+  errors.value.startDate_er = "";
+  errors.value.endDate_er = "";
   let hasError = false;
-  if (!date.value) {
-    errors.value.date_er = "Required field";
+
+  if (!startDate.value) {
+    errors.value.startDate_er = "Required field";
     hasError = true;
   }
+
+  if (!endDate.value) {
+    errors.value.endDate_er = "Required field";
+    hasError = true;
+  }
+
+  // Validar que la fecha final no sea menor que la fecha inicial
+  if (startDate.value && endDate.value) {
+    const start = new Date(startDate.value);
+    const end = new Date(endDate.value);
+    
+    if (end < start) {
+      errors.value.endDate_er = "End date cannot be before start date";
+      hasError = true;
+    }
+  }
+
   if (hasError) {
     return;
   }
+
   try {
-    const response = await CoverSheetAPI.allByDate(
-      formatToYYYYMMDD(date.value)
-    );
+    isLoading.value = true;
+    
+    // Traer TODOS los coversheets de una sola vez
+    const response = await CoverSheetAPI.all();
     const allCoversheets = response.data.data || [];
+    
+    // Convertir las fechas de búsqueda a formato comparable
+    const startDateStr = formatToYYYYMMDD(startDate.value);
+    const endDateStr = formatToYYYYMMDD(endDate.value);
+    
+    // Aplicar todos los filtros (fecha, truck, trailer, driver)
     const filters = {
+      startDate: startDateStr,
+      endDate: endDateStr,
       truck_id: selectedTruck.value || null,
       trailer_id: selectedTrailer.value || null,
       driver_id: selectedDriver.value || null,
     };
-    
- 
+
     coverSheetList.value = filterCoversheets(allCoversheets, filters);
   } catch (error) {
     console.error("Error al obtener CoverSheet:", error);
+  } finally {
+    isLoading.value = false;
   }
 };
-
-
-
-// Abrir modal para ver el CoverSheet
 
 const openCoverSheetModal = async (item) => {
   await openModal(
     defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
     {
       item: item,
-      onUpdateSuccess: SearchCoverSheet, // Pass the function
+      onUpdateSuccess: SearchCoverSheet,
     }
   )
-    // runs when modal is closed via confirmModal
     .then((data) => {
       console.log("success", data);
     })
-    // runs when modal is closed via closeModal or esc
     .catch(() => {
       console.log("catch");
     });
@@ -190,22 +214,17 @@ const openCoverSheetModal = async (item) => {
 const openNewCoverSheetModal = async () => {
   await openModal(
     defineAsyncComponent(() => import("@/components/NewCoverSheetModal.vue")),
-    {
-      // item: item,
-    }
+    {}
   )
-    // runs when modal is closed via confirmModal
     .then((data) => {
       console.log("success", data);
     })
-    // runs when modal is closed via closeModal or esc
     .catch(() => {
       console.log("catch");
     });
 };
 
 const EditCoverSheet = (item) => {};
-// Metodos Utilitarios
 
 const currentDate = ref(
   new Date().toLocaleDateString("en-US", {
@@ -232,10 +251,20 @@ const formatToYYYYMMDD = (inputDate) => {
 
 const filterCoversheets = (coversheets, filters) => {
   return coversheets.filter((c) => {
+    // Filtro por rango de fechas
+    let matchDate = true;
+    if (filters.startDate && filters.endDate && c.date) {
+      // Asumiendo que c.date está en formato YYYY-MM-DD
+      const coverSheetDate = c.date;
+      matchDate = coverSheetDate >= filters.startDate && coverSheetDate <= filters.endDate;
+    }
+    
+    // Filtros por truck, trailer y driver
     const matchTrailer = !filters.trailer_id || c.trailer_id === filters.trailer_id;
     const matchTruck = !filters.truck_id || c.truck_id === filters.truck_id;
     const matchDriver = !filters.driver_id || c.driver_id === filters.driver_id;
-    return matchTrailer && matchTruck && matchDriver;
+    
+    return matchDate && matchTrailer && matchTruck && matchDriver;
   });
 };
 
@@ -244,7 +273,7 @@ onMounted(() => {
     sessionStorage.setItem("page_reloaded", "true");
     window.location.reload();
   } else {
-    sessionStorage.removeItem("page_reloaded"); // limpia para futuras visitas
+    sessionStorage.removeItem("page_reloaded");
   }
 
   SearchCoverSheet();
@@ -252,7 +281,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- row -->
   <div class="container-fluid">
     <div class="page-titles">
       <ol class="breadcrumb">
@@ -262,24 +290,22 @@ onMounted(() => {
       </ol>
     </div>
 
-    <Spinner v-if="storeRoute.loading || storeTruck.loading" />
+    <Spinner v-if="storeRoute.loading || storeTruck.loading || isLoading" />
 
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
           <div class="basic-form">
-            <!-- <form @submit="onSubmit" autocomplete="off"> -->
-
             <div class="row">
               <div class="mb-3 col-md-3">
-                <label class="form-label">Date</label>
+                <label class="form-label">Start Date</label>
                 <div class="mt-0">
                   <VueDatePicker
-                    v-model="date"
+                    v-model="startDate"
                     week-start="0"
                     :enable-time-picker="false"
                     :max-date="new Date()"
-                    placeholder="Select Time"
+                    placeholder="Select Start Date"
                   >
                     <template #input-icon>
                       <img
@@ -289,14 +315,36 @@ onMounted(() => {
                     </template>
                   </VueDatePicker>
                 </div>
-                <small v-if="errors.date_er" class="text-danger">{{
-                  errors.date_er
+                <small v-if="errors.startDate_er" class="text-danger">{{
+                  errors.startDate_er
                 }}</small>
               </div>
 
-       
-
               <div class="mb-3 col-md-3">
+                <label class="form-label">End Date</label>
+                <div class="mt-0">
+                  <VueDatePicker
+                    v-model="endDate"
+                    week-start="0"
+                    :enable-time-picker="false"
+                    :max-date="new Date()"
+                    :min-date="startDate"
+                    placeholder="Select End Date"
+                  >
+                    <template #input-icon>
+                      <img
+                        class="input-slot-image"
+                        src="../assets/icons/calendar.png"
+                      />
+                    </template>
+                  </VueDatePicker>
+                </div>
+                <small v-if="errors.endDate_er" class="text-danger">{{
+                  errors.endDate_er
+                }}</small>
+              </div>
+
+              <div class="mb-3 col-md-2">
                 <label class="form-label">Truck #</label>
                 <v-select
                   :options="storeTruck.trucks"
@@ -312,7 +360,7 @@ onMounted(() => {
                 }}</small>
               </div>
 
-                <div class="mb-3 col-md-3">
+              <div class="mb-3 col-md-2">
                 <label class="form-label">Trailer #</label>
                 <v-select
                   :options="storeTrailer.trailers"
@@ -328,7 +376,7 @@ onMounted(() => {
                 }}</small>
               </div>
 
-              <div class="mb-3 col-md-3">
+              <div class="mb-3 col-md-2">
                 <label class="form-label">Driver</label>
                 <v-select
                   :options="storeDriver.drivers"
@@ -347,26 +395,13 @@ onMounted(() => {
               @click="SearchCoverSheet"
               type="button"
               class="btn btn-info"
+              :disabled="isLoading"
             >
-              Search CoverSheet
+              {{ isLoading ? 'Searching...' : 'Search CoverSheet' }}
               <span class="btn-icon-end">
                 <i class="fa fa-search"></i>
               </span>
             </button>
-
-            <!-- <button
-              style="margin-bottom: -5px !important; margin-left: 15px"
-              @click="openNewCoverSheetModal"
-              type="button"
-              class="btn btn-primary"
-            >
-              New CoverSheet
-              <span class="btn-icon-end">
-                <i class="fa fa-table"></i>
-              </span>
-            </button> -->
-
-            
           </div>
         </div>
       </div>
@@ -377,28 +412,21 @@ onMounted(() => {
         <div class="card-body">
           <div class="basic-form">
             <div class="row">
-            <div style="text-align: end; color:blueviolet">{{ coverSheetList.length}} rows</div>
+              <div style="text-align: end; color:blueviolet">{{ coverSheetList.length}} rows</div>
               <hr style="color: black" />
               <div class="table-responsive">
                 <table class="table table-bordered header-border table-striped table-hover table-responsive-md">
                   <thead class="thead-primary">
                     <tr>
-                    <th>HomeBase</th>
+                      <th>HomeBase</th>
                       <th>
                         <a
                           @click="sortCoverSheetList('driverName')"
-                          style="
-                            cursor: pointer;
-                            text-decoration: none;
-                            color: inherit;
-                          "
+                          style="cursor: pointer; text-decoration: none; color: inherit;"
                         >
                           Driver
                           <span v-if="sortKey === 'driverName'">
-                            <i
-                              v-if="sortOrder === 'asc'"
-                              class="fa fa-sort-asc"
-                            ></i>
+                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
                             <i v-else class="fa fa-sort-desc"></i>
                           </span>
                         </a>
@@ -406,37 +434,23 @@ onMounted(() => {
                       <th>
                         <a
                           @click="sortCoverSheetList('truckNumber')"
-                          style="
-                            cursor: pointer;
-                            text-decoration: none;
-                            color: inherit;
-                          "
+                          style="cursor: pointer; text-decoration: none; color: inherit;"
                         >
                           Truck #
                           <span v-if="sortKey === 'truck'">
-                            <i
-                              v-if="sortOrder === 'asc'"
-                              class="fa fa-sort-asc"
-                            ></i>
+                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
                             <i v-else class="fa fa-sort-desc"></i>
                           </span>
                         </a>
                       </th>
                       <th>
                         <a
-                          @click="sortCoverSheetList('truckNumber')"
-                          style="
-                            cursor: pointer;
-                            text-decoration: none;
-                            color: inherit;
-                          "
+                          @click="sortCoverSheetList('trailerNumber')"
+                          style="cursor: pointer; text-decoration: none; color: inherit;"
                         >
                           Trailer #
                           <span v-if="sortKey === 'trailerNumber'">
-                            <i
-                              v-if="sortOrder === 'asc'"
-                              class="fa fa-sort-asc"
-                            ></i>
+                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
                             <i v-else class="fa fa-sort-desc"></i>
                           </span>
                         </a>
@@ -463,8 +477,9 @@ onMounted(() => {
                           <a
                             @click="openCoverSheetModal(item)"
                             class="btn btn-primary shadow btn-xs sharp me-1"
-                            ><i class="fa fa-eye"></i
-                          ></a>
+                          >
+                            <i class="fa fa-eye"></i>
+                          </a>
                         </div>
                       </td>
                     </tr>
@@ -484,14 +499,14 @@ onMounted(() => {
 .table-responsive {
   max-height: 600px;
   overflow-y: auto;
-  display: block; /* Ensures the container behaves as a block */
+  display: block;
 }
 
 .table-responsive thead th {
   position: sticky;
   top: 0;
-  background-color: #6f42c1; /* Matches your purple header */
+  background-color: #6f42c1;
   color: white;
-  z-index: 1; /* Ensures header stays above content */
+  z-index: 1;
 }
 </style>
