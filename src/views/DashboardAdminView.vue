@@ -254,8 +254,8 @@ const filterCoversheets = (coversheets, filters) => {
     // Filtro por rango de fechas
     let matchDate = true;
     if (filters.startDate && filters.endDate && c.date) {
-      // Asumiendo que c.date está en formato YYYY-MM-DD
-      const coverSheetDate = c.date;
+      // Extraer solo la parte YYYY-MM-DD del timestamp
+      const coverSheetDate = c.date.split('T')[0];
       matchDate = coverSheetDate >= filters.startDate && coverSheetDate <= filters.endDate;
     }
     
