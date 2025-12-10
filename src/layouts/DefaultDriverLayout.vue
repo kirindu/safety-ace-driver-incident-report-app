@@ -19,7 +19,6 @@ import Footer from '@/components/Footer.vue'
 </div>
 <RouterView />
 
-<Footer />
 
 
 
