@@ -88,10 +88,10 @@ const emailInputType = computed(() => {
 });
 
 // Watch para limpiar el campo cuando cambia el rol
-watch(rol, () => {
-  setFieldValue('email', '');
-  setFieldValue('password', '');
-});
+// watch(rol, () => {
+//   setFieldValue('email', '');
+//   setFieldValue('password', '');
+// });
 
 // Metodos
 const onSubmit = handleSubmit(async (values, { resetForm }) => {
