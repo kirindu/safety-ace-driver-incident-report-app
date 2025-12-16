@@ -469,7 +469,7 @@ onMounted(() => {
                       <td class="td">{{ item.truckNumber }}</td>
                       <td class="td">{{ item.trailerNumber }}</td>
                       <td class="td">{{ item.clockIn }}</td>
-                      <td class="td">{{ item.clockIn }}</td>
+                      <td class="td">{{ item.clockOut }}</td>
                       <td class="td">{{ item.trainee }}</td>
                       <td class="td">{{ item.notes }}</td>
                       <td>
