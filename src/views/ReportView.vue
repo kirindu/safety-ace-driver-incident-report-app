@@ -20,7 +20,9 @@ const route = useRoute()
 const reportUrls = {
   'single-date': 'https://metabase.kizunadata.cloud/public/question/3536d878-1db6-417b-87db-bec31bc2134a',
   'date-range': 'https://metabase.kizunadata.cloud/public/question/4c82025d-1c24-4ccc-a4c7-113fd210275c',
-  'driver-name': 'https://metabase.kizunadata.cloud/public/question/ba704ea3-9c18-4aeb-97d5-1204623c69e8'
+  'driver-name': 'https://metabase.kizunadata.cloud/public/question/ba704ea3-9c18-4aeb-97d5-1204623c69e8',
+  'load-single-date': 'https://metabase.kizunadata.cloud/public/question/55cdb9b8-5401-41ec-8e21-e60f42a9ab80',
+  'load-date-range': 'https://metabase.kizunadata.cloud/public/question/da3028c5-dabb-4766-aaea-6f5748333723'
 }
 
 // Computed property que determina qué URL usar basado en el parámetro de la ruta
