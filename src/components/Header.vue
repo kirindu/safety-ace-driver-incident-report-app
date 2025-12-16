@@ -97,7 +97,7 @@ const logout = () => {
 <div class="dropdown-menu reports-menu"> 
     <a  @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'single-date' } })">General Report by Single Date</a>
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'date-range' } })">General Report by Date Range</a>
-    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General by Driver Name</a>
+    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a>
   </div>
 
 
