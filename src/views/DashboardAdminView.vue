@@ -235,6 +235,12 @@ const currentDate = ref(
   })
 );
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return DateTime.fromISO(dateString).toFormat('MM/dd/yyyy');
+  // O para formato más descriptivo: 'MMM dd, yyyy' → Dec 17, 2025
+};
+
 const formatToYYYYMMDD = (inputDate) => {
   const date = new Date(inputDate);
   if (isNaN(date.getTime())) {
@@ -418,6 +424,7 @@ onMounted(() => {
                 <table class="table table-bordered header-border table-striped table-hover table-responsive-md">
                   <thead class="thead-primary">
                     <tr>
+                      <th>Date</th>
                       <th>HomeBase</th>
                       <th>
                         <a
@@ -464,6 +471,7 @@ onMounted(() => {
                   </thead>
                   <tbody>
                     <tr v-for="(item, index) in coverSheetList" :key="index">
+                     <td class="td">{{ formatDate(item.date) }}</td>
                       <td class="td">{{ item.homeBaseName }}</td>
                       <td class="td">{{ item.driverName }}</td>
                       <td class="td">{{ item.truckNumber }}</td>

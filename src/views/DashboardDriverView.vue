@@ -1291,10 +1291,10 @@ const handleFileChange = (event) => {
   const newImages = [];
 
   for (let file of files) {
-    if (file.size > 3145728) {
+    if (file.size > 5242880 ) {
       showSweetAlert({
         title: "Image with excess size!",
-        text: `You cannot upload the image ${file.name}, the maximum allowed is 3Mb`,
+        text: `You cannot upload the image ${file.name}, the maximum allowed is 5Mb`,
         icon: "warning",
         allowOutsideClick: false,
       }).then(() => {
