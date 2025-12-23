@@ -194,33 +194,33 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
             }
           }
 
- 
+
         } else {
           router.push({ name: 'dashboard' });
 
-      }   
-      
+        }
 
-      //  router.push({ name: 'dashboard' });
 
-    } 
- 
-  } else {
+        //  router.push({ name: 'dashboard' });
 
-       if (rol.value === 'Admin') {
-      const { data } = await UserAPI.loginAdmin({
-        email: values.email, // Enviamos como email para Admin
-        password: values.password,
-      });
-
-      if (data.ok) {
-        localStorage.setItem("USER", JSON.stringify(data));
-        router.push({ name: 'dashboard-admin' });
       }
+
+    } else {
+
+      if (rol.value === 'Admin') {
+        const { data } = await UserAPI.loginAdmin({
+          email: values.email, // Enviamos como email para Admin
+          password: values.password,
+        });
+
+        if (data.ok) {
+          localStorage.setItem("USER", JSON.stringify(data));
+          router.push({ name: 'dashboard-admin' });
+        }
+      }
+
+
     }
-
-
-  }
 
   } catch (error) {
     showToast({
@@ -229,7 +229,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
       position: "top",
       duration: 3000,
     });
-    resetForm(); 
+    resetForm();
   } finally {
     loading.value = false;
   }
@@ -237,7 +237,11 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
   // Limpiamos el formulario una ves realizado el submit
 });
 
+const showPassword = ref(false);
 
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
 
 
 </script>
@@ -248,8 +252,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
       <div class="d-flex flex-column-auto flex-column pt-lg-40 pt-15">
         <div class="text-center mb-4 pt-5">
           <a href="/" class="brand-logo">
-            <img fetchpriority="high" decoding="async" width="188" height="110"
-              src="@/assets/logo/AIRC-logo.png" />
+            <img fetchpriority="high" decoding="async" width="188" height="110" src="@/assets/logo/AIRC-logo.png" />
 
             <div>
               <div class="brand-title">
@@ -309,15 +312,8 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
 
                     <div class="input-group">
                       <span class="input-group-text"> <i :class="emailIcon"></i> </span>
-                      <input 
-                        v-model="email" 
-                        v-bind="emailAttrs" 
-                        :type="emailInputType" 
-                        class="form-control"
-                        id="validationCustomEmail" 
-                        required
-                        autocomplete="off" 
-                      />
+                      <input v-model="email" v-bind="emailAttrs" :type="emailInputType" class="form-control"
+                        id="validationCustomEmail" required autocomplete="off" />
                     </div>
 
                     <div style="width: 100%; margin-top: 0.25rem; font-size: 0.875em; color: #e41a01;">
@@ -329,15 +325,21 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
                   <div class="mb-3">
                     <label class="mb-1 form-label">Password<span class="text-danger">*</span></label>
                     <div class="position-relative">
-
                       <div class="input-group">
-                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
-                        <input type="password" v-model="password" v-bind="passwordAttrs" class="form-control"
-                          id="validationCustomPassword" required autocomplete="off" />
+                        <span class="input-group-text">
+                          <i class="fa fa-lock"></i>
+                        </span>
+                        <input :type="showPassword ? 'text' : 'password'" v-model="password" v-bind="passwordAttrs"
+                          class="form-control" id="validationCustomPassword" required autocomplete="off" />
+                        <button class="btn btn-outline-secondary password-toggle-btn" type="button"
+                          @click="togglePasswordVisibility" tabindex="-1">
+                          <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" class="password-icon"></i>
+                        </button>
                       </div>
 
-                      <div style="width: 100%; margin-top: 0.25rem; font-size: 0.875em; color: #e41a01;">{{
-                        errors.password }}</div>
+                      <div style="width: 100%; margin-top: 0.25rem; font-size: 0.875em; color: #e41a01;">
+                        {{ errors.password }}
+                      </div>
                     </div>
                   </div>
 
@@ -374,3 +376,48 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.password-toggle-btn {
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  padding: 0.375rem 0.75rem;
+}
+
+.password-toggle-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.password-toggle-btn:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  outline: none;
+}
+
+.password-icon {
+  transition: all 0.3s ease;
+  color: #6c757d;
+}
+
+.password-toggle-btn:hover .password-icon {
+  color: #495057;
+  transform: scale(1.1);
+}
+
+/* Animación suave al cambiar de ícono */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.password-icon {
+  animation: fadeIn 0.2s ease;
+}
+</style>
