@@ -4,6 +4,13 @@ import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
 const router = useRouter() // Instanciamos el router
 
+// ✅ Importar el composable de autenticación
+import { useAuth } from '@/composables/useAuth';
+const { user: authUser, initUser } = useAuth();
+
+
+
+
 // Importamos utilidades
 import { DateTime } from "luxon";
 
@@ -56,6 +63,11 @@ import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
 const storeTypeDowntime = useTypeDownTimeStore();
 
 const user = ref(null);
+
+watch(authUser, (newUser) => {
+  user.value = newUser;
+  console.log('Usuario actualizado en dashboard:', newUser);
+}, { immediate: true });
 
 
 
@@ -362,41 +374,24 @@ const tonsError = computed(() => {
 
 
 onMounted(() => {
-  if (!sessionStorage.getItem("page_reloaded2")) {
-    sessionStorage.setItem("page_reloaded2", "true");
-    window.location.reload();
-  } else {
-    sessionStorage.removeItem("page_reloaded2");
-  }
+  // ✅ Inicializar el usuario desde el composable
+  initUser();
+  
+  // ✅ Asignar el usuario al ref local
+  user.value = authUser.value;
 
-  // Recuperamos el usuario
-  const storedUser = localStorage.getItem("USER");
-
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser);
-
-      if (parsed.data.user) {
-        user.value = parsed.data.user; // ADMIN
-      } else {
-        user.value = parsed.data; // DRIVER
-      }
-    } catch (e) {
-      console.error("Error al parsear USER desde localStorage:", e);
-    }
-  }
-
+  // Verificar rol y redirigir si es necesario
   if (user.value) {
-
     if (user.value.rol === "Admin") {
-      router.push({ name: 'dashboard-admin' }); // Redirigir al dashboard de Admin
+      router.push({ name: 'dashboard-admin' });
+      return; // Salir temprano si es admin
     }
-
   }
 
-
-
-  let user_id = user.value.id;
+  // ✅ Acceso seguro al ID del usuario
+  let user_id = user.value?.id || null;
+  console.log('User ID en dashboard:', user_id);
+  
   let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
 
   if (user_id !== coversheet_driver_id) {
@@ -404,13 +399,11 @@ onMounted(() => {
   } else {
     // Parse the date from localStorage (assumed to be in UTC)
     const dbDate = DateTime.fromISO(JSON.parse(localStorage.getItem("COVERSHEET")).date, { zone: 'utc' });
-    const today = DateTime.now(); // Current time
+    const today = DateTime.now();
 
-    // Convert both dates to Denver timezone for comparison
     const dbDateDenver = dbDate.setZone('America/Denver');
     const todayDenver = today.setZone('America/Denver');
 
-    // Compare year, month, and day
     if (
       dbDateDenver.year !== todayDenver.year ||
       dbDateDenver.month !== todayDenver.month ||
@@ -418,11 +411,9 @@ onMounted(() => {
     ) {
       localStorage.removeItem("COVERSHEET");
     } else {
-      // Aqui esta la logica si el driver intenta entrar a un coversheet que ya tiene creado el mismo dia
-
+      // Cargar coversheet existente
       isEditModeCoverShet.value = true;
-      const coversheet = JSON.parse(localStorage.getItem("COVERSHEET")); // Cargamos los datos del coversheet previamente guardado
-
+      const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
 
       selectedHomeBase.value = coversheet.homebase_id;
       selectedTruck.value = coversheet.truck_id;
@@ -447,13 +438,8 @@ onMounted(() => {
       dieselExhaustFluid.value = coversheet.dieselExhaustFluid;
       notes.value = coversheet.notes;
 
-
-
-
-
       selectedTruckDownTime.value = coversheet.truck_id;
       selectedTrailerDownTime.value = coversheet.trailer_id;
-
 
       handleVisibleAcordion();
       loadSpareTruckInfo();
@@ -461,17 +447,6 @@ onMounted(() => {
       loadLoad();
     }
   }
-
-  // Si recuperamos el objeto que viene en un select , se lo pasamos directamente para que lo muestre en el input
-  // selectedRoute.value = {
-  //   id: "6802a8f922dd5e9980ae8c1f",
-  //   routeName: "100",
-  //   lob: "Front Load",
-  //   active: true,
-  //   createdAt: "2025-04-18T19:33:13.043000"
-  // };
-
-
 });
 
 // Metodos

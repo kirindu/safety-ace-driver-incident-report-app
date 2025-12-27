@@ -21,15 +21,12 @@ const { showToast } = useToastNotification();
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
-
 // Reactividad
 const loading = ref(false);
 const rol = ref('Driver')  // valor por defecto
 
 // Variables Reactivas
 const selectedRoute = ref("");
-const user = ref(null);
-
 
 // Validaciones
 import { useForm } from "vee-validate";
@@ -87,12 +84,6 @@ const emailInputType = computed(() => {
   return rol.value === 'Driver' ? 'text' : 'email';
 });
 
-// Watch para limpiar el campo cuando cambia el rol
-// watch(rol, () => {
-//   setFieldValue('email', '');
-//   setFieldValue('password', '');
-// });
-
 // Metodos
 const onSubmit = handleSubmit(async (values, { resetForm }) => {
   loading.value = true;
@@ -100,7 +91,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
 
     if (rol.value === 'Driver') {
       const { data } = await UserAPI.loginDriver({
-        username: values.email, // Enviamos como username para Driver
+        username: values.email,
         password: values.password,
       });
 
@@ -109,28 +100,26 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
         localStorage.setItem("USER", JSON.stringify(data));
 
         // ✅ PASO 2: Obtener el user_id de forma correcta
-        // La estructura es: data.data.user.id
         let user_id = null;
         
-        // Primero intentamos obtener el ID del objeto de respuesta directamente
         if (data.data?.user?.id) {
           user_id = data.data.user.id;
         } else if (data.data?.id) {
           user_id = data.data.id;
         }
 
-        console.log('User ID obtenido:', user_id); // Para debug
+        console.log('User ID obtenido:', user_id);
 
         // ✅ PASO 3: Verificar coversheet
         let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
 
-        if (coversheet_driver_id) { // Si existe un coversheet en el localstorage
+        if (coversheet_driver_id) {
 
           if (user_id !== coversheet_driver_id) {
-            // El coversheet es de otro usuario, eliminarlo
             console.log('Coversheet de otro usuario, eliminando...');
             localStorage.removeItem("COVERSHEET");
-            router.push({ name: 'dashboard' });
+            // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+            window.location.href = '/';
             
           } else {
             // El coversheet es del mismo usuario, verificar fecha
@@ -138,26 +127,23 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
             const dbDate = DateTime.fromISO(coversheetData.date, { zone: 'utc' });
             const today = DateTime.now();
 
-            // Convert both dates to Denver timezone for comparison
             const dbDateDenver = dbDate.setZone('America/Denver');
             const todayDenver = today.setZone('America/Denver');
 
-            // Compare year, month, and day
             if (
               dbDateDenver.year !== todayDenver.year ||
               dbDateDenver.month !== todayDenver.month ||
               dbDateDenver.day !== todayDenver.day
             ) {
-              // Coversheet de otro día, eliminarlo
               console.log('Coversheet de otro día, eliminando...');
               localStorage.removeItem("COVERSHEET");
-              router.push({ name: 'dashboard' });
+              // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+              window.location.href = '/';
               
             } else {
-              // Coversheet del mismo día y mismo usuario
               console.log('Coversheet válido encontrado');
               
-              // ✅ IMPORTANTE: Esperar la respuesta del SweetAlert ANTES de navegar
+              // ✅ Esperar la respuesta del SweetAlert ANTES de navegar
               const result = await showSweetAlert({
                 title: "A current cover sheet has been detected",
                 text: "Do you want to continue working with it or create a new cover sheet?",
@@ -170,22 +156,23 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
                 allowOutsideClick: false,
               });
 
-              // ✅ Ahora procesamos el resultado
               if (result.isConfirmed) {
                 console.log('Usuario quiere continuar con el coversheet existente');
-                router.push({ name: 'dashboard' });
+                // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+                window.location.href = '/';
               } else {
                 console.log('Usuario quiere crear un nuevo coversheet');
                 localStorage.removeItem("COVERSHEET");
-                router.push({ name: 'dashboard' });
+                // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+                window.location.href = '/';
               }
             }
           }
 
         } else {
-          // No hay coversheet previo
           console.log('No hay coversheet previo');
-          router.push({ name: 'dashboard' });
+          // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+          window.location.href = '/';
         }
 
       }
@@ -194,13 +181,14 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
 
       if (rol.value === 'Admin') {
         const { data } = await UserAPI.loginAdmin({
-          email: values.email, // Enviamos como email para Admin
+          email: values.email,
           password: values.password,
         });
 
         if (data.ok) {
           localStorage.setItem("USER", JSON.stringify(data));
-          router.push({ name: 'dashboard-admin' });
+          // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
+          window.location.href = '/admin/dashboard';
         }
       }
 
@@ -218,8 +206,6 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
   } finally {
     loading.value = false;
   }
-
-  // Limpiamos el formulario una ves realizado el submit
 });
 
 const showPassword = ref(false);

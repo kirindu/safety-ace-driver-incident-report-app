@@ -275,13 +275,6 @@ const filterCoversheets = (coversheets, filters) => {
 };
 
 onMounted(() => {
-  if (!sessionStorage.getItem("page_reloaded")) {
-    sessionStorage.setItem("page_reloaded", "true");
-    window.location.reload();
-  } else {
-    sessionStorage.removeItem("page_reloaded");
-  }
-
   SearchCoverSheet();
 });
 </script>

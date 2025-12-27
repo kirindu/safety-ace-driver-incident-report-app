@@ -1,14 +1,57 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { computed } from 'vue'
-import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-const links_disabled = ref(false); // Establécelo en `true` para deshabilitar temporalmente
+console.log('🟢 Header: Iniciando carga del componente');
 
+const links_disabled = ref(false)
+const router = useRouter()
+
+// Variables locales (sin useAuth por ahora)
 const user = ref(null)
-const router = useRouter() // Instanciamos el router
 
-const menu_visible = ref(false);
+// Inicializar usuario desde localStorage directamente
+onMounted(() => {
+  console.log('🟢 Header: onMounted ejecutado');
+  const storedUser = localStorage.getItem('USER');
+  
+  if (storedUser) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      console.log('🟢 Header: Usuario parseado:', parsed);
+      
+      if (parsed.data?.user) {
+        user.value = parsed.data.user; // ADMIN
+      } else if (parsed.data) {
+        user.value = parsed.data; // DRIVER
+      }
+      
+      console.log('🟢 Header: Usuario asignado:', user.value);
+    } catch (e) {
+      console.error('🔴 Header: Error al parsear USER:', e);
+    }
+  } else {
+    console.log('⚠️ Header: No hay usuario en localStorage');
+  }
+});
+
+const avatarSrc = computed(() => {
+  if (!user.value) return '/assets/images/avatar/avatar_driver.jpg';
+  
+  return user.value.rol === 'Admin' 
+    ? '/assets/images/avatar/avatar_admin.png'
+    : '/assets/images/avatar/avatar_driver.jpg';
+});
+
+const isAdmin = computed(() => {
+  return user.value?.rol === 'Admin';
+});
+
+const menu_visible = computed(() => {
+  const visible = isAdmin.value;
+  console.log('🟢 Header: menu_visible:', visible);
+  return visible;
+});
 
 // Fecha actual formateada
 const currentDate = ref(
@@ -20,57 +63,16 @@ const currentDate = ref(
   })
 )
 
-onMounted(() => {
-  const storedUser = localStorage.getItem('USER')
-
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser)
-
-      if (parsed.data.user) {
-        user.value = parsed.data.user // ADMIN
-      } else {
-        user.value = parsed.data // DRIVER
-      }
-    } catch (e) {
-      console.error('Error al parsear USER desde localStorage:', e)
-    }
-  }
-  if (user.value.rol === 'Admin') {
-    menu_visible.value = true; // Mostrar el menú si el usuario es Admin
-  } else {
-    menu_visible.value = false; // Ocultar el menú si el usuario es Driver
-  }
-})
-
-const avatarSrc = computed(() => {
-  const storedUser = localStorage.getItem('USER')
-
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser)
-
-      if (parsed.data.user) {
-        user.value = parsed.data.user // ADMIN
-        return '/assets/images/avatar/avatar_admin.png'
-      } else {
-        user.value = parsed.data // DRIVER
-        return '/assets/images/avatar/avatar_driver.jpg'
-      }
-    } catch (e) {
-      console.error('Error al parsear USER desde localStorage:', e)
-    }
-  }
-})
-
 // Método para manejar el logout
 const logout = () => {
-  localStorage.removeItem('USER') // Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET2') // Eliminamos la variable COVERSHEET2 del localStorage
-  router.push({ name: 'login' }) // Redirigimos al usuario a la página de login
+  user.value = null;
+  localStorage.removeItem('USER');
+  localStorage.removeItem('COVERSHEET');
+  localStorage.removeItem('COVERSHEET2');
+  router.push({ name: 'login' });
 }
 
-
+console.log('🟢 Header: Componente cargado completamente');
 </script>
 
 <template>
@@ -171,7 +173,6 @@ const logout = () => {
                 </a>
               </div>
             </li>
-
 
 
 
