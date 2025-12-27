@@ -105,39 +105,38 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
       });
 
       if (data.ok) {
+        // ✅ PASO 1: Guardar en localStorage
         localStorage.setItem("USER", JSON.stringify(data));
 
-
-        /* Aqui vamos abrir el Option Driver Modal */
-
-        // Recuperamos el usuario
-        const storedUser = localStorage.getItem("USER");
-
-
-        if (storedUser) {
-          try {
-            const parsed = JSON.parse(storedUser);
-
-            if (parsed.data) {
-              user.value = parsed.data;
-            }
-          } catch (e) {
-            console.error("Error al parsear USER desde localStorage:", e);
-          }
+        // ✅ PASO 2: Obtener el user_id de forma correcta
+        // La estructura es: data.data.user.id
+        let user_id = null;
+        
+        // Primero intentamos obtener el ID del objeto de respuesta directamente
+        if (data.data?.user?.id) {
+          user_id = data.data.user.id;
+        } else if (data.data?.id) {
+          user_id = data.data.id;
         }
 
+        console.log('User ID obtenido:', user_id); // Para debug
 
-        let user_id = user.value.id;
+        // ✅ PASO 3: Verificar coversheet
         let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
 
         if (coversheet_driver_id) { // Si existe un coversheet en el localstorage
 
           if (user_id !== coversheet_driver_id) {
+            // El coversheet es de otro usuario, eliminarlo
+            console.log('Coversheet de otro usuario, eliminando...');
             localStorage.removeItem("COVERSHEET");
+            router.push({ name: 'dashboard' });
+            
           } else {
-            // Parse the date from localStorage (assumed to be in UTC)
-            const dbDate = DateTime.fromISO(JSON.parse(localStorage.getItem("COVERSHEET")).date, { zone: 'utc' });
-            const today = DateTime.now(); // Current time
+            // El coversheet es del mismo usuario, verificar fecha
+            const coversheetData = JSON.parse(localStorage.getItem("COVERSHEET"));
+            const dbDate = DateTime.fromISO(coversheetData.date, { zone: 'utc' });
+            const today = DateTime.now();
 
             // Convert both dates to Denver timezone for comparison
             const dbDateDenver = dbDate.setZone('America/Denver');
@@ -149,18 +148,17 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
               dbDateDenver.month !== todayDenver.month ||
               dbDateDenver.day !== todayDenver.day
             ) {
+              // Coversheet de otro día, eliminarlo
+              console.log('Coversheet de otro día, eliminando...');
               localStorage.removeItem("COVERSHEET");
+              router.push({ name: 'dashboard' });
+              
             } else {
-              // Aqui esta la logica si el driver intenta entrar a un coversheet que ya tiene creado el mismo dia
-
-
-              // const coversheet = JSON.parse(localStorage.getItem("COVERSHEET")); 
-              // console.log('COVERSHEET loaded from localStorage:', coversheet);
-              // selectedRoute.value = coversheet.route_id;
-
-
-
-              showSweetAlert({
+              // Coversheet del mismo día y mismo usuario
+              console.log('Coversheet válido encontrado');
+              
+              // ✅ IMPORTANTE: Esperar la respuesta del SweetAlert ANTES de navegar
+              const result = await showSweetAlert({
                 title: "A current cover sheet has been detected",
                 text: "Do you want to continue working with it or create a new cover sheet?",
                 icon: "warning",
@@ -170,38 +168,25 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
                 confirmButtonText: "Yes, continue working with it",
                 cancelButtonText: "Create a new cover sheet",
                 allowOutsideClick: false,
-              }).then(async () => {
-                if (alertResult.value.isConfirmed) {
-                  try {
-
-                    router.push({ name: 'dashboard' });
-
-                  } catch (error) {
-                    console.error("Error :", error);
-                    showSweetAlert({
-                      title: "Error!",
-                      icon: "error",
-                      confirmButtonText: "Ok",
-                    });
-                  }
-                } else {
-                  // Eliminar el coversheet existente y crear uno nuevo
-                  localStorage.removeItem("COVERSHEET");
-                  router.push({ name: 'dashboard' });
-                }
               });
 
+              // ✅ Ahora procesamos el resultado
+              if (result.isConfirmed) {
+                console.log('Usuario quiere continuar con el coversheet existente');
+                router.push({ name: 'dashboard' });
+              } else {
+                console.log('Usuario quiere crear un nuevo coversheet');
+                localStorage.removeItem("COVERSHEET");
+                router.push({ name: 'dashboard' });
+              }
             }
           }
 
-
         } else {
+          // No hay coversheet previo
+          console.log('No hay coversheet previo');
           router.push({ name: 'dashboard' });
-
         }
-
-
-        //  router.push({ name: 'dashboard' });
 
       }
 
@@ -219,10 +204,10 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
         }
       }
 
-
     }
 
   } catch (error) {
+    console.error('Error en login:', error);
     showToast({
       message: "Invalid credentials, please try again.",
       type: "error",

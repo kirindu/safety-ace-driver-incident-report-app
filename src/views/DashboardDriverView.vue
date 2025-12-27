@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 
 import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
 const router = useRouter() // Instanciamos el router
@@ -319,6 +319,45 @@ const errorsLoad = ref({
   selectedSourceLoad_er: "",
   selectedDestinationLoad_er: "",
   selectedMaterialLoad_er: "",
+});
+
+// ✅ Computed para calcular Tons automáticamente
+const calculatedTons = computed(() => {
+  const gross = parseFloat(grossWeightLoad.value);
+  const tare = parseFloat(tareWeightLoad.value);
+
+  // Si alguno de los valores está vacío o no es válido, retornar vacío
+  if (!grossWeightLoad.value || !tareWeightLoad.value || isNaN(gross) || isNaN(tare)) {
+    tonsLoad.value = "";
+    return "";
+  }
+
+  // Validar que Gross Weight >= Tare Weight
+  if (gross < tare) {
+    tonsLoad.value = "";
+    return "";
+  }
+
+  // Calcular tons (Gross - Tare)
+  const tons = gross - tare;
+
+  // Actualizar tonsLoad para que se envíe al backend
+  tonsLoad.value = tons.toFixed(2);
+
+  return tons.toFixed(2);
+});
+
+// ✅ Validación para mostrar error
+const tonsError = computed(() => {
+  const gross = parseFloat(grossWeightLoad.value);
+  const tare = parseFloat(tareWeightLoad.value);
+
+  if (grossWeightLoad.value && tareWeightLoad.value && !isNaN(gross) && !isNaN(tare)) {
+    if (gross < tare) {
+      return "Gross Weight must be ≥ Tare Weight";
+    }
+  }
+  return "";
 });
 
 
@@ -1020,7 +1059,7 @@ const HandleLoad = async (event) => {
     hasError = true;
   }
 
-    if (!selectedMaterialLoad.value) {
+  if (!selectedMaterialLoad.value) {
     errorsLoad.value.selectedMaterialLoad_er = "Required field";
     hasError = true;
   }
@@ -1291,7 +1330,7 @@ const handleFileChange = (event) => {
   const newImages = [];
 
   for (let file of files) {
-    if (file.size > 5242880 ) {
+    if (file.size > 5242880) {
       showSweetAlert({
         title: "Image with excess size!",
         text: `You cannot upload the image ${file.name}, the maximum allowed is 5Mb`,
@@ -1828,7 +1867,7 @@ const getDenverTimeAsUTCISOString = () => {
                               placeholder="Choose your Truck" :reduce="(trailer) => trailer.id" label="trailerNumber"
                               class="form-control p-0" />
 
-                 
+
 
                           </div>
 
@@ -1962,8 +2001,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <label class="form-label">Type</label>
                             <v-select :options="storeTypeDowntime.typeDownTimes" v-model="selectedTypeTruckDownTime"
                               placeholder="Choose your Type" :reduce="(typedowntimes) => typedowntimes.id"
-                              label="typeDownTimeName" class="form-control p-0"
-                               />
+                              label="typeDownTimeName" class="form-control p-0" />
                             <small v-if="errorsDowntime.selectedTypeTruckDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTypeTruckDownTime_er }}</small>
                           </div>
@@ -2015,8 +2053,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <label class="form-label">Type</label>
                             <v-select :options="storeTypeDowntime.typeDownTimes" v-model="selectedTypeTrailerDownTime"
                               placeholder="Choose your Type" :reduce="(typedowntimes) => typedowntimes.id"
-                              label="typeDownTimeName" class="form-control p-0"
-                               />
+                              label="typeDownTimeName" class="form-control p-0" />
                             <small v-if="errorsDowntime.selectedTypeTrailerDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTypeTrailerDownTime_er }}</small>
                           </div>
@@ -2158,7 +2195,8 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tunnel Time In</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="tunnelTimeInLoad" :disabled="preloadedLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="tunnelTimeInLoad" :disabled="preloadedLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2171,7 +2209,8 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tunnel Time Out</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="tunnelTimeOutLoad" :disabled="preloadedLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="tunnelTimeOutLoad" :disabled="preloadedLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2184,7 +2223,8 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Leave Yard</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="leaveYardLoad" :disabled="preloadedNextDayLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="leaveYardLoad" :disabled="preloadedNextDayLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2194,12 +2234,11 @@ const getDenverTimeAsUTCISOString = () => {
                               }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-2">
+                          <div class="mb-3 col-md-4">
                             <label class="form-label">Operator</label>
-                            <v-select :options="storeOperator.operators" v-model="selectedOperatorLoad" :disabled="preloadedLoad"
-                              placeholder="Choose your Operator" :reduce="(operator) => operator.id"
-                              label="operatorName" class="form-control p-0"
-                               />
+                            <v-select :options="storeOperator.operators" v-model="selectedOperatorLoad"
+                              :disabled="preloadedLoad" placeholder="Choose your Operator"
+                              :reduce="(operator) => operator.id" label="operatorName" class="form-control p-0" />
                             <small v-if="errorsLoad.selectedOperatorLoad_er" class="text-danger">{{
                               errorsLoad.selectedOperatorLoad_er }}</small>
                           </div>
@@ -2211,18 +2250,17 @@ const getDenverTimeAsUTCISOString = () => {
                             <label class="form-label">Source</label>
                             <v-select :options="storeSource.sources" v-model="selectedSourceLoad"
                               placeholder="Choose your Source" :reduce="(source) => source.id" label="sourceName"
-                              class="form-control p-0"
-                               />
+                              class="form-control p-0" />
                             <small v-if="errorsLoad.selectedSourceLoad_er" class="text-danger">{{
                               errorsLoad.selectedSourceLoad_er }}</small>
                           </div>
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Destination</label>
-                            <v-select :options="storeDestination.destinations" :disabled="preloadedNextDayLoad" v-model="selectedDestinationLoad"
-                              placeholder="Choose your Destination" :reduce="(destination) => destination.id"
-                              label="destinationName" class="form-control p-0"
-                               />
+                            <v-select :options="storeDestination.destinations" :disabled="preloadedNextDayLoad"
+                              v-model="selectedDestinationLoad" placeholder="Choose your Destination"
+                              :reduce="(destination) => destination.id" label="destinationName"
+                              class="form-control p-0" />
                             <small v-if="errorsLoad.selectedDestinationLoad_er" class="text-danger">{{
                               errorsLoad.selectedDestinationLoad_er }}</small>
                           </div>
@@ -2231,8 +2269,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <label class="form-label">Material</label>
                             <v-select :options="storeMaterial.materials" v-model="selectedMaterialLoad"
                               placeholder="Choose your Material" :reduce="(material) => material.id"
-                              label="materialName" class="form-control p-0"
-                               />
+                              label="materialName" class="form-control p-0" />
                             <small v-if="errorsLoad.selectedMaterialLoad_er" class="text-danger">{{
                               errorsLoad.selectedMaterialLoad_er }}</small>
                           </div>
@@ -2240,7 +2277,8 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Time In</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="timeInLoad" :disabled="preloadedNextDayLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="timeInLoad" :disabled="preloadedNextDayLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2253,7 +2291,8 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Time Out</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="timeOutLoad" :disabled="preloadedNextDayLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="timeOutLoad" :disabled="preloadedNextDayLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2275,37 +2314,44 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsLoad.ticketNumberLoad_er }}</small>
                           </div>
 
+                          <!-- ✅ GROSS WEIGHT -->
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Gross Weight</label>
                             <input type="number" step="any" v-model="grossWeightLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.grossWeightLoad_er" class="text-danger">{{
-                              errorsLoad.grossWeightLoad_er
-                              }}</small>
+                              class="form-control form-control-sm border border-primary"
+                              :class="{ 'border-danger': tonsError }" />
+                            <small v-if="errorsLoad.grossWeightLoad_er" class="text-danger">
+                              {{ errorsLoad.grossWeightLoad_er }}
+                            </small>
                           </div>
 
+                          <!-- ✅ TARE WEIGHT -->
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tare Weight</label>
                             <input type="number" step="any" v-model="tareWeightLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.tareWeightLoad_er" class="text-danger">{{
-                              errorsLoad.tareWeightLoad_er
-                              }}</small>
+                              class="form-control form-control-sm border border-primary"
+                              :class="{ 'border-danger': tonsError }" />
+                            <small v-if="errorsLoad.tareWeightLoad_er" class="text-danger">
+                              {{ errorsLoad.tareWeightLoad_er }}
+                            </small>
                           </div>
 
-
+                          <!-- ✅ TONS - CALCULADO Y BLOQUEADO -->
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tons</label>
-                            <input type="number" step="any" v-model="tonsLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.tonsLoad_er" class="text-danger">{{ errorsLoad.tonsLoad_er
-                              }}</small>
+                            <input type="number" step="any" v-model="calculatedTons" disabled readonly
+                              class="form-control form-control-sm border border-primary calculated-field"
+                              :class="{ 'border-danger': tonsError }" placeholder="Auto-calculated" />
+                            <small v-if="tonsError" class="text-danger">{{ tonsError }}</small>
+                            <small v-else-if="errorsLoad.tonsLoad_er" class="text-danger">
+                              {{ errorsLoad.tonsLoad_er }}
+                            </small>
                           </div>
-
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Back Yard</label>
                             <div class="mt-0">
-                              <VueDatePicker v-model="backYardLoad" :disabled="preloadedNextDayLoad" time-picker placeholder="Select Time">
+                              <VueDatePicker v-model="backYardLoad" :disabled="preloadedNextDayLoad" time-picker
+                                placeholder="Select Time">
                                 <template #input-icon>
                                   <img class="input-slot-image" src="../assets/icons/clock2.png" />
                                 </template>
@@ -2581,5 +2627,23 @@ input[type="number"]:disabled {
   --dp-range-between-dates-background-color: var(--dp-hover-color, #f3f3f3);
   --dp-range-between-dates-text-color: var(--dp-hover-text-color, #212121);
   --dp-range-between-border-color: var(--dp-hover-color, #f3f3f3);
+}
+
+/* ✅ Estilos para el campo calculado */
+.calculated-field {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+  color: #495057 !important;
+  cursor: not-allowed !important;
+}
+
+.calculated-field:disabled {
+  opacity: 1 !important;
+}
+
+/* Borde rojo cuando hay error de validación */
+.border-danger {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 </style>

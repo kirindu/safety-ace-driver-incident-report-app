@@ -4,17 +4,16 @@ import qs from "qs";
 export default {
 
   async all() {
-
     const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).token;
+    const userData = JSON.parse(currentUser);
+    const token = userData.data?.access_token;
 
     const data = await api.get('/users/', {
       headers: {
-        'x-token' : token
+        'Authorization': `Bearer ${token}`
       }
     });
     return data;
-
   },
 
   async loginDriver(values) {
@@ -23,12 +22,23 @@ export default {
         "Content-Type": "application/json",
       },
     });
+    
+    // ✅ La respuesta ahora tiene la estructura:
+    // {
+    //   "ok": true,
+    //   "data": {
+    //     "access_token": "...",
+    //     "token_type": "bearer",
+    //     "user": { ... }
+    //   }
+    // }
+    
     return data;
   },
 
   async loginAdmin(values) {
     const form = qs.stringify({
-      username: values.email, // 👈 el campo debe llamarse 'username'
+      username: values.email,
       password: values.password
     });
   
@@ -37,14 +47,24 @@ export default {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
+    
+    // ✅ La respuesta tiene la estructura:
+    // {
+    //   "ok": true,
+    //   "data": {
+    //     "access_token": "...",
+    //     "token_type": "bearer",
+    //     "user": { ... }
+    //   }
+    // }
   
     return data;
   },
 
   async auth() {
-
     const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
+    const userData = JSON.parse(currentUser);
+    const token = userData.data?.access_token;
 
     const data = await api.get('/auth/user', {
       headers: {
@@ -52,14 +72,12 @@ export default {
       }
     });
     return data;
-
   },
-
-
 
   async add(values) {
     const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
+    const userData = JSON.parse(currentUser);
+    const token = userData.data?.access_token;
 
     const data = await api.post('/users/', values, {
       headers: {
@@ -70,10 +88,9 @@ export default {
   },
 
   async delete(idUser) {
-
     const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
+    const userData = JSON.parse(currentUser);
+    const token = userData.data?.access_token;
 
     const data = await api.delete('/users/' + idUser, {
      headers: {
@@ -81,13 +98,12 @@ export default {
       }
     });
     return data;
-
   },
 
   async edit(idUser, values) {
-
     const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
+    const userData = JSON.parse(currentUser);
+    const token = userData.data?.access_token;
 
     const data = await api.put('/users/' + idUser, values, {
       headers: {
@@ -95,7 +111,6 @@ export default {
       }
     });
     return data;
-
   },
   
 };
