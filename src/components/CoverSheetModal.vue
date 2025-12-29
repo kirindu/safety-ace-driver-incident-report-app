@@ -265,6 +265,48 @@ const errorsLoad = ref({
   selectedMaterialLoad_er: "",
 });
 
+// ✅ Computed para calcular Tons automáticamente
+const calculatedTons = computed(() => {
+  const gross = parseFloat(grossWeightLoad.value);
+  const tare = parseFloat(tareWeightLoad.value);
+
+  // Si alguno de los valores está vacío o no es válido, retornar vacío
+  if (!grossWeightLoad.value || !tareWeightLoad.value || isNaN(gross) || isNaN(tare)) {
+    tonsLoad.value = "";
+    return "";
+  }
+
+  // Validar que Gross Weight >= Tare Weight
+  if (gross < tare) {
+    tonsLoad.value = "";
+    return "";
+  }
+
+  // Calcular tons (Gross - Tare) / 2000
+  const tons = (gross - tare) / 2000;
+
+  // Actualizar tonsLoad para que se envíe al backend (redondeado a 2 decimales)
+  tonsLoad.value = tons.toFixed(2);
+
+  return tons.toFixed(2);
+});
+
+// ✅ Validación para mostrar error
+const tonsError = computed(() => {
+  const gross = parseFloat(grossWeightLoad.value);
+  const tare = parseFloat(tareWeightLoad.value);
+
+  if (!grossWeightLoad.value || !tareWeightLoad.value) {
+    return "";
+  }
+
+  if (gross < tare) {
+    return "Gross Weight must be greater than Tare Weight";
+  }
+
+  return "";
+});
+
 // ✅ WATCHERS para Preloaded y Preload for next day
 // Watch para preloadedLoad - asegurar que solo uno esté seleccionado
 watch(preloadedLoad, (newValue) => {
@@ -1977,10 +2019,10 @@ const downloadImage = (imageUrl) => {
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tons</label>
-                            <input type="number" step="any" v-model="tonsLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.tonsLoad_er" class="text-danger">{{ errorsLoad.tonsLoad_er
-                              }}</small>
+                            <input type="number" step="any" v-model="calculatedTons" disabled readonly
+                              class="form-control form-control-sm border border-primary calculated-field" 
+                              :class="{ 'border-danger': tonsError }" />
+                            <small v-if="tonsError" class="text-danger">{{ tonsError }}</small>
                           </div>
 
                           <div class="mb-3 col-md-2">
@@ -2157,5 +2199,23 @@ const downloadImage = (imageUrl) => {
 .btn-info {
   min-height: 38px !important;
   padding: 0.375rem 0.75rem !important;
+}
+
+/* ✅ Estilos para el campo calculado */
+.calculated-field {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+  color: #495057 !important;
+  cursor: not-allowed !important;
+}
+
+.calculated-field:disabled {
+  opacity: 1 !important;
+}
+
+/* Borde rojo cuando hay error de validación */
+.border-danger {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 </style>
