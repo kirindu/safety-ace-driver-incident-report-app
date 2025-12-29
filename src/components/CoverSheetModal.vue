@@ -2049,7 +2049,7 @@ const downloadImage = (imageUrl) => {
                                   ) in selectedLoadData.images"
                                   :key="index"
                                   :src="
-                                    'https://backend-fastapi-airc-coversheet.onrender.com/' +
+                                    'https://backend-fastapi-airc-coversheet-staging.onrender.com/' +
                                     image
                                   "
                                   style="
