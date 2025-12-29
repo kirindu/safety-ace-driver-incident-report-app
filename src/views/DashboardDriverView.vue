@@ -350,10 +350,10 @@ const calculatedTons = computed(() => {
     return "";
   }
 
-  // Calcular tons (Gross - Tare)
-  const tons = gross - tare;
+  // Calcular tons (Gross - Tare) / 2000
+  const tons = (gross - tare) / 2000;
 
-  // Actualizar tonsLoad para que se envíe al backend
+  // Actualizar tonsLoad para que se envíe al backend (redondeado a 2 decimales)
   tonsLoad.value = tons.toFixed(2);
 
   return tons.toFixed(2);
