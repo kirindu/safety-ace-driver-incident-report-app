@@ -265,6 +265,49 @@ const errorsLoad = ref({
   selectedMaterialLoad_er: "",
 });
 
+// ✅ WATCHERS para Preloaded y Preload for next day
+// Watch para preloadedLoad - asegurar que solo uno esté seleccionado
+watch(preloadedLoad, (newValue) => {
+  if (newValue && preloadedNextDayLoad.value) {
+    preloadedNextDayLoad.value = false;
+  }
+});
+
+// Watch para preloadedNextDayLoad - asegurar que solo uno esté seleccionado
+watch(preloadedNextDayLoad, (newValue) => {
+  if (newValue && preloadedLoad.value) {
+    preloadedLoad.value = false;
+  }
+});
+
+// Watch para deshabilitar campos cuando Preloaded está seleccionado
+watch(preloadedLoad, (newValue) => {
+  if (newValue) {
+    // Si se selecciona Preloaded, reseteamos los siguientes campos
+    tunnelTimeInLoad.value = "";
+    tunnelTimeOutLoad.value = "";
+    selectedOperatorLoad.value = "";
+  }
+});
+
+// Watch para deshabilitar campos cuando preloadedNextDayLoad está seleccionado
+watch(preloadedNextDayLoad, (newValue) => {
+  if (newValue) {
+    // Si se selecciona preloadedNextDayLoad, reseteamos los siguientes campos
+    leaveYardLoad.value = "";
+    selectedSourceLoad.value = "";
+    selectedDestinationLoad.value = "";
+    selectedMaterialLoad.value = "";
+    timeInLoad.value = "";
+    timeOutLoad.value = "";
+    ticketNumberLoad.value = "";
+    grossWeightLoad.value = "";
+    tareWeightLoad.value = "";
+    tonsLoad.value = "";
+    backYardLoad.value = "";
+  }
+});
+
 
 // Handle form submission General Info
 const onSubmit = async (event) => {
@@ -440,36 +483,24 @@ const CargamosSpareTruckInfo = async (event = null) => {
   }
 
   try {
-    if (reactiveProps.item.value.spareTruckInfo_id?.length) {
+    isLoadingSpareTruckInfo.value = true;
+    
+    // ✅ CORREGIDO: Llamar al API sin verificar spareTruckInfo_id (que no existe)
+    const response = await CoverSheetAPI.getSpareTruckInfo(reactiveProps.item.value.id);
+    spareTruckList.value = response.data.data || [];
 
-
-      isLoadingSpareTruckInfo.value = true;
-      isVisibleSpareTruckInfo.value = true; // Show the Spare Truck Info section
-      const response = await CoverSheetAPI.getSpareTruckInfo(reactiveProps.item.value.id);
-
-
-      spareTruckList.value = response.data.data; // Update the spare truck list with the fetched data
-
-      if (response.data.ok) {
-        isLoadingSpareTruckInfo.value = false; // Hide loading spinner
-      } else {
-        isLoadingSpareTruckInfo.value = false; // Hide loading spinner
-      }
+    // ✅ Mostrar la sección solo si hay datos
+    if (response.data.data && response.data.data.length > 0) {
+      isVisibleSpareTruckInfo.value = true;
     } else {
-      isLoadingSpareTruckInfo.value = false;
       isVisibleSpareTruckInfo.value = false;
     }
+
+    isLoadingSpareTruckInfo.value = false;
   } catch (error) {
-    showSweetAlert({
-      title: "Error getting Spare Truck Info!",
-      icon: "warning",
-      showDenyButton: false,
-      showCancelButton: false,
-      confirmButtonText: "Ok",
-      allowOutsideClick: false,
-    }).then(() => {
-      isLoadingSpareTruckInfo.value = false; // Hide loading spinner
-    });
+    console.error("Error al obtener Spare Truck Info:", error);
+    isLoadingSpareTruckInfo.value = false;
+    isVisibleSpareTruckInfo.value = false;
   }
 };
 
@@ -480,35 +511,24 @@ const CargamosDowntime = async (event = null) => {
   }
 
   try {
-    if (reactiveProps.item.value.downtime_id?.length) {
-      isLoadingDowntime.value = true;
-      isVisibleDowntime.value = true; // Show the Downtime section
+    isLoadingDowntime.value = true;
 
-      const response = await CoverSheetAPI.getDowntime(
-        reactiveProps.item.value.id
-      );
-      downtimeList.value = response.data.data; // Update the downtime list with the fetched data
+    // ✅ CORREGIDO: Llamar al API sin verificar downtime_id (que no existe)
+    const response = await CoverSheetAPI.getDowntime(reactiveProps.item.value.id);
+    downtimeList.value = response.data.data || [];
 
-      if (response.data.ok) {
-        isLoadingDowntime.value = false; // Hide loading spinner
-      } else {
-        isLoadingDowntime.value = false; // Hide loading spinner
-      }
+    // ✅ Mostrar la sección solo si hay datos
+    if (response.data.data && response.data.data.length > 0) {
+      isVisibleDowntime.value = true;
     } else {
-      isLoadingDowntime.value = false;
       isVisibleDowntime.value = false;
     }
+
+    isLoadingDowntime.value = false;
   } catch (error) {
-    showSweetAlert({
-      title: "Error getting Downtime!",
-      icon: "warning",
-      showDenyButton: false,
-      showCancelButton: false,
-      confirmButtonText: "Ok",
-      allowOutsideClick: false,
-    }).then(() => {
-      isLoadingDowntime.value = false; // Hide loading spinner
-    });
+    console.error("Error al obtener Downtime:", error);
+    isLoadingDowntime.value = false;
+    isVisibleDowntime.value = false;
   }
 };
 
@@ -1276,7 +1296,7 @@ const downloadImage = (imageUrl) => {
                   <div v-if="isVisibleSpareTruckInfo" class="accordion-item">
                     <h2 class="accordion-header">
                       <button
-                        class="accordion-button"
+                        class="accordion-button collapsed"
                         type="button"
                         data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseOne"
@@ -1290,7 +1310,7 @@ const downloadImage = (imageUrl) => {
 
                     <div
                       id="bordered_collapseOne"
-                      class="accordion-collapse collapse show"
+                      class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two"
                     >
                       <div class="accordion-body">
@@ -1782,7 +1802,36 @@ const downloadImage = (imageUrl) => {
 
                         <div v-if="visibleDetailLoad">
 
-                    <div style="background-color: #cdc2f5" class="row">
+                    <!-- ✅ CONTENEDOR CON BACKGROUND UNIFICADO -->
+                    <div style="background-color: #cdc2f5; padding: 15px; border-radius: 5px;">
+
+                    <!-- ✅ CHECKBOXES: Preloaded y Preload for next day -->
+                    <div class="row mb-3">
+                      <div class="col-md-12">
+                        <div class="form-check form-check-inline">
+                          <label class="form-check-label" style="color: black; font-weight: 500;">
+                            <input 
+                              type="checkbox" 
+                              class="form-check-input" 
+                              v-model="preloadedLoad"
+                            > 
+                            Preloaded
+                          </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <label class="form-check-label" style="color: black; font-weight: 500;">
+                            <input 
+                              type="checkbox" 
+                              class="form-check-input" 
+                              v-model="preloadedNextDayLoad"
+                            > 
+                            Preload for next day
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tunnel Time In</label>
@@ -1834,11 +1883,12 @@ const downloadImage = (imageUrl) => {
                           </div>
 
                         </div>
-                        <div style="background-color: #cdc2f5" class="row">
+                        <div class="row">
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Source</label>
                             <v-select :options="storeSource.sources" v-model="selectedSourceLoad"
+                              :disabled="preloadedNextDayLoad"
                               placeholder="Choose your Source" :reduce="(source) => source.id" label="sourceName"
                               class="form-control p-0"
                                />
@@ -1859,6 +1909,7 @@ const downloadImage = (imageUrl) => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Material</label>
                             <v-select :options="storeMaterial.materials" v-model="selectedMaterialLoad"
+                              :disabled="preloadedNextDayLoad"
                               placeholder="Choose your Material" :reduce="(material) => material.id"
                               label="materialName" class="form-control p-0"
                                />
@@ -2015,6 +2066,9 @@ const downloadImage = (imageUrl) => {
                   <p>No images available</p>
                 </div> -->
                         </div>
+
+                    </div>
+                    <!-- ✅ FIN DEL CONTENEDOR CON BACKGROUND -->
 
                         </div>
 

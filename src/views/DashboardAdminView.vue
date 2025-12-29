@@ -60,38 +60,6 @@ const storeTruck = useTrucksStore();
 import { useDriversStore } from "@/stores/drivers.js";
 const storeDriver = useDriversStore();
 
-// Nuevo Composable para manejar la ordenación
-const sortKey = ref(null);
-const sortOrder = ref("asc");
-
-const sortCoverSheetList = (key) => {
-  if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
-  } else {
-    sortKey.value = key;
-    sortOrder.value = "asc";
-  }
-
-  coverSheetList.value.sort((a, b) => {
-    let valueA = a[key] || "";
-    let valueB = b[key] || "";
-
-    if (key === "truckNumber" || key === "trailerNumber") {
-      valueA = parseInt(valueA, 10) || 0;
-      valueB = parseInt(valueB, 10) || 0;
-    } else if (typeof valueA === "string") {
-      valueA = valueA.toLowerCase();
-      valueB = valueB.toLowerCase();
-    }
-
-    if (sortOrder.value === "asc") {
-      return valueA > valueB ? 1 : -1;
-    } else {
-      return valueA < valueB ? 1 : -1;
-    }
-  });
-};
-
 const user = ref(null);
 
 // Recuperamos el usuario
@@ -130,9 +98,16 @@ const errors = ref({
   endDate_er: "",
 });
 
-const isEditModeCoverShet = ref(false);
+// 🆕 VARIABLES DE PAGINACIÓN
+const currentPage = ref(1);
+const itemsPerPage = ref(50);
+const totalRecords = ref(0);
+const totalPages = ref(0);
+const hasNextPage = ref(false);
+const hasPrevPage = ref(false);
 
-const SearchCoverSheet = async (event) => {
+// 🆕 FUNCIÓN PRINCIPAL DE BÚSQUEDA CON PAGINACIÓN
+const SearchCoverSheet = async (event = null, page = 1) => {
   if (event) {
     event.preventDefault();
   }
@@ -170,29 +145,84 @@ const SearchCoverSheet = async (event) => {
   try {
     isLoading.value = true;
     
-    // Traer TODOS los coversheets de una sola vez
-    const response = await CoverSheetAPI.all();
-    const allCoversheets = response.data.data || [];
-    
-    // Convertir las fechas de búsqueda a formato comparable
+    // Convertir las fechas al formato YYYY-MM-DD
     const startDateStr = formatToYYYYMMDD(startDate.value);
     const endDateStr = formatToYYYYMMDD(endDate.value);
     
-    // Aplicar todos los filtros (fecha, truck, trailer, driver)
-    const filters = {
-      startDate: startDateStr,
-      endDate: endDateStr,
+    // 🆕 Construir parámetros para la API con paginación
+    const params = {
+      page: page,
+      limit: itemsPerPage.value,
+      start_date: startDateStr,
+      end_date: endDateStr,
       truck_id: selectedTruck.value || null,
       trailer_id: selectedTrailer.value || null,
       driver_id: selectedDriver.value || null,
+      sort_by: 'date',
+      sort_order: -1 // Descendente (más reciente primero)
     };
 
-    coverSheetList.value = filterCoversheets(allCoversheets, filters);
+    // 🆕 Llamar al nuevo endpoint paginado
+    const response = await CoverSheetAPI.allPaginated(params);
+    
+    // 🆕 La estructura de respuesta ahora es: response.data.data
+    const responseData = response.data.data;
+    
+    // Actualizar la lista de coversheets
+    coverSheetList.value = responseData.data || [];
+    
+    // 🆕 Actualizar información de paginación
+    const pagination = responseData.pagination;
+    currentPage.value = pagination.page;
+    totalRecords.value = pagination.total_count;
+    totalPages.value = pagination.total_pages;
+    hasNextPage.value = pagination.has_next;
+    hasPrevPage.value = pagination.has_prev;
+
+    console.log(`📄 Página ${currentPage.value} de ${totalPages.value} (${totalRecords.value} registros totales)`);
+    
   } catch (error) {
     console.error("Error al obtener CoverSheet:", error);
+    coverSheetList.value = [];
+    totalRecords.value = 0;
+    totalPages.value = 0;
   } finally {
     isLoading.value = false;
   }
+};
+
+// 🆕 FUNCIONES DE NAVEGACIÓN DE PÁGINAS
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    SearchCoverSheet(null, page);
+  }
+};
+
+const goToFirstPage = () => {
+  goToPage(1);
+};
+
+const goToLastPage = () => {
+  goToPage(totalPages.value);
+};
+
+const goToPrevPage = () => {
+  if (hasPrevPage.value) {
+    goToPage(currentPage.value - 1);
+  }
+};
+
+const goToNextPage = () => {
+  if (hasNextPage.value) {
+    goToPage(currentPage.value + 1);
+  }
+};
+
+// 🆕 Cambiar cantidad de registros por página
+const changeItemsPerPage = () => {
+  currentPage.value = 1; // Reset a página 1 al cambiar el límite
+  SearchCoverSheet(null, 1);
 };
 
 const openCoverSheetModal = async (item) => {
@@ -200,7 +230,7 @@ const openCoverSheetModal = async (item) => {
     defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
     {
       item: item,
-      onUpdateSuccess: SearchCoverSheet,
+      onUpdateSuccess: () => SearchCoverSheet(null, currentPage.value),
     }
   )
     .then((data) => {
@@ -224,8 +254,6 @@ const openNewCoverSheetModal = async () => {
     });
 };
 
-const EditCoverSheet = (item) => {};
-
 const currentDate = ref(
   new Date().toLocaleDateString("en-US", {
     weekday: "short",
@@ -238,7 +266,6 @@ const currentDate = ref(
 const formatDate = (dateString) => {
   if (!dateString) return '';
   return DateTime.fromISO(dateString).toFormat('MM/dd/yyyy');
-  // O para formato más descriptivo: 'MMM dd, yyyy' → Dec 17, 2025
 };
 
 const formatToYYYYMMDD = (inputDate) => {
@@ -255,25 +282,6 @@ const formatToYYYYMMDD = (inputDate) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-const filterCoversheets = (coversheets, filters) => {
-  return coversheets.filter((c) => {
-    // Filtro por rango de fechas
-    let matchDate = true;
-    if (filters.startDate && filters.endDate && c.date) {
-      // Extraer solo la parte YYYY-MM-DD del timestamp
-      const coverSheetDate = c.date.split('T')[0];
-      matchDate = coverSheetDate >= filters.startDate && coverSheetDate <= filters.endDate;
-    }
-    
-    // Filtros por truck, trailer y driver
-    const matchTrailer = !filters.trailer_id || c.trailer_id === filters.trailer_id;
-    const matchTruck = !filters.truck_id || c.truck_id === filters.truck_id;
-    const matchDriver = !filters.driver_id || c.driver_id === filters.driver_id;
-    
-    return matchDate && matchTrailer && matchTruck && matchDriver;
-  });
-};
-
 onMounted(() => {
   SearchCoverSheet();
 });
@@ -284,7 +292,7 @@ onMounted(() => {
     <div class="page-titles">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">
-          <a href="javascript:void(0)">Search Coversheet</a>
+          <a href="javascript:void(0)"></a>
         </li>
       </ol>
     </div>
@@ -411,50 +419,38 @@ onMounted(() => {
         <div class="card-body">
           <div class="basic-form">
             <div class="row">
-              <div style="text-align: end; color:blueviolet">{{ coverSheetList.length}} rows</div>
+              <!-- 🆕 Información de registros y paginación -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="color: blueviolet; font-weight: 600;">
+                  Showing {{ coverSheetList.length }} of {{ totalRecords }} total records
+                  <span v-if="totalPages > 1"> (Page {{ currentPage }} of {{ totalPages }})</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <label style="margin: 0;">Records per page:</label>
+                  <select 
+                    v-model.number="itemsPerPage" 
+                    @change="changeItemsPerPage"
+                    class="form-control"
+                    style="width: auto; padding: 5px 10px;"
+                  >
+                    <option :value="25">25</option>
+                    <option :value="50">50</option>
+                    <option :value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              
               <hr style="color: black" />
+              
               <div class="table-responsive">
                 <table class="table table-bordered header-border table-striped table-hover table-responsive-md">
                   <thead class="thead-primary">
                     <tr>
                       <th>Date</th>
                       <th>HomeBase</th>
-                      <th>
-                        <a
-                          @click="sortCoverSheetList('driverName')"
-                          style="cursor: pointer; text-decoration: none; color: inherit;"
-                        >
-                          Driver
-                          <span v-if="sortKey === 'driverName'">
-                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
-                            <i v-else class="fa fa-sort-desc"></i>
-                          </span>
-                        </a>
-                      </th>
-                      <th>
-                        <a
-                          @click="sortCoverSheetList('truckNumber')"
-                          style="cursor: pointer; text-decoration: none; color: inherit;"
-                        >
-                          Truck #
-                          <span v-if="sortKey === 'truck'">
-                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
-                            <i v-else class="fa fa-sort-desc"></i>
-                          </span>
-                        </a>
-                      </th>
-                      <th>
-                        <a
-                          @click="sortCoverSheetList('trailerNumber')"
-                          style="cursor: pointer; text-decoration: none; color: inherit;"
-                        >
-                          Trailer #
-                          <span v-if="sortKey === 'trailerNumber'">
-                            <i v-if="sortOrder === 'asc'" class="fa fa-sort-asc"></i>
-                            <i v-else class="fa fa-sort-desc"></i>
-                          </span>
-                        </a>
-                      </th>
+                      <th>Driver</th>
+                      <th>Truck #</th>
+                      <th>Trailer #</th>
                       <th>Clock In</th>
                       <th>Clock Out</th>
                       <th>Trainee / Trainer</th>
@@ -463,16 +459,21 @@ onMounted(() => {
                     </tr>
                   </thead>
                   <tbody>
+                    <tr v-if="coverSheetList.length === 0 && !isLoading">
+                      <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+                        No records found for the selected filters
+                      </td>
+                    </tr>
                     <tr v-for="(item, index) in coverSheetList" :key="index">
-                     <td class="td">{{ formatDate(item.date) }}</td>
-                      <td class="td">{{ item.homeBaseName }}</td>
+                      <td class="td">{{ formatDate(item.date) }}</td>
+                      <td class="td">{{ item.homeBaseName || 'N/A' }}</td>
                       <td class="td">{{ item.driverName }}</td>
                       <td class="td">{{ item.truckNumber }}</td>
                       <td class="td">{{ item.trailerNumber }}</td>
                       <td class="td">{{ item.clockIn }}</td>
                       <td class="td">{{ item.clockOut }}</td>
-                      <td class="td">{{ item.trainee }}</td>
-                      <td class="td">{{ item.notes }}</td>
+                      <td class="td">{{ item.trainee || '-' }}</td>
+                      <td class="td">{{ item.notes || '-' }}</td>
                       <td>
                         <div>
                           <a
@@ -486,6 +487,76 @@ onMounted(() => {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <!-- 🆕 CONTROLES DE PAGINACIÓN -->
+              <div v-if="totalPages > 1" class="pagination-controls">
+                <div class="pagination-info">
+                  Page {{ currentPage }} of {{ totalPages }}
+                </div>
+                
+                <div class="pagination-buttons">
+                  <!-- Primera página -->
+                  <button 
+                    @click="goToFirstPage" 
+                    :disabled="!hasPrevPage || isLoading"
+                    class="btn btn-sm btn-outline-primary"
+                    title="First Page"
+                  >
+                    <i class="fa fa-angle-double-left"></i>
+                  </button>
+                  
+                  <!-- Página anterior -->
+                  <button 
+                    @click="goToPrevPage" 
+                    :disabled="!hasPrevPage || isLoading"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Previous Page"
+                  >
+                    <i class="fa fa-angle-left"></i> Previous
+                  </button>
+                  
+                  <!-- Input directo de página -->
+                  <!-- <div style="display: inline-flex; align-items: center; gap: 5px; margin: 0 10px;">
+                    <span>Go to page:</span>
+                    <input 
+                      type="number" 
+                      v-model.number="currentPage"
+                      @keyup.enter="goToPage(currentPage)"
+                      :min="1"
+                      :max="totalPages"
+                      class="form-control"
+                      style="width: 70px; display: inline-block; padding: 5px; text-align: center;"
+                    />
+                    <button 
+                      @click="goToPage(currentPage)"
+                      class="btn btn-sm btn-primary"
+                      :disabled="isLoading"
+                    >
+                      Go
+                    </button>
+                  </div> -->
+                  
+                  <!-- Página siguiente -->
+                  <button 
+                    @click="goToNextPage" 
+                    :disabled="!hasNextPage || isLoading"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Next Page"
+                  >
+                    Next <i class="fa fa-angle-right"></i>
+                  </button>
+                  
+                  <!-- Última página -->
+                  <button 
+                    @click="goToLastPage" 
+                    :disabled="!hasNextPage || isLoading"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Last Page"
+                  >
+                    <i class="fa fa-angle-double-right"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -509,5 +580,43 @@ onMounted(() => {
   background-color: #6f42c1;
   color: white;
   z-index: 1;
+}
+
+/* 🆕 Estilos para paginación */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.pagination-info {
+  font-weight: 600;
+  color: #6f42c1;
+  font-size: 14px;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.pagination-buttons button {
+  min-width: 40px;
+  height: 35px;
+}
+
+.pagination-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-buttons button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>

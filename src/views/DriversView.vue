@@ -222,7 +222,7 @@ onMounted(() => {
     <div class="page-titles">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">
-          <a href="javascript:void(0)">Search Coversheet</a> 
+          <a href="javascript:void(0)"></a> 
         </li>
       </ol>
     </div>
