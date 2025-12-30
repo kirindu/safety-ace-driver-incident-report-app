@@ -111,7 +111,7 @@ const SearchCoverSheet = async (event = null, page = 1) => {
   if (event) {
     event.preventDefault();
   }
-  
+
   // Limpiar errores anteriores
   errors.value.startDate_er = "";
   errors.value.endDate_er = "";
@@ -131,7 +131,7 @@ const SearchCoverSheet = async (event = null, page = 1) => {
   if (startDate.value && endDate.value) {
     const start = new Date(startDate.value);
     const end = new Date(endDate.value);
-    
+
     if (end < start) {
       errors.value.endDate_er = "End date cannot be before start date";
       hasError = true;
@@ -144,11 +144,11 @@ const SearchCoverSheet = async (event = null, page = 1) => {
 
   try {
     isLoading.value = true;
-    
+
     // Convertir las fechas al formato YYYY-MM-DD
     const startDateStr = formatToYYYYMMDD(startDate.value);
     const endDateStr = formatToYYYYMMDD(endDate.value);
-    
+
     // 🆕 Construir parámetros para la API con paginación
     const params = {
       page: page,
@@ -164,13 +164,13 @@ const SearchCoverSheet = async (event = null, page = 1) => {
 
     // 🆕 Llamar al nuevo endpoint paginado
     const response = await CoverSheetAPI.allPaginated(params);
-    
+
     // 🆕 La estructura de respuesta ahora es: response.data.data
     const responseData = response.data.data;
-    
+
     // Actualizar la lista de coversheets
     coverSheetList.value = responseData.data || [];
-    
+
     // 🆕 Actualizar información de paginación
     const pagination = responseData.pagination;
     currentPage.value = pagination.page;
@@ -180,7 +180,7 @@ const SearchCoverSheet = async (event = null, page = 1) => {
     hasPrevPage.value = pagination.has_prev;
 
     console.log(`📄 Página ${currentPage.value} de ${totalPages.value} (${totalRecords.value} registros totales)`);
-    
+
   } catch (error) {
     console.error("Error al obtener CoverSheet:", error);
     coverSheetList.value = [];
@@ -307,18 +307,10 @@ onMounted(() => {
               <div class="mb-3 col-md-3">
                 <label class="form-label">Start Date</label>
                 <div class="mt-0">
-                  <VueDatePicker
-                    v-model="startDate"
-                    week-start="0"
-                    :enable-time-picker="false"
-                    :max-date="new Date()"
-                    placeholder="Select Start Date"
-                  >
+                  <VueDatePicker v-model="startDate" week-start="0" :enable-time-picker="false" :max-date="new Date()"
+                    placeholder="Select Start Date">
                     <template #input-icon>
-                      <img
-                        class="input-slot-image"
-                        src="../assets/icons/calendar.png"
-                      />
+                      <img class="input-slot-image" src="../assets/icons/calendar.png" />
                     </template>
                   </VueDatePicker>
                 </div>
@@ -330,19 +322,10 @@ onMounted(() => {
               <div class="mb-3 col-md-3">
                 <label class="form-label">End Date</label>
                 <div class="mt-0">
-                  <VueDatePicker
-                    v-model="endDate"
-                    week-start="0"
-                    :enable-time-picker="false"
-                    :max-date="new Date()"
-                    :min-date="startDate"
-                    placeholder="Select End Date"
-                  >
+                  <VueDatePicker v-model="endDate" week-start="0" :enable-time-picker="false" :max-date="new Date()"
+                    :min-date="startDate" placeholder="Select End Date">
                     <template #input-icon>
-                      <img
-                        class="input-slot-image"
-                        src="../assets/icons/calendar.png"
-                      />
+                      <img class="input-slot-image" src="../assets/icons/calendar.png" />
                     </template>
                   </VueDatePicker>
                 </div>
@@ -353,15 +336,9 @@ onMounted(() => {
 
               <div class="mb-3 col-md-2">
                 <label class="form-label">Truck #</label>
-                <v-select
-                  :options="storeTruck.trucks"
-                  v-model="selectedTruck"
-                  placeholder="Choose Truck"
-                  :reduce="(truck) => truck.id"
-                  label="truckNumber"
-                  class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedTruck }"
-                />
+                <v-select :options="storeTruck.trucks" v-model="selectedTruck" placeholder="Choose Truck"
+                  :reduce="(truck) => truck.id" label="truckNumber" class="form-control p-0"
+                  :class="{ 'is-invalid': formSubmitted && !selectedTruck }" />
                 <small v-if="errors.truck_er" class="text-danger">{{
                   errors.truck_er
                 }}</small>
@@ -369,15 +346,9 @@ onMounted(() => {
 
               <div class="mb-3 col-md-2">
                 <label class="form-label">Trailer #</label>
-                <v-select
-                  :options="storeTrailer.trailers"
-                  v-model="selectedTrailer"
-                  placeholder="Choose Trailer"
-                  :reduce="(trailer) => trailer.id"
-                  label="trailerNumber"
-                  class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedTrailer }"
-                />
+                <v-select :options="storeTrailer.trailers" v-model="selectedTrailer" placeholder="Choose Trailer"
+                  :reduce="(trailer) => trailer.id" label="trailerNumber" class="form-control p-0"
+                  :class="{ 'is-invalid': formSubmitted && !selectedTrailer }" />
                 <small v-if="errors.trailer_er" class="text-danger">{{
                   errors.trailer_er
                 }}</small>
@@ -385,30 +356,28 @@ onMounted(() => {
 
               <div class="mb-3 col-md-2">
                 <label class="form-label">Driver</label>
-                <v-select
-                  :options="storeDriver.drivers"
-                  v-model="selectedDriver"
-                  placeholder="Choose Driver"
-                  :reduce="(driver) => driver.id"
-                  label="name"
-                  class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedDriver }"
-                />
+                <v-select :options="storeDriver.drivers" v-model="selectedDriver" placeholder="Choose Driver"
+                  :reduce="(driver) => driver.id" label="name" class="form-control p-0"
+                  :class="{ 'is-invalid': formSubmitted && !selectedDriver }" />
               </div>
             </div>
 
-            <button
-              style="margin-bottom: -5px !important"
-              @click="SearchCoverSheet"
-              type="button"
-              class="btn btn-info"
-              :disabled="isLoading"
-            >
+            <button style="margin-bottom: -5px !important" @click="SearchCoverSheet" type="button" class="btn btn-info"
+              :disabled="isLoading">
               {{ isLoading ? 'Searching...' : 'Search CoverSheet' }}
               <span class="btn-icon-end">
                 <i class="fa fa-search"></i>
               </span>
             </button>
+
+            <!-- <button style="margin-bottom: -5px !important; margin-left: 15px" @click="openNewCoverSheetModal"
+              type="button" class="btn btn-primary">
+              New CoverSheet
+              <span class="btn-icon-end">
+                <i class="fa fa-table"></i>
+              </span>
+            </button> -->
+
           </div>
         </div>
       </div>
@@ -427,21 +396,17 @@ onMounted(() => {
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <label style="margin: 0;">Records per page:</label>
-                  <select 
-                    v-model.number="itemsPerPage" 
-                    @change="changeItemsPerPage"
-                    class="form-control"
-                    style="width: auto; padding: 5px 10px;"
-                  >
+                  <select v-model.number="itemsPerPage" @change="changeItemsPerPage" class="form-control"
+                    style="width: auto; padding: 5px 10px;">
                     <option :value="25">25</option>
                     <option :value="50">50</option>
                     <option :value="100">100</option>
                   </select>
                 </div>
               </div>
-              
+
               <hr style="color: black" />
-              
+
               <div class="table-responsive">
                 <table class="table table-bordered header-border table-striped table-hover table-responsive-md">
                   <thead class="thead-primary">
@@ -476,10 +441,7 @@ onMounted(() => {
                       <td class="td">{{ item.notes || '-' }}</td>
                       <td>
                         <div>
-                          <a
-                            @click="openCoverSheetModal(item)"
-                            class="btn btn-primary shadow btn-xs sharp me-1"
-                          >
+                          <a @click="openCoverSheetModal(item)" class="btn btn-primary shadow btn-xs sharp me-1">
                             <i class="fa fa-eye"></i>
                           </a>
                         </div>
@@ -494,28 +456,20 @@ onMounted(() => {
                 <div class="pagination-info">
                   Page {{ currentPage }} of {{ totalPages }}
                 </div>
-                
+
                 <div class="pagination-buttons">
                   <!-- Primera página -->
-                  <button 
-                    @click="goToFirstPage" 
-                    :disabled="!hasPrevPage || isLoading"
-                    class="btn btn-sm btn-outline-primary"
-                    title="First Page"
-                  >
+                  <button @click="goToFirstPage" :disabled="!hasPrevPage || isLoading"
+                    class="btn btn-sm btn-outline-primary" title="First Page">
                     <i class="fa fa-angle-double-left"></i>
                   </button>
-                  
+
                   <!-- Página anterior -->
-                  <button 
-                    @click="goToPrevPage" 
-                    :disabled="!hasPrevPage || isLoading"
-                    class="btn btn-sm btn-outline-primary"
-                    title="Previous Page"
-                  >
+                  <button @click="goToPrevPage" :disabled="!hasPrevPage || isLoading"
+                    class="btn btn-sm btn-outline-primary" title="Previous Page">
                     <i class="fa fa-angle-left"></i> Previous
                   </button>
-                  
+
                   <!-- Input directo de página -->
                   <!-- <div style="display: inline-flex; align-items: center; gap: 5px; margin: 0 10px;">
                     <span>Go to page:</span>
@@ -536,24 +490,16 @@ onMounted(() => {
                       Go
                     </button>
                   </div> -->
-                  
+
                   <!-- Página siguiente -->
-                  <button 
-                    @click="goToNextPage" 
-                    :disabled="!hasNextPage || isLoading"
-                    class="btn btn-sm btn-outline-primary"
-                    title="Next Page"
-                  >
+                  <button @click="goToNextPage" :disabled="!hasNextPage || isLoading"
+                    class="btn btn-sm btn-outline-primary" title="Next Page">
                     Next <i class="fa fa-angle-right"></i>
                   </button>
-                  
+
                   <!-- Última página -->
-                  <button 
-                    @click="goToLastPage" 
-                    :disabled="!hasNextPage || isLoading"
-                    class="btn btn-sm btn-outline-primary"
-                    title="Last Page"
-                  >
+                  <button @click="goToLastPage" :disabled="!hasNextPage || isLoading"
+                    class="btn btn-sm btn-outline-primary" title="Last Page">
                     <i class="fa fa-angle-double-right"></i>
                   </button>
                 </div>
@@ -617,6 +563,6 @@ onMounted(() => {
 
 .pagination-buttons button:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
