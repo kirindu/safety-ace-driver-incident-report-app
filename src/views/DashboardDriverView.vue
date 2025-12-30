@@ -2250,7 +2250,7 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
 
                           <div class="mb-3 col-md-2">
-                            <label class="form-label">Time In</label>
+                            <label class="form-label">Destination Time In</label>
                             <div class="mt-0">
                               <VueDatePicker v-model="timeInLoad" :disabled="preloadedNextDayLoad" time-picker
                                 placeholder="Select Time">
@@ -2264,7 +2264,7 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
 
                           <div class="mb-3 col-md-2">
-                            <label class="form-label">Time Out</label>
+                            <label class="form-label">Destination Time Out</label>
                             <div class="mt-0">
                               <VueDatePicker v-model="timeOutLoad" :disabled="preloadedNextDayLoad" time-picker
                                 placeholder="Select Time">
