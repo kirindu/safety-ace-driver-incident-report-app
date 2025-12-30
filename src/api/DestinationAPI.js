@@ -19,4 +19,4 @@ export default {
     const data = await api.delete('/destinations/' + idDestination, {});
     return data;
   },
-};.
+};
