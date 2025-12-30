@@ -1765,8 +1765,8 @@ const getDenverTimeAsUTCISOString = () => {
                 <th>Route #</th>
                 <th>First Stop Time</th>
                 <th>Last Stop Time</th>
-                <th>Landfill Time In</th>
-                <th>Landfill Time Out</th>
+                <th>Destination Time In</th>
+                <th>Destination Time Out</th>
                 <th>Gross Weight</th>
                 <th>Tare Weight</th>
                 <th>Tons</th>

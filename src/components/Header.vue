@@ -97,11 +97,11 @@ console.log('🟢 Header: Componente cargado completamente');
           </span>
 
 <div class="dropdown-menu reports-menu"> 
-    <a  @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'single-date' } })">General Report by Single Date</a>
-    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'date-range' } })">General Report by Date Range</a>
-    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a>
-    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-single-date' } })">Load Report by Single Date</a>
-    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-date-range' } })">Load Report by Range Date</a>
+    <!-- <a  @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'single-date' } })">General Report by Single Date</a> -->
+    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'date-range' } })">CoverSheet Report</a>
+    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a> -->
+    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-single-date' } })">Load Report by Single Date</a> -->
+    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-date-range' } })">Load Report</a>
   </div>
 
 

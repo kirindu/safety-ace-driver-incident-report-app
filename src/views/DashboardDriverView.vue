@@ -2323,7 +2323,7 @@ const getDenverTimeAsUTCISOString = () => {
                             </small>
                           </div>
                           <div class="mb-3 col-md-2">
-                            <label class="form-label">Back Yard</label>
+                            <label class="form-label">Return To Yard</label>
                             <div class="mt-0">
                               <VueDatePicker v-model="backYardLoad" :disabled="preloadedNextDayLoad" time-picker
                                 placeholder="Select Time">
