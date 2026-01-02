@@ -1112,7 +1112,7 @@ const getDenverTimeAsUTCISOString = () => {
 
               
 			                  <div class="mb-3 col-md-3">
-                  <label class="form-label">Date</label>
+                  <label class="form-label">Datex</label>
                   <div class="mt-0">
                     <VueDatePicker v-model="date" week-start="0" :enable-time-picker="false" :max-date="new Date()" placeholder="Select Time">
                       <template #input-icon>
