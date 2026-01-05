@@ -466,21 +466,12 @@ const data = localStorage.getItem('COVERSHEET');
       selectedTrailerDownTime.value = coversheet.trailer_id;
 
     //  handleVisibleAcordion();
-     // loadSpareTruckInfo();
-      //loadDowntime();
-      //loadLoad();
-
-
-
-
+      loadSpareTruckInfo();
+      loadDowntime();
+      loadLoad();
 
   }
 
-
-
-  
-    
-  
 });
 
 // Metodos
@@ -1424,8 +1415,8 @@ const logout = () => {
 // Método para manejar el logout
 const finalizeCoverSheet = () => {
   localStorage.removeItem('COVERSHEET');
-  closeModal();
- 
+  // ✅ Usar confirmModal en lugar de closeModal para indicar éxito
+  confirmModal({ finalized: true });
 }
 
 
@@ -1764,7 +1755,7 @@ const getDenverTimeAsUTCISOString = () => {
                 {{ isEditModeCoverShet ? "Update CoverSheet" : "Start CoverSheet" }}
               </button>
 
-              <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
+              <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="finalizeCoverSheet">
                 Finalize CoverSheet
               </button> 
             </form>
@@ -1792,7 +1783,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                   <div class="accordion-item">
                     <h2 class="accordion-header">
-                      <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseOne">
                         Spare
                       </button>
@@ -1801,7 +1792,7 @@ const getDenverTimeAsUTCISOString = () => {
                     <Spinner v-if="storeHomeBase.loading || storeTruck.loading" />
 
 
-                    <div id="bordered_collapseOne" class="accordion-collapse collapse show"
+                    <div id="bordered_collapseOne" class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
@@ -2193,12 +2184,6 @@ const getDenverTimeAsUTCISOString = () => {
                             </table>
                           </div>
                         </div>
-
-
-
-
-
-
 
                       </div>
                     </div>

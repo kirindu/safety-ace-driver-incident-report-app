@@ -8,8 +8,10 @@ export default function useSweetAlert2Notification() {
     try {
       const result = await Swal.fire(options);
       alertResult.value = result;
+      return result; // ✅ ESTO FALTABA - Retornar el resultado
     } catch (error) {
       console.error('SweetAlert2 error:', error);
+      return null; // ✅ Retornar null en caso de error
     }
   };
 
@@ -18,3 +20,9 @@ export default function useSweetAlert2Notification() {
     alertResult
   };
 }
+
+
+
+
+
+

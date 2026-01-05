@@ -225,6 +225,55 @@ const changeItemsPerPage = () => {
   SearchCoverSheet(null, 1);
 };
 
+const deleteCoverSheet = async (item) => {
+  const result = await showSweetAlert({
+    title: "Are you sure you want to delete this CoverSheet?",
+    //text: "This action will deactivate the coversheet (soft delete)",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel"
+  });
+
+  // ✅ Ahora result sí tiene valor porque el composable lo retorna
+  if (result?.isConfirmed) {
+    try {
+      isLoading.value = true;
+      const response = await CoverSheetAPI.delete(item.id);
+
+      if (response.data.ok) {
+        await showSweetAlert({
+          title: "Deleted!",
+          text: "CoverSheet has been deleted successfully.",
+          icon: "success",
+          confirmButtonText: "Ok",
+        });
+
+        // ✅ CORRECCIÓN: Llamar a SearchCoverSheet, no SearchDriver
+        SearchCoverSheet(null, currentPage.value);
+      } else {
+        await showSweetAlert({
+          title: "Error!",
+          text: "Error deleting CoverSheet.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting CoverSheet:", error);
+      await showSweetAlert({
+        title: "Error!",
+        text: error.response?.data?.message || "Error deleting CoverSheet!",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
 const openCoverSheetModal = async (item) => {
   await openModal(
     defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
@@ -247,11 +296,28 @@ const openNewCoverSheetModal = async () => {
     {}
   )
     .then((data) => {
-      console.log("success", data);
+      // ✅ Solo recargar si el modal se cerró con confirmModal (finalizó exitosamente)
+      if (data?.finalized) {
+        console.log("CoverSheet finalized successfully");
+        SearchCoverSheet(null, currentPage.value);
+      } else {
+        console.log("Modal closed without finalizing");
+      }
     })
     .catch(() => {
-      console.log("catch");
+      console.log("Modal cancelled");
     });
+};
+
+const downloadPDF = () => {
+  const pdfUrl = '/documents/AIRC-Coversheet-2026.pdf';
+  const link = document.createElement('a');
+  link.href = pdfUrl;
+  link.download = 'CoverSheet-Guide.pdf';
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 const currentDate = ref(
@@ -362,7 +428,12 @@ onMounted(() => {
               </div>
             </div>
 
-            <button style="margin-bottom: -5px !important" @click="SearchCoverSheet" type="button" class="btn btn-info"
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+
+
+            <div>
+
+                        <button style="margin-bottom: -5px !important" @click="SearchCoverSheet" type="button" class="btn btn-info"
               :disabled="isLoading">
               {{ isLoading ? 'Searching...' : 'Search CoverSheet' }}
               <span class="btn-icon-end">
@@ -370,13 +441,33 @@ onMounted(() => {
               </span>
             </button>
 
-             <button style="margin-bottom: -5px !important; margin-left: 15px" @click="openNewCoverSheetModal"
+            <button style="margin-bottom: -5px !important; margin-left: 15px" @click="openNewCoverSheetModal"
               type="button" class="btn btn-primary">
               New CoverSheet
               <span class="btn-icon-end">
                 <i class="fa fa-table"></i>
               </span>
-            </button> 
+            </button>
+            
+            
+            </div>
+
+            <div>
+
+                        <button style="margin-bottom: -5px !important; margin-left: 15px" @click="downloadPDF" type="button"
+              class="btn btn-success">
+              Download AIRC Blank CoverSheet
+              <span class="btn-icon-end">
+                <i class="fa fa-download"></i>
+              </span>
+            </button>
+            
+            </div>
+
+
+            </div>
+
+
 
           </div>
         </div>
@@ -420,7 +511,7 @@ onMounted(() => {
                       <th>Clock Out</th>
                       <th>Trainee / Trainer</th>
                       <th>Notes</th>
-                      <th>Action</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -444,7 +535,12 @@ onMounted(() => {
                           <a @click="openCoverSheetModal(item)" class="btn btn-primary shadow btn-xs sharp me-1">
                             <i class="fa fa-eye"></i>
                           </a>
+
+                          <a @click="deleteCoverSheet(item)" class="btn btn-danger shadow btn-xs sharp me-1">
+                            <i class="fa fa-trash"></i>
+                          </a>
                         </div>
+
                       </td>
                     </tr>
                   </tbody>
