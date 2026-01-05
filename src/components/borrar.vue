@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue"
 import { closeModal, confirmModal } from "@kolirt/vue-modal";
 
 import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
@@ -64,7 +64,7 @@ import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
 const storeTypeDowntime = useTypeDownTimeStore();
 
 import { useDriversStore } from "@/stores/drivers.js";
-const storeDriver = useDriversStore();	
+const storeDriver = useDriversStore();		
 
 const user = ref(null);
 
@@ -290,7 +290,6 @@ const isLoadingLoad = ref(false); // To show loading spinner when fetching load 
 const formSubmittedLoad = ref(false); // To track if Load form has been submitted
 
 
-
 // Agregar después de las declaraciones de preloadedLoad y preloadedNextDayLoad
 
 // Watch para preloadedLoad
@@ -411,29 +410,50 @@ onMounted(() => {
   if (user.value) {
     if (user.value.rol === "Admin") {
       router.push({ name: 'dashboard-admin' });
-   //   return; // Salir temprano si es admin
+    //  return; // Salir temprano si es admin
     }
   }
 
   // ✅ Acceso seguro al ID del usuario
   let user_id = user.value?.id || null;
+  //console.log('User ID en dashboard:', user_id);
+  
+  //let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
 
 const data = localStorage.getItem('COVERSHEET');
   if (data) {
     existeCover.value = true;
     isEditModeCoverShet.value = true;
-    isVisibleAcordion.value = true;
   } else {
     existeCover.value = false;
     isEditModeCoverShet.value = false;
-    isVisibleAcordion.value = false;
-    
   }
 
-   // Cargar coversheet existente
-  if(existeCover.value){
 
-       
+
+  //if (user_id !== coversheet_driver_id) {
+    //localStorage.removeItem("COVERSHEET");
+  //} else {
+    // Parse the date from localStorage (assumed to be in UTC)
+    //const dbDate = DateTime.fromISO(JSON.parse(localStorage.getItem("COVERSHEET")).date, { zone: 'utc' });
+    //const today = DateTime.now();
+
+    //const dbDateDenver = dbDate.setZone('America/Denver');
+    //const todayDenver = today.setZone('America/Denver');
+
+   // if (
+     // dbDateDenver.year !== todayDenver.year ||
+     // dbDateDenver.month !== todayDenver.month ||
+     // dbDateDenver.day !== todayDenver.day
+    //) {
+     // localStorage.removeItem("COVERSHEET");
+    //} else {
+
+
+      // Cargar coversheet existente
+
+      if(existeCover.value){
+      
       const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
 
       date.value = DateTime.fromISO(coversheet.date).toJSDate();
@@ -466,22 +486,13 @@ const data = localStorage.getItem('COVERSHEET');
       selectedTrailerDownTime.value = coversheet.trailer_id;
 
     //  handleVisibleAcordion();
-     // loadSpareTruckInfo();
-      //loadDowntime();
-      //loadLoad();
-
-
-
-
-
-  }
-
-
-
-  
-    
-  
-});
+    //  loadSpareTruckInfo();
+     // loadDowntime();
+    //  loadLoad();
+    }
+  //  }
+ // }
+//});
 
 // Metodos
 
@@ -1416,16 +1427,9 @@ const setTimeFromDB = (timeString) => {
 
 // Método para manejar el logout
 const logout = () => {
-  localStorage.removeItem('USER');// Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET'); // Eliminamos la variable COVERSHEET2 del localStorage
-  router.push({ name: 'login' }); // Redirigimos al usuario a la página de login
-}
-
-// Método para manejar el logout
-const finalizeCoverSheet = () => {
-  localStorage.removeItem('COVERSHEET');
-  closeModal();
- 
+  localStorage.removeItem('USER') // Eliminamos la variable USER del localStorage
+  localStorage.removeItem('COVERSHEET2') // Eliminamos la variable COVERSHEET2 del localStorage
+  router.push({ name: 'login' }) // Redirigimos al usuario a la página de login
 }
 
 
@@ -1460,7 +1464,6 @@ const getDenverTimeAsUTCISOString = () => {
     <div class="col-lg-12">
       <div class="card">
 
-
            <div class="card-header">
              Coversheet
        
@@ -1476,12 +1479,13 @@ const getDenverTimeAsUTCISOString = () => {
 
 
 
+
         <div class="card-body">
           <div class="basic-form">
 
             <form @submit="onSubmit" autocomplete="off">
 
-                        <div class="row">
+             <div class="row">
 
                  <div class="mb-3 col-md-3">
                   <label class="form-label">Date</label>
@@ -1764,9 +1768,9 @@ const getDenverTimeAsUTCISOString = () => {
                 {{ isEditModeCoverShet ? "Update CoverSheet" : "Start CoverSheet" }}
               </button>
 
-              <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
+              <!-- <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
                 Finalize CoverSheet
-              </button> 
+              </button> -->
             </form>
           </div>
         </div>
@@ -1792,7 +1796,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                   <div class="accordion-item">
                     <h2 class="accordion-header">
-                      <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseOne">
                         Spare
                       </button>
