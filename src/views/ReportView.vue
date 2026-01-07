@@ -22,7 +22,8 @@ const reportUrls = {
   'date-range': 'https://metabase.kizunadata.cloud/public/question/4c82025d-1c24-4ccc-a4c7-113fd210275c',
   'driver-name': 'https://metabase.kizunadata.cloud/public/question/ba704ea3-9c18-4aeb-97d5-1204623c69e8',
   'load-single-date': 'https://metabase.kizunadata.cloud/public/question/55cdb9b8-5401-41ec-8e21-e60f42a9ab80',
-  'load-date-range': 'https://metabase.kizunadata.cloud/public/question/da3028c5-dabb-4766-aaea-6f5748333723'
+  'load-date-range': 'https://metabase.kizunadata.cloud/public/question/da3028c5-dabb-4766-aaea-6f5748333723',
+  'downtime-date-range': 'https://metabase.kizunadata.cloud/public/question/5a9bb66f-6958-4dbb-9f05-67ce8fa1c4aa'
 }
 
 // Computed property que determina qué URL usar basado en el parámetro de la ruta

@@ -102,6 +102,7 @@ console.log('🟢 Header: Componente cargado completamente');
     <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a> -->
     <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-single-date' } })">Load Report by Single Date</a> -->
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-date-range' } })">Load Report</a>
+    <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'downtime-date-range' } })">DownTime Report</a>
   </div>
 
 
