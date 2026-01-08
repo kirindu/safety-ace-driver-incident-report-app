@@ -1044,8 +1044,14 @@ const downloadImage = (imageUrl) => {
   <div class="container-fluid">
     <div class="col-lg-12">
       <div class="card">
-        <div class="card-header">
-        Coversheet
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <span style="font-weight: 600; font-size: 1.1rem;">Coversheet</span>
+            <span style="margin-left: 15px; color: #6c757d;">|</span>
+            <span style="margin-left: 15px; font-weight: 700; color: #893db6; font-size: 1.15rem;">
+              {{ reactiveProps.item.value.driverName }}
+            </span>
+          </div>
           <button
             @click.prevent="closeModal"
             type="submit"
