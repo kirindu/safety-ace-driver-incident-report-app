@@ -1,0 +1,285 @@
+[
+  {
+    "$lookup": {
+      "from": "coversheets",
+      "localField": "coversheet_ref_id",
+      "foreignField": "_id",
+      "as": "coversheet_info"
+    }
+  },
+  {
+    "$addFields": {
+      "coversheet_info": { "$arrayElemAt": ["$coversheet_info", 0] }
+    }
+  },
+  {
+    "$match": {
+      "coversheet_info.active": true
+    }
+  },
+{
+  "$match": {
+    "$expr": {
+      "$and": [
+        {
+          "$gte": [
+            {
+              "$dateToString": {
+                "format": "%Y-%m-%d",
+                "date": "$coversheet_info.date",
+                "timezone": "America/Denver"
+              }
+            },
+            {
+              "$dateToString": {
+                "format": "%Y-%m-%d",
+                "date": { "$literal": {{start_date}} },
+                "timezone": "UTC"
+              }
+            }
+          ]
+        },
+        {
+          "$lte": [
+            {
+              "$dateToString": {
+                "format": "%Y-%m-%d",
+                "date": "$coversheet_info.date",
+                "timezone": "America/Denver"
+              }
+            },
+            {
+              "$dateToString": {
+                "format": "%Y-%m-%d",
+                "date": { "$literal": {{end_date}} },
+                "timezone": "UTC"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+},
+  {
+    "$addFields": {
+      "operatorIdObject": { "$toObjectId": "$operator_id" },
+      "sourceIdObject": { "$toObjectId": "$source_id" },
+      "destinationIdObject": { "$toObjectId": "$destination_id" },
+      "materialIdObject": { "$toObjectId": "$material_id" }
+    }
+  },
+  {
+    "$lookup": {
+      "from": "operators",
+      "localField": "operatorIdObject",
+      "foreignField": "_id",
+      "as": "operator_info"
+    }
+  },
+  {
+    "$lookup": {
+      "from": "sources",
+      "localField": "sourceIdObject",
+      "foreignField": "_id",
+      "as": "source_info"
+    }
+  },
+  {
+    "$lookup": {
+      "from": "destinations",
+      "localField": "destinationIdObject",
+      "foreignField": "_id",
+      "as": "destination_info"
+    }
+  },
+  {
+    "$lookup": {
+      "from": "materials",
+      "localField": "materialIdObject",
+      "foreignField": "_id",
+      "as": "material_info"
+    }
+  },
+  {
+    "$addFields": {
+      "operator_info": { "$arrayElemAt": ["$operator_info", 0] },
+      "source_info": { "$arrayElemAt": ["$source_info", 0] },
+      "destination_info": { "$arrayElemAt": ["$destination_info", 0] },
+      "material_info": { "$arrayElemAt": ["$material_info", 0] }
+    }
+  },
+  [[{
+    "$match": {
+      "$expr": {
+        "$regexMatch": {
+          "input": { "$ifNull": ["$operatorName", ""] },
+          "regex": {{operatorName}},
+          "options": "i"
+        }
+      }
+    }
+  },]]
+  [[{
+    "$match": {
+      "$expr": {
+        "$regexMatch": {
+          "input": { "$ifNull": ["$sourceName", ""] },
+          "regex": {{sourceName}},
+          "options": "i"
+        }
+      }
+    }
+  },]]
+  [[{
+    "$match": {
+      "$expr": {
+        "$regexMatch": {
+          "input": { "$ifNull": ["$destinationName", ""] },
+          "regex": {{destinationName}},
+          "options": "i"
+        }
+      }
+    }
+  },]]
+  [[{
+    "$match": {
+      "$expr": {
+        "$regexMatch": {
+          "input": { "$ifNull": ["$materialName", ""] },
+          "regex": {{materialName}},
+          "options": "i"
+        }
+      }
+    }
+  },]]
+  [[{
+    "$match": {
+      "$expr": {
+        "$regexMatch": {
+          "input": { "$ifNull": ["$coversheet_info.driverName", ""] },
+          "regex": {{driverName}},
+          "options": "i"
+        }
+      }
+    }
+  },]]
+{
+  "$project": {
+    "_id": 0,
+    "coversheet_date_formatted": {
+      "$dateToString": {
+        "format": "%Y-%m-%d",
+        "date": "$coversheet_info.date",
+        "timezone": "America/Denver"
+      }
+    },
+    "driverName": "$coversheet_info.driverName",
+    "ticketNumberLoad": 1,
+    "tunnelTimeInLoad": 1,
+    "tunnelTimeOutLoad": 1,
+    "leaveYardLoad": 1,
+    "backYardLoad": 1,
+    "timeInLoad": 1,
+    "timeOutLoad": 1,
+    "grossWeightLoad": 1,
+    "tareWeightLoad": 1,
+    "tonsLoad": {
+      "$cond": {
+        "if": {
+          "$and": [
+            { "$ne": ["$grossWeightLoad", null] },
+            { "$ne": ["$tareWeightLoad", null] },
+            { "$ne": ["$grossWeightLoad", ""] },
+            { "$ne": ["$tareWeightLoad", ""] }
+          ]
+        },
+        "then": {
+          "$round": [
+            {
+              "$divide": [
+                {
+                  "$subtract": [
+                    {
+                      "$cond": {
+                        "if": { "$eq": [{ "$type": "$grossWeightLoad" }, "string"] },
+                        "then": { "$toDouble": "$grossWeightLoad" },
+                        "else": "$grossWeightLoad"
+                      }
+                    },
+                    {
+                      "$cond": {
+                        "if": { "$eq": [{ "$type": "$tareWeightLoad" }, "string"] },
+                        "then": { "$toDouble": "$tareWeightLoad" },
+                        "else": "$tareWeightLoad"
+                      }
+                    }
+                  ]
+                },
+                2000
+              ]
+            },
+            2
+          ]
+        },
+        "else": "$tonsLoad"
+      }
+    },
+    "operatorName": 1,
+    "sourceName": 1,
+    "destinationName": 1,
+    "materialName": 1,
+    "truckNumber": "$coversheet_info.truckNumber",
+    "preloadedLoad": {
+      "$cond": {
+        "if": { "$eq": ["$preloadedLoad", true] },
+        "then": "Yes",
+        "else": {
+          "$cond": {
+            "if": { "$eq": ["$preloadedLoad", false] },
+            "then": "No",
+            "else": ""
+          }
+        }
+      }
+    },
+    "preloadedNextDayLoad": {
+      "$cond": {
+        "if": { "$eq": ["$preloadedNextDayLoad", true] },
+        "then": "Yes",
+        "else": {
+          "$cond": {
+            "if": { "$eq": ["$preloadedNextDayLoad", false] },
+            "then": "No",
+            "else": ""
+          }
+        }
+      }
+    },
+    "ticket_image_url": {
+      "$cond": {
+        "if": {
+          "$and": [
+            { "$isArray": "$images" },
+            { "$gt": [{ "$size": "$images" }, 0] }
+          ]
+        },
+        "then": {
+          "$concat": [
+            "https://backend-fastapi-airc-coversheet-staging.onrender.com/",
+            { "$arrayElemAt": ["$images", 0] }
+          ]
+        },
+        "else": null
+      }
+    },
+    "noteLoad": 1
+  }
+},
+  {
+    "$sort": {
+      "coversheet_date": -1,
+      "createdAt": -1
+    }
+  }
+]

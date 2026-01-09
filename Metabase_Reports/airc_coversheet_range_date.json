@@ -1,0 +1,208 @@
+[
+  {
+    "$match": {
+      "active": true
+    }
+  },
+  {
+    "$addFields": {
+      "driverIdObject": { "$toObjectId": "$driver_id" }
+    }
+  },
+  {
+    "$lookup": {
+      "from": "drivers",
+      "localField": "driverIdObject",
+      "foreignField": "_id",
+      "as": "driver_info"
+    }
+  },
+  {
+    "$unwind": "$driver_info"
+  },
+  {
+    "$lookup": {
+      "from": "load",
+      "localField": "_id",
+      "foreignField": "coversheet_ref_id",
+      "as": "loads_info"
+    }
+  },
+  {
+    "$match": {
+      "$expr": {
+        "$and": [
+          {
+            "$gte": [
+              "$date",
+              {
+                "$dateTrunc": {
+                  "date": { "$literal": {{start_date}} },
+                  "unit": "day",
+                  "timezone": "UTC"
+                }
+              }
+            ]
+          },
+          {
+            "$lt": [
+              "$date",
+              {
+                "$dateAdd": {
+                  "startDate": {
+                    "$dateTrunc": {
+                      "date": { "$literal": {{end_date}} },
+                      "unit": "day",
+                      "timezone": "UTC"
+                    }
+                  },
+                  "unit": "day",
+                  "amount": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "coversheet_id": { "$toString": "$_id" },
+      "driver_id": { "$toString": "$driver_id" },
+      "truck_id": { "$toString": "$truck_id" },
+      "trailer_id": { "$toString": "$trailer_id" },
+      "truckNumber": 1,
+      "routeNumber": 1,
+      "date_utc": {
+        "$dateToString": {
+          "format": "%m-%d-%Y",
+          "date": "$date",
+          "timezone": "UTC"
+        }
+      },
+      "clockIn": 1,
+      "clockOut": 1,
+      "clockInTrainee": 1,
+      "clockOutTrainee": 1,
+      "trainee": 1,
+      "timePreTripStart": 1,
+      "timePreTripEnd": 1,
+      "timePostTripStart": 1,
+      "timePostTripEnd": 1,
+      
+      "truckStartMiles": 1,
+      "truckEndMiles": 1,
+      "truckStartHours": 1,
+      "truckEndHours": 1,
+
+      "trailerStartMiles": 1,
+      "trailerEndMiles": 1,
+      "fuel": 1,
+      "dieselExhaustFluid": 1,
+      "trailerNumber": 1,
+      "truckNumber": 1,
+      "homeBaseName": 1,
+      "driverName": 1,
+      
+      "driverNameFromDrivers": "$driver_info.name",
+      "driverEmail": "$driver_info.email",
+      
+      "debug_loads_count": { "$size": "$loads_info" },
+      "debug_matched_load_ids": {
+        "$map": {
+          "input": "$loads_info",
+          "as": "l",
+          "in": { "$toString": "$$l._id" }
+        }
+      },
+      
+      "totalTime": {
+        "$cond": {
+          "if": {
+            "$and": [
+              { "$ne": ["$clockIn", null] },
+              { "$ne": ["$clockOut", null] },
+              { "$ne": ["$clockIn", ""] },
+              { "$ne": ["$clockOut", ""] }
+            ]
+          },
+          "then": {
+            "$let": {
+              "vars": {
+                "clockInParts": { "$split": ["$clockIn", ":"] },
+                "clockOutParts": { "$split": ["$clockOut", ":"] }
+              },
+              "in": {
+                "$let": {
+                  "vars": {
+                    "clockInMinutes": {
+                      "$add": [
+                        { "$multiply": [{ "$toInt": { "$arrayElemAt": ["$$clockInParts", 0] } }, 60] },
+                        { "$toInt": { "$arrayElemAt": ["$$clockInParts", 1] } }
+                      ]
+                    },
+                    "clockOutMinutes": {
+                      "$add": [
+                        { "$multiply": [{ "$toInt": { "$arrayElemAt": ["$$clockOutParts", 0] } }, 60] },
+                        { "$toInt": { "$arrayElemAt": ["$$clockOutParts", 1] } }
+                      ]
+                    }
+                  },
+                  "in": {
+                    "$let": {
+                      "vars": {
+                        "diffMinutes": {
+                          "$cond": {
+                            "if": { "$gte": ["$$clockOutMinutes", "$$clockInMinutes"] },
+                            "then": { "$subtract": ["$$clockOutMinutes", "$$clockInMinutes"] },
+                            "else": { "$add": [1440, { "$subtract": ["$$clockOutMinutes", "$$clockInMinutes"] }] }
+                          }
+                        }
+                      },
+                      "in": {
+                        "$round": [
+                          { "$divide": ["$$diffMinutes", 60] },
+                          2
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": null
+        }
+      },
+      
+      "totalTons": {
+        "$sum": {
+          "$map": {
+            "input": "$loads_info",
+            "as": "load",
+            "in": {
+              "$cond": {
+                "if": {
+                  "$and": [
+                    { "$ne": ["$$load.tonsLoad", null] },
+                    { "$ne": ["$$load.tonsLoad", ""] }
+                  ]
+                },
+                "then": {
+                  "$cond": {
+                    "if": { "$eq": [{ "$type": "$$load.tonsLoad" }, "string"] },
+                    "then": { "$toDouble": "$$load.tonsLoad" },
+                    "else": "$$load.tonsLoad"
+                  }
+                },
+                "else": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

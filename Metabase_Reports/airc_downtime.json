@@ -1,0 +1,97 @@
+[
+  {
+    "$match": {
+      "active": true
+      [[,"driverName": {{driver_name}}]]
+      [[,"truckNumber": {{truck_number}}]]
+      [[,"trailerNumber": {{trailer_number}}]]
+      [[,"homeBaseName": {{home_base}}]]
+      ,"$expr": {
+        "$and": [
+          {
+            "$gte": [
+              {
+                "$dateToString": {
+                  "format": "%Y-%m-%d",
+                  "date": "$date",
+                  "timezone": "America/Denver"
+                }
+              },
+              {
+                "$dateToString": {
+                  "format": "%Y-%m-%d",
+                  "date": { "$literal": {{start_date}} },
+                  "timezone": "UTC"
+                }
+              }
+            ]
+          },
+          {
+            "$lte": [
+              {
+                "$dateToString": {
+                  "format": "%Y-%m-%d",
+                  "date": "$date",
+                  "timezone": "America/Denver"
+                }
+              },
+              {
+                "$dateToString": {
+                  "format": "%Y-%m-%d",
+                  "date": { "$literal": {{end_date}} },
+                  "timezone": "UTC"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "$lookup": {
+      "from": "downtime",
+      "localField": "_id",
+      "foreignField": "coversheet_ref_id",
+      "as": "downtimes_info"
+    }
+  },
+  {
+    "$unwind": {
+      "path": "$downtimes_info",
+      "preserveNullAndEmptyArrays": false
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "coversheet_id": { "$toString": "$_id" },
+      "driver_id": { "$toString": "$driver_id" },
+      "coversheet_date": {
+        "$dateToString": {
+          "format": "%Y-%m-%d",
+          "date": "$date"
+        }
+      },
+      "driverName": 1,
+      "truckNumber": 1,
+      "trailerNumber": 1,
+      "homeBaseName": 1,
+      "downtime_id": { "$toString": "$downtimes_info._id" },
+      "downtime_truckDownTimeStart": "$downtimes_info.truckDownTimeStartDownTime",
+      "downtime_truckDownTimeEnd": "$downtimes_info.truckDownTimeEndDownTime",
+      "downtime_trailerDownTimeStart": "$downtimes_info.trailerDownTimeStartDownTime",
+      "downtime_trailerDownTimeEnd": "$downtimes_info.trailerDownTimeEndDownTime",
+      "downtime_reason": "$downtimes_info.downTimeReasonDownTime",
+      "downtime_typeTruck": "$downtimes_info.typeTruckDownTimeName",
+      "downtime_typeTrailer": "$downtimes_info.typeTrailerDownTimeName",
+      "downtime_truckNumber": "$downtimes_info.truckNumber",
+      "downtime_trailerNumber": "$downtimes_info.trailerNumber"
+    }
+  },
+  {
+    "$sort": {
+      "coversheet_date": -1
+    }
+  }
+]
