@@ -225,6 +225,45 @@
           "else": null
         }
       },
+      "yardTimeMinutes": {
+  "$cond": {
+    "if": {
+      "$and": [
+        { "$ne": ["$leaveYardLoad", null] },
+        { "$ne": ["$backYardLoad", null] },
+        { "$ne": ["$leaveYardLoad", ""] },
+        { "$ne": ["$backYardLoad", ""] }
+      ]
+    },
+    "then": {
+      "$subtract": [
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$backYardLoad", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$backYardLoad", ":"] }, 1] } }
+          ]
+        },
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$leaveYardLoad", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$leaveYardLoad", ":"] }, 1] } }
+          ]
+        }
+      ]
+    },
+    "else": null
+  }
+},
       "noteLoad": 1
     }
   },

@@ -86,7 +86,85 @@
       "downtime_typeTruck": "$downtimes_info.typeTruckDownTimeName",
       "downtime_typeTrailer": "$downtimes_info.typeTrailerDownTimeName",
       "downtime_truckNumber": "$downtimes_info.truckNumber",
-      "downtime_trailerNumber": "$downtimes_info.trailerNumber"
+      "downtime_trailerNumber": "$downtimes_info.trailerNumber",
+      "truck_downtime_minutes": {
+  "$cond": {
+    "if": {
+      "$and": [
+        { "$ne": ["$downtimes_info.truckDownTimeStartDownTime", null] },
+        { "$ne": ["$downtimes_info.truckDownTimeEndDownTime", null] },
+        { "$ne": ["$downtimes_info.truckDownTimeStartDownTime", ""] },
+        { "$ne": ["$downtimes_info.truckDownTimeEndDownTime", ""] }
+      ]
+    },
+    "then": {
+      "$subtract": [
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.truckDownTimeEndDownTime", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.truckDownTimeEndDownTime", ":"] }, 1] } }
+          ]
+        },
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.truckDownTimeStartDownTime", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.truckDownTimeStartDownTime", ":"] }, 1] } }
+          ]
+        }
+      ]
+    },
+    "else": null
+  }
+},
+"trailer_downtime_minutes": {
+  "$cond": {
+    "if": {
+      "$and": [
+        { "$ne": ["$downtimes_info.trailerDownTimeStartDownTime", null] },
+        { "$ne": ["$downtimes_info.trailerDownTimeEndDownTime", null] },
+        { "$ne": ["$downtimes_info.trailerDownTimeStartDownTime", ""] },
+        { "$ne": ["$downtimes_info.trailerDownTimeEndDownTime", ""] }
+      ]
+    },
+    "then": {
+      "$subtract": [
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.trailerDownTimeEndDownTime", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.trailerDownTimeEndDownTime", ":"] }, 1] } }
+          ]
+        },
+        {
+          "$add": [
+            { 
+              "$multiply": [
+                { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.trailerDownTimeStartDownTime", ":"] }, 0] } }, 
+                60
+              ] 
+            },
+            { "$toInt": { "$arrayElemAt": [{ "$split": ["$downtimes_info.trailerDownTimeStartDownTime", ":"] }, 1] } }
+          ]
+        }
+      ]
+    },
+    "else": null
+  }
+},
     }
   },
   {
