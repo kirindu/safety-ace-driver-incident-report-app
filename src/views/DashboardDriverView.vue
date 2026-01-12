@@ -372,6 +372,65 @@ const tonsError = computed(() => {
   return "";
 });
 
+// Computed property para filtrar materiales basado en el source seleccionado
+const filteredMaterials = computed(() => {
+  // Obtener el source seleccionado
+  const selectedSource = storeSource.sources.find(
+    source => source.id === selectedSourceLoad.value
+  );
+  
+  // Si no hay source seleccionado, retornar todos los materiales menos CONTAMINATED
+  if (!selectedSource) {
+    return storeMaterial.materials.filter(
+      material => material.materialName !== "CONTAMINATED"
+    );
+  }
+  
+  const sourceName = selectedSource.sourceName;
+  
+  // Si el source es RMR, RMR-S o RMR-N, mostrar todos los materiales incluyendo CONTAMINATED
+  if (sourceName === "RMR" || sourceName === "RMR-S" || sourceName === "RMR-N") {
+    return storeMaterial.materials;
+  }
+  
+  // Para otros sources, filtrar CONTAMINATED
+  return storeMaterial.materials.filter(
+    material => material.materialName !== "CONTAMINATED"
+  );
+});
+
+// Watch para limpiar Material cuando Source cambia
+watch(selectedSourceLoad, (newSourceId, oldSourceId) => {
+  // Solo limpiar si ya había un source seleccionado anteriormente
+  if (!oldSourceId) return;
+  
+  // Obtener los nombres de los sources
+  const newSource = storeSource.sources.find(source => source.id === newSourceId);
+  const oldSource = storeSource.sources.find(source => source.id === oldSourceId);
+  
+  if (!newSource || !oldSource) return;
+  
+  const oldSourceName = oldSource.sourceName;
+  const newSourceName = newSource.sourceName;
+  
+  // Si el source antiguo era RMR, RMR-S o RMR-N
+  const wasRMR = oldSourceName === "RMR" || oldSourceName === "RMR-S" || oldSourceName === "RMR-N";
+  // Y el nuevo source NO es RMR, RMR-S o RMR-N
+  const isRMR = newSourceName === "RMR" || newSourceName === "RMR-S" || newSourceName === "RMR-N";
+  
+  // Si se cambia de RMR a no-RMR, verificar si el material seleccionado es CONTAMINATED
+  if (wasRMR && !isRMR && selectedMaterialLoad.value) {
+    const selectedMaterial = storeMaterial.materials.find(
+      material => material.id === selectedMaterialLoad.value
+    );
+    
+    if (selectedMaterial && selectedMaterial.materialName === "CONTAMINATED") {
+      // Limpiar el material si era CONTAMINATED
+      selectedMaterialLoad.value = "";
+    }
+  }
+});
+
 
 onMounted(() => {
   // ✅ Inicializar el usuario desde el composable
@@ -1225,6 +1284,160 @@ const EditLoad = (item) => {
   selectedLoadId.value = item.id || item._id; // Ensure the ID is captured
 };
 
+// Delete functions
+const DeleteSpareTruckInfo = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Spare Truck Info?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await SpareTruckInfoAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Spare Truck Info deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadSpareTruckInfo();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Spare Truck Info!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Spare Truck Info:", error);
+        showSweetAlert({
+          title: "Error deleting Spare Truck Info!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
+const DeleteDowntime = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Downtime?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await DowntimeAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Downtime deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadDowntime();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Downtime!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Downtime:", error);
+        showSweetAlert({
+          title: "Error deleting Downtime!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
+const DeleteLoad = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Load?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await LoadAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Load deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadLoad();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Load!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Load:", error);
+        showSweetAlert({
+          title: "Error deleting Load!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
 const loadSpareTruckInfo = async () => {
   const rawCoverSheet = localStorage.getItem("COVERSHEET");
   if (!rawCoverSheet) return;
@@ -1910,6 +2123,11 @@ const getDenverTimeAsUTCISOString = () => {
                                       <a @click="EditSpareTruckInfo(item)"
                                         class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteSpareTruckInfo(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
@@ -2097,6 +2315,11 @@ const getDenverTimeAsUTCISOString = () => {
                                     <div>
                                       <a @click="EditDowntime(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteDowntime(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
@@ -2242,7 +2465,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Material</label>
-                            <v-select :options="storeMaterial.materials" v-model="selectedMaterialLoad"
+                            <v-select :options="filteredMaterials" v-model="selectedMaterialLoad"
                               placeholder="Choose your Material" :reduce="(material) => material.id"
                               label="materialName" class="form-control p-0" />
                             <small v-if="errorsLoad.selectedMaterialLoad_er" class="text-danger">{{
@@ -2439,6 +2662,11 @@ const getDenverTimeAsUTCISOString = () => {
                                     <div>
                                       <a @click="EditLoad(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteLoad(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>

@@ -1250,6 +1250,160 @@ const EditLoad = (item) => {
   selectedLoadId.value = item.id || item._id; // Ensure the ID is captured
 };
 
+// Delete functions
+const DeleteSpareTruckInfo = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Spare Truck Info?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await SpareTruckInfoAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Spare Truck Info deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadSpareTruckInfo();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Spare Truck Info!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Spare Truck Info:", error);
+        showSweetAlert({
+          title: "Error deleting Spare Truck Info!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
+const DeleteDowntime = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Downtime?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await DowntimeAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Downtime deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadDowntime();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Downtime!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Downtime:", error);
+        showSweetAlert({
+          title: "Error deleting Downtime!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
+const DeleteLoad = async (item) => {
+  showSweetAlert({
+    title: "Are you sure you want to delete this Load?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await LoadAPI.delete(item.id || item._id);
+        
+        if (response.data.ok) {
+          showSweetAlert({
+            title: "Load deleted successfully!",
+            icon: "success",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          }).then(() => {
+            loadLoad();
+          });
+        } else {
+          showSweetAlert({
+            title: "Error deleting Load!",
+            icon: "error",
+            showDenyButton: false,
+            showCancelButton: false,
+            confirmButtonText: "Ok",
+            allowOutsideClick: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting Load:", error);
+        showSweetAlert({
+          title: "Error deleting Load!",
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    }
+  });
+};
+
 const loadSpareTruckInfo = async () => {
   const rawCoverSheet = localStorage.getItem("COVERSHEET");
   if (!rawCoverSheet) return;
@@ -1990,6 +2144,11 @@ const getDenverTimeAsUTCISOString = () => {
                                       <a @click="EditSpareTruckInfo(item)"
                                         class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteSpareTruckInfo(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
@@ -2177,6 +2336,11 @@ const getDenverTimeAsUTCISOString = () => {
                                     <div>
                                       <a @click="EditDowntime(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteDowntime(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
@@ -2513,6 +2677,11 @@ const getDenverTimeAsUTCISOString = () => {
                                     <div>
                                       <a @click="EditLoad(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
                                           class="fa fa-pencil"></i></a>
+                                      <a
+                                        @click="DeleteLoad(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
