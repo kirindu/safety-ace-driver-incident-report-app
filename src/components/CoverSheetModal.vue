@@ -74,6 +74,8 @@ const props = defineProps({
 // Con esto hacemos los props reactivos
 const reactiveProps = toRefs(props);
 
+const isLoading = ref(false);
+
 // General Info
 const selectedHomeBase = ref("");
 const selectedTruck = ref("");
@@ -666,6 +668,165 @@ const OcultamosDowntime = () => {
 
 const OcultamosLoad = () => {
   visibleDetailLoad.value = false; // Hide the Load details section
+};
+
+
+
+const DeleteSpareTruckInfo = async (item) => {
+  const result = await showSweetAlert({
+    title: "Are you sure you want to delete this Spare Truck Info?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  });
+
+  if (result?.isConfirmed) {
+    try {
+      isLoading.value = true;
+      const response = await SpareTruckInfoAPI.delete(item.id);
+
+      if (response.data.ok) {
+        await showSweetAlert({
+          title: "Deleted!",
+          text: "Spare Truck has been deleted successfully.",
+          icon: "success",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+           }).then(() => {
+             CargamosSpareTruckInfo();
+           });
+
+      } else {
+        await showSweetAlert({
+          title: "Error!",
+          text: "Error deleting Spare Truck Info!",
+          icon: "error",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting Spare Truck Info:", error);
+      await showSweetAlert({
+        title: "Error!",
+        text: error.response?.data?.message || "Error deleting CoverSheet!",
+        icon: "error",
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
+
+
+const DeleteDowntime = async (item) => {
+  const result = await showSweetAlert({
+    title: "Are you sure you want to delete this Downtime?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  });
+
+  if (result?.isConfirmed) {
+    try {
+      isLoading.value = true;
+      const response = await DowntimeAPI.delete(item.id);
+
+      if (response.data.ok) {
+        await showSweetAlert({
+          title: "Deleted!",
+          text: "Downtime has been deleted successfully.",
+          icon: "success",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+           }).then(() => {
+             CargamosDowntime();
+           });
+
+      } else {
+        await showSweetAlert({
+          title: "Error!",
+          text: "Error deleting Downtime!",
+          icon: "error",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting Downtime:", error);
+      await showSweetAlert({
+        title: "Error!",
+        text: error.response?.data?.message || "Error deleting Downtime!",
+        icon: "error",
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
+
+const DeleteLoad = async (item) => {
+  const result = await showSweetAlert({
+    title: "Are you sure you want to delete this Load?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    allowOutsideClick: false,
+  });
+
+  if (result?.isConfirmed) {
+    try {
+      isLoading.value = true;
+      const response = await LoadAPI.delete(item.id);
+
+      if (response.data.ok) {
+        await showSweetAlert({
+          title: "Deleted!",
+          text: "Load has been deleted successfully.",
+          icon: "success",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+           }).then(() => {
+             CargamosLoad();
+           });
+
+      } else {
+        await showSweetAlert({
+          title: "Error!",
+          text: "Error deleting Load!",
+          icon: "error",
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting Load:", error);
+      await showSweetAlert({
+        title: "Error!",
+        text: error.response?.data?.message || "Error deleting Load!",
+        icon: "error",
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  }
 };
 
 const HandleSpareTruckInfo = async (event) => {
@@ -1400,6 +1561,11 @@ const downloadImage = (imageUrl) => {
                                         class="btn btn-primary shadow btn-xs sharp me-1"
                                         ><i class="fa fa-sign-in"></i
                                       ></a>
+                                      <a
+                                        @click="DeleteSpareTruckInfo(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
+                                      ></a>
                                     </div>
                                   </td>
                                 </tr>
@@ -1606,7 +1772,7 @@ const downloadImage = (imageUrl) => {
                                   <th>Trailer #</th>
                                   <th>Trailer Downtime Start</th>
                                   <th>Trailer Downtime End</th>
-                                  <th>Action</th>
+                                  <th>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1626,6 +1792,11 @@ const downloadImage = (imageUrl) => {
                                         @click="EditDowntime(item)"
                                         class="btn btn-primary shadow btn-xs sharp me-1"
                                         ><i class="fa fa-sign-in"></i
+                                      ></a>
+                                      <a
+                                        @click="DeleteDowntime(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
                                       ></a>
                                     </div>
                                   </td>
@@ -1816,7 +1987,7 @@ const downloadImage = (imageUrl) => {
                                   <th>Tunnel Time Out</th>
                                   <th>Operator</th>
                                   <th>Ticket #</th>
-                                  <th>Action</th>
+                                  <th>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1837,6 +2008,11 @@ const downloadImage = (imageUrl) => {
                                         @click="EditLoad(item)"
                                         class="btn btn-primary shadow btn-xs sharp me-1"
                                         ><i class="fa fa-sign-in"></i
+                                      ></a>
+                                      <a
+                                        @click="DeleteLoad(item)"
+                                        class="btn btn-danger shadow btn-xs sharp"
+                                        ><i class="fa fa-trash"></i
                                       ></a>
                                     </div>
                                   </td>

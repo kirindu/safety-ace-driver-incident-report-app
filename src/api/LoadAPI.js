@@ -24,6 +24,9 @@ export default {
     return data;
 
   },
+  async delete(idCoverSheet) {
 
-
+    const data = await api.delete('/load/' + idCoverSheet);
+    return data;    
+  }
 };

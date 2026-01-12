@@ -2161,7 +2161,7 @@ const getDenverTimeAsUTCISOString = () => {
                                   <th>Trailer #</th>
                                   <th>Trailer Downtime Start</th>
                                   <th>Trailer Downtime End</th>
-                                  <th>Action</th>
+                                  <th>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2496,7 +2496,7 @@ const getDenverTimeAsUTCISOString = () => {
                                   <th>Tunnel Time Out</th>
                                   <th>Operator</th>
                                   <th>Ticket #</th>
-                                  <th>Action</th>
+                                  <th>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>

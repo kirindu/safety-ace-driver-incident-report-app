@@ -24,47 +24,9 @@ export default {
     return data;
 
   },
+  async delete(idCoverSheet) {
 
-
-  // async add(values) {
-
-  //   const currentUser = localStorage.getItem('USER') || '';
-  //   const token = JSON.parse(currentUser).token;
-
-  //   const data = await api.post('/coversheets/', values, {
-  //     headers: {
-  //       'x-token' : token
-  //     }
-  //   });
-  //   return data;
-
-  // },
-
-  // async edit(idCategory, values) {
-
-  //   const currentUser = localStorage.getItem('USER') || '';
-  //   const token = JSON.parse(currentUser).token;
-
-  //   const data = await api.put('/categories/' + idCategory, values, {
-  //     headers: {
-  //       'x-token' : token
-  //     }
-  //   });
-  //   return data;
-
-  // },
-
-  // async delete(idCategory) {
-
-  //   const currentUser = localStorage.getItem('USER') || '';
-  //   const token = JSON.parse(currentUser).token;
-
-  //   const data = await api.delete('/categories/' + idCategory, {
-  //     headers: {
-  //       'x-token' : token
-  //     }
-  //   });
-  //   return data;
-
-  // },
+    const data = await api.delete('/sparetruckinfo/' + idCoverSheet);
+    return data;  
+}
 };
