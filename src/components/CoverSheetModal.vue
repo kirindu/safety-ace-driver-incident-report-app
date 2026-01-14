@@ -338,10 +338,9 @@ watch(preloadedLoad, (newValue) => {
 watch(preloadedNextDayLoad, (newValue) => {
   if (newValue) {
     // Si se selecciona preloadedNextDayLoad, reseteamos los siguientes campos
+    // NOTA: Source y Material NO se resetean porque permanecen activos
     leaveYardLoad.value = "";
-    selectedSourceLoad.value = "";
     selectedDestinationLoad.value = "";
-    selectedMaterialLoad.value = "";
     timeInLoad.value = "";
     timeOutLoad.value = "";
     ticketNumberLoad.value = "";
@@ -2112,7 +2111,6 @@ const downloadImage = (imageUrl) => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Source</label>
                             <v-select :options="storeSource.sources" v-model="selectedSourceLoad"
-                              :disabled="preloadedNextDayLoad"
                               placeholder="Choose your Source" :reduce="(source) => source.id" label="sourceName"
                               class="form-control p-0"
                                />
@@ -2133,7 +2131,6 @@ const downloadImage = (imageUrl) => {
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Material</label>
                             <v-select :options="storeMaterial.materials" v-model="selectedMaterialLoad"
-                              :disabled="preloadedNextDayLoad"
                               placeholder="Choose your Material" :reduce="(material) => material.id"
                               label="materialName" class="form-control p-0"
                                />
@@ -2381,6 +2378,84 @@ const downloadImage = (imageUrl) => {
 .btn-info {
   min-height: 38px !important;
   padding: 0.375rem 0.75rem !important;
+}
+
+/* Estilos para campos de texto deshabilitados */
+input[type="text"]:disabled,
+input[type="number"]:disabled {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  border-color: #ced4da !important;
+}
+
+/* Estilos para VueDatePicker deshabilitado */
+.dp__input:disabled {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  border-color: #ced4da !important;
+}
+
+/* Estilos para v-select deshabilitado */
+.v-select.vs--disabled .vs__dropdown-toggle {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  border-color: #ced4da !important;
+}
+
+.v-select.vs--disabled .vs__selected {
+  color: #6c757d !important;
+}
+
+.v-select.vs--disabled .vs__search,
+.v-select.vs--disabled .vs__search:focus {
+  background-color: transparent !important;
+  cursor: not-allowed !important;
+}
+
+.v-select.vs--disabled .vs__actions {
+  cursor: not-allowed !important;
+}
+
+.v-select.vs--disabled .vs__clear,
+.v-select.vs--disabled .vs__open-indicator {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.dp__theme_light {
+  --dp-background-color: #ffffff;
+  --dp-text-color: #212121;
+  --dp-hover-color: #f3f3f3;
+  --dp-hover-text-color: #212121;
+  --dp-hover-icon-color: #959595;
+  --dp-primary-color: #1976d2;
+  --dp-primary-disabled-color: #6bacea;
+  --dp-primary-text-color: #f8f5f5;
+  --dp-secondary-color: #c0c4cc;
+  --dp-border-color: #ddd;
+  --dp-menu-border-color: #ddd;
+  --dp-border-color-hover: #aaaeb7;
+  --dp-border-color-focus: #aaaeb7;
+  --dp-disabled-color: #f6f6f6;
+  --dp-scroll-bar-background: #f3f3f3;
+  --dp-scroll-bar-color: #959595;
+  --dp-success-color: #76d275;
+  --dp-success-color-disabled: #a3d9b1;
+  --dp-icon-color: #959595;
+  --dp-danger-color: #ff6f60;
+  --dp-marker-color: #ff6f60;
+  --dp-tooltip-color: #fafafa;
+  --dp-disabled-color-text: #8e8e8e;
+  --dp-highlight-color: rgb(25 118 210 / 10%);
+  --dp-range-between-dates-background-color: var(--dp-hover-color, #f3f3f3);
+  --dp-range-between-dates-text-color: var(--dp-hover-text-color, #212121);
+  --dp-range-between-border-color: var(--dp-hover-color, #f3f3f3);
 }
 
 /* ✅ Estilos para el campo calculado */
