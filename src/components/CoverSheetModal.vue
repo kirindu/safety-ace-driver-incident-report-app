@@ -1,7 +1,7 @@
 <script setup>
 //Importaciones de sistemas y librerias
-import { ref, toRefs, computed, watch, onMounted, defineEmits } from "vue";
-import { closeModal, confirmModal } from "@kolirt/vue-modal";
+import { ref, toRefs, computed, watch, onMounted, defineEmits, defineAsyncComponent } from "vue";
+import { closeModal, confirmModal, openModal  } from "@kolirt/vue-modal";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
@@ -632,6 +632,15 @@ visibleDetailDowntime.value = true; // Show the Downtime details section
 
 const EditLoad = (item) => {
 
+  // Clear previous image arrays when editing a Load
+  selectedFiles.value = [];
+  selectedImages.value = [];
+  
+  // Clear file input if it exists
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+
   tunnelTimeInLoad.value = item.tunnelTimeInLoad? setTimeFromDB(item.tunnelTimeInLoad): "";
   tunnelTimeOutLoad.value = item.tunnelTimeOutLoad? setTimeFromDB(item.tunnelTimeOutLoad): "";
   leaveYardLoad.value = item.leaveYardLoad? setTimeFromDB(item.leaveYardLoad): "";
@@ -667,6 +676,13 @@ const OcultamosDowntime = () => {
 
 const OcultamosLoad = () => {
   visibleDetailLoad.value = false; // Hide the Load details section
+  
+  // Clear image arrays when hiding Load section
+  selectedFiles.value = [];
+  selectedImages.value = [];
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
 };
 
 
@@ -857,17 +873,7 @@ const HandleSpareTruckInfo = async (event) => {
   // }
 
     if (hasError) {
-          showSweetAlert({
-        title: "Select a record from the table to edit it!",
-        icon: "warning",
-        showDenyButton: false,
-        showCancelButton: false,
-        confirmButtonText: "Ok",
-        allowOutsideClick: false,
-      }).then(() => {
-        return;
-      });
-      return
+      return;
   }
 
   const spareTruckInfo = {
@@ -960,17 +966,7 @@ const HandleDowntime = async (event) => {
   // }
 
       if (hasError) {
-          showSweetAlert({
-        title: "Select a record from the table to edit it!",
-        icon: "warning",
-        showDenyButton: false,
-        showCancelButton: false,
-        confirmButtonText: "Ok",
-        allowOutsideClick: false,
-      }).then(() => {
-        return;
-      });
-      return
+      return;
   }
 
   const downtime = {
@@ -1067,17 +1063,7 @@ const HandleLoad = async (event) => {
   // }
 
       if (hasError) {
-          showSweetAlert({
-        title: "Select a record from the table to edit it!",
-        icon: "warning",
-        showDenyButton: false,
-        showCancelButton: false,
-        confirmButtonText: "Ok",
-        allowOutsideClick: false,
-      }).then(() => {
-        return;
-      });
-      return
+      return;
   }
 
   // Create a new FormData object
@@ -1119,9 +1105,24 @@ const HandleLoad = async (event) => {
         showCancelButton: false,
         confirmButtonText: "Ok",
         allowOutsideClick: false,
-      }).then(() => {
+      }).then(async () => {
         isLoadingLoad.value = false;
-        CargamosLoad(); // Refresh the Load list
+        
+        // Refresh the Load list
+        await CargamosLoad();
+        
+        // Update selectedLoadData with the refreshed Load to show all images
+        const updatedLoad = loadList.value.find(load => load.id === selectedLoadId.value || load._id === selectedLoadId.value);
+        if (updatedLoad) {
+          selectedLoadData.value = updatedLoad;
+        }
+        
+        // Clear image arrays after successful save
+        selectedFiles.value = [];
+        selectedImages.value = [];
+        if (fileInput.value) {
+          fileInput.value.value = "";
+        }
       });
     } else {
       showSweetAlert({
@@ -1198,6 +1199,126 @@ const downloadImage = (imageUrl) => {
   link.click();
   document.body.removeChild(link);
 };
+
+const openAddSpareModal = async (item) => {
+  await openModal(
+    defineAsyncComponent(() => import("@/components/AddSpareModal.vue")),
+        {
+      item: item,
+      onUpdateSuccess: CargamosSpareTruckInfo, // Pass the function reference (without parentheses)
+    }
+
+  )
+    .then((data) => {
+      console.log("success", data);
+    })
+    .catch(() => {
+      console.log("catch");
+    });
+};
+
+const openAddDownTimeModal = async (item) => {
+  await openModal(
+    defineAsyncComponent(() => import("@/components/AddDownTimeModal.vue")),
+        {
+      item: item,
+      onUpdateSuccess: CargamosDowntime, // Pass the function reference (without parentheses)
+    }
+
+  )
+    .then((data) => {
+      console.log("success", data);
+    })
+    .catch(() => {
+      console.log("catch");
+    });
+};
+
+const openAddLoadModal = async (item) => {
+  await openModal(
+    defineAsyncComponent(() => import("@/components/AddLoadModal.vue")),
+        {
+      item: item,
+      onUpdateSuccess: CargamosLoad, // Pass the function reference (without parentheses)
+    }
+
+  )
+    .then((data) => {
+      console.log("success", data);
+    })
+    .catch(() => {
+      console.log("catch");
+    });
+};
+
+// Handle file selection and preview for Load images
+const handleFileChange = (event) => {
+  if (!event.target.files.length || event.target.files[0]?.type.indexOf("image/") !== 0) {
+    showSweetAlert({
+      title: "Camera Error",
+      text: "Unable to access the camera. Please ensure permissions are granted or select an image from the gallery.",
+      icon: "warning",
+      allowOutsideClick: false,
+    });
+    return;
+  }
+
+  const files = Array.from(event.target.files); // Convert FileList to Array
+  const newImages = [];
+
+  for (let file of files) {
+    if (file.size > 5242880) {
+      showSweetAlert({
+        title: "Image with excess size!",
+        text: `You cannot upload the image ${file.name}, the maximum allowed is 5Mb`,
+        icon: "warning",
+        allowOutsideClick: false,
+      }).then(() => {
+        fileInput.value.value = "";
+        selectedImages.value = [];
+        selectedFiles.value = []; // Clear files as well
+      });
+      return;
+    }
+    newImages.push({
+      name: file.name,
+      size: file.size,
+      url: URL.createObjectURL(file), // Create URL for preview
+    });
+  }
+
+  if (newImages.length + selectedImages.value.length > 15) {
+    showSweetAlert({
+      title: "Upload not completed!",
+      text: "At most you can add up to 15 images.",
+      icon: "warning",
+      allowOutsideClick: false,
+    }).then(() => {
+      fileInput.value.value = "";
+    });
+    return;
+  }
+
+  // Append new files and images
+  selectedFiles.value = [...selectedFiles.value, ...files];
+  selectedImages.value = [...selectedImages.value, ...newImages];
+
+  // Clear the file input to allow new selections
+  fileInput.value.value = "";
+};
+
+// Remove image from preview
+const removeImage = (index) => {
+  selectedImages.value.splice(index, 1);
+  selectedFiles.value.splice(index, 1);
+};
+
+
+
+
+
+
+
 </script>
 
 <template>
@@ -1498,7 +1619,20 @@ const downloadImage = (imageUrl) => {
                 <div
                   class="accordion accordion-primary-solid"
                   id="accordion-two"
-                >
+                >     
+                  <a @click="openAddSpareModal(reactiveProps.item.value)" style="width: auto;" class="btn btn-success shadow btn-sm sharp me-1">
+                   Add New Spare +
+                   </a>
+
+                   <a @click="openAddDownTimeModal(reactiveProps.item.value)" style="width: auto; margin-left: 10px;" class="btn btn-success shadow btn-sm sharp me-1">
+                   Add New DownTime +
+                   </a>
+
+                  <a @click="openAddLoadModal(reactiveProps.item.value)" style="width: auto; margin-left: 10px;" class="btn btn-success shadow btn-sm sharp me-1">
+                   Add New Load +
+                   </a>
+
+                   <hr>
                   <Spinner v-if="isLoadingSpareTruckInfo" />
 
                   <div v-if="isVisibleSpareTruckInfo" class="accordion-item">
@@ -1738,6 +1872,8 @@ const downloadImage = (imageUrl) => {
                     </div>
                   </div>
 
+
+
                   <Spinner v-if="isLoadingDowntime" />
                   <div v-if="isVisibleDowntime" class="accordion-item">
                     <h2 class="accordion-header">
@@ -1757,6 +1893,7 @@ const downloadImage = (imageUrl) => {
                       data-bs-parent="#accordion-two"
                     >
                       <div class="accordion-body">
+
                         <div class="row">
                           <hr style="color: black" />
                           <div class="table-responsive">
@@ -1816,7 +1953,7 @@ const downloadImage = (imageUrl) => {
                             <v-select :options="storeTruck.trucks" v-model="selectedTruckDownTime"
                               placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTruckDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTruckDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTruckDownTime_er }}</small>
                           </div>
@@ -1867,7 +2004,7 @@ const downloadImage = (imageUrl) => {
                             <v-select :options="storeTrailer.trailers" v-model="selectedTrailerDownTime"
                               placeholder="Choose your Trailer" :reduce="(trailer) => trailer.id" label="trailerNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTrailerDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTrailerDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTrailerDownTime_er }}</small>
                           </div>
@@ -1952,6 +2089,10 @@ const downloadImage = (imageUrl) => {
                   </div>
 
                   <Spinner v-if="isLoadingLoad" />
+              
+
+
+                  
 
                   <div v-if="isVisibleLoad" class="accordion-item">
                     <h2 class="accordion-header">
@@ -2095,7 +2236,7 @@ const downloadImage = (imageUrl) => {
                               }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-2">
+                          <div class="mb-3 col-md-4">
                             <label class="form-label">Operator</label>
                             <v-select :options="storeOperator.operators" v-model="selectedOperatorLoad" :disabled="preloadedLoad"
                               placeholder="Choose your Operator" :reduce="(operator) => operator.id"
@@ -2219,6 +2360,52 @@ const downloadImage = (imageUrl) => {
 
                         </div>
 
+                                   <div class="row d-flex align-items-center">
+
+
+                          <div class="mb-3 col-md-9">
+                            <!-- <label class="form-label">Images</label> -->
+
+                            <input v-show="false" type="file" ref="fileInput"
+                              class="form-control form-control-sm border border-primary" multiple accept="image/*"
+                              capture="environment" @change="handleFileChange"
+                              style="height: 38px; padding: 0.375rem 0.75rem;" />
+
+                            <button @click.prevent="fileInput.click()" style="height: 50px;" type="button"
+                              class="btn btn-primary btn-rounded btn-sm">Add Photos<span class="btn-icon-end"><i
+                                  class="fa fa-camera"></i></span>
+                            </button>
+
+
+                            <div v-if="selectedImages.length > 0" class="row mt-2">
+                              <div v-for="(image, index) in selectedImages" :key="index" class="col-md-3">
+                                <img :src="image.url" alt="Preview" style="max-width: 100px; margin-bottom: 10px;" />
+                                <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
+                                <button @click.prevent="removeImage(index)"
+                                  class="btn btn-danger btn-xs">Remove</button>
+                              </div>
+                            </div>
+
+                            <small v-if="errorsLoad.imagesLoad_er" class="text-danger">{{ errorsLoad.imagesLoad_er
+                              }}</small>
+                          </div>
+
+
+                          <!-- <div style="margin-bottom: -10px !important;" class="mb-0 col-md-3 d-flex">
+                            <button :disabled="isLoadingLoad" @click="HandleLoad" type="button" class="btn btn-info"
+                              style="height: 38px; padding: 0.375rem 0.75rem;">
+                              {{ isEditingLoad ? "Save" : "Add" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditingLoad ? 'fa fa-save' : 'fa fa-plus'"></i>
+                              </span>
+                            </button>
+                          </div> -->
+
+
+
+                        </div>
+
+
                         <div style="background-color: #cdc2f5" class="row">
                           <div class="mb-3 col-md-9">
                             <label class="form-label">Note</label>
@@ -2287,6 +2474,16 @@ const downloadImage = (imageUrl) => {
                   <p>No images available</p>
                 </div> -->
                         </div>
+
+
+                        
+
+
+
+
+
+
+
 
                     </div>
                     <!-- ✅ FIN DEL CONTENEDOR CON BACKGROUND -->
