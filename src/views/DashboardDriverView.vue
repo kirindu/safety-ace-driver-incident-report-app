@@ -232,6 +232,7 @@ const errorsDowntime = ref({
 const formData = new FormData();
 const selectedFiles = ref([]); // Store File objects for FormData
 const selectedImages = ref([]);
+const existingLoadImages = ref([]); // Store existing images from edited Load
 const fileInput = ref(null);
 
 const loadList = ref([]);
@@ -793,6 +794,7 @@ const resetLoad = () => {
 
   selectedImages.value = [];
   selectedFiles.value = []; // Clear files as well
+  existingLoadImages.value = []; // Clear existing images
   if (fileInput.value) {
     fileInput.value.value = "";
   }
@@ -1285,6 +1287,8 @@ const EditLoad = async (item) => {
   // Set editing mode
   isEditingLoad.value = true;
   selectedLoadId.value = item.id || item._id; // Ensure the ID is captured
+  // Store existing images from the Load being edited
+  existingLoadImages.value = item.images || [];
   
   // Wait for Vue to finish processing all reactive updates before resetting flag
   await nextTick();
@@ -1570,6 +1574,12 @@ const handleFileChange = (event) => {
 const removeImage = (index) => {
   selectedImages.value.splice(index, 1);
   selectedFiles.value.splice(index, 1);
+};
+
+// Function to download/view image
+const downloadImage = (imageUrl) => {
+  const fullUrl = `https://backend-fastapi-airc-coversheet-staging.onrender.com/${imageUrl}`;
+  window.open(fullUrl, '_blank');
 };
 
 // Metodos Utilitarios
@@ -1934,7 +1944,7 @@ const getDenverTimeAsUTCISOString = () => {
                     <Spinner v-if="storeHomeBase.loading || storeTruck.loading" />
 
 
-                    <div id="bordered_collapseOne" class="accordion-collapse collapse show"
+                    <div id="bordered_collapseOne" class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
@@ -2570,6 +2580,23 @@ const getDenverTimeAsUTCISOString = () => {
                                 <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
                                 <button @click.prevent="removeImage(index)"
                                   class="btn btn-danger btn-xs">Remove</button>
+                              </div>
+                            </div>
+
+                            <!-- Existing images from Load -->
+                            <div v-if="existingLoadImages.length > 0" class="row mt-3">
+                              <h6 style="color: #000;">Existing Images:</h6>
+                              <div class="col-md-12">
+                                <div class="d-flex flex-wrap">
+                                  <img
+                                    v-for="(image, index) in existingLoadImages"
+                                    :key="'existing-' + index"
+                                    :src="'https://backend-fastapi-airc-coversheet-staging.onrender.com/' + image"
+                                    style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
+                                    @click="downloadImage(image)"
+                                    alt="Existing Load Image"
+                                  />
+                                </div>
                               </div>
                             </div>
                             <!-- <button
