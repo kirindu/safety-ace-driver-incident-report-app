@@ -2123,10 +2123,15 @@ const removeImage = (index) => {
                                   <th>Source</th>
                                   <th>Destination</th>
                                   <th>Material</th>
-                                  <th>Tunnel Time In</th>
-                                  <th>Tunnel Time Out</th>
-                                  <th>Operator</th>
                                   <th>Ticket #</th>
+                                  <th>Operator</th>
+                                  <!-- <th>Tunnel Time In</th>
+                                  <th>Tunnel Time Out</th> -->
+                                  <th>Leave Yard</th>
+                                  <th>Return To Yard</th>
+                                  
+                                  
+                                  <th>Tons</th>
                                   <th>Actions</th>
                                 </tr>
                               </thead>
@@ -2138,10 +2143,17 @@ const removeImage = (index) => {
                                   <td class="td">{{ item.sourceName }}</td>
                                   <td class="td">{{ item.destinationName }}</td>
                                   <td class="td">{{ item.materialName }}</td>
-                                  <td class="td">{{ item.tunnelTimeInLoad }}</td>
-                                  <td class="td">{{ item.tunnelTimeOutLoad }}</td>
-                                  <td class="td">{{ item.operatorName }}</td>
-                                  <td class="td">{{ item.ticketNumberLoad }}</td>
+                                   <td class="td">{{ item.ticketNumberLoad }}</td>
+                                   <td class="td">{{ item.operatorName }}</td>
+                                  <!-- <td class="td">{{ item.tunnelTimeInLoad }}</td>
+                                  <td class="td">{{ item.tunnelTimeOutLoad }}</td> -->
+                                  <td class="td">{{ item.leaveYardLoad }}</td>
+                                  <td class="td">{{ item.backYardLoad }}</td>
+
+
+                                  
+                                 
+                                  <td class="td">{{ item.tonsLoad }}</td>
                                   <td>
                                     <div style="text-align: center;">
                                       <a
