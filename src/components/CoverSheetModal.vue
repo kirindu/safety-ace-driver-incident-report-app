@@ -1908,6 +1908,7 @@ const removeImage = (index) => {
                                   <th>Trailer #</th>
                                   <th>Trailer Downtime Start</th>
                                   <th>Trailer Downtime End</th>
+                                  <th>Downtime Reason</th>
                                   <th>Actions</th>
                                 </tr>
                               </thead>
@@ -1922,6 +1923,7 @@ const removeImage = (index) => {
                                   <td class="td">{{ item.trailerNumber }}</td>
                                   <td class="td">{{ item.trailerDownTimeStartDownTime }}</td>
                                   <td class="td">{{ item.trailerDownTimeEndDownTime }}</td>
+                                  <td class="td">{{ item.downTimeReasonDownTime }}</td>
                                   <td>
                                     <div style="text-align: center;">
                                       <a
