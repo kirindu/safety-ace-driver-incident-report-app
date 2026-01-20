@@ -2179,7 +2179,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <v-select :options="storeTruck.trucks" v-model="selectedTruckDownTime"
                               placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTruckDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTruckDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTruckDownTime_er }}</small>
                           </div>
@@ -2229,7 +2229,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <v-select :options="storeTrailer.trailers" v-model="selectedTrailerDownTime"
                               placeholder="Choose your Trailer" :reduce="(trailer) => trailer.id" label="trailerNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTrailerDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTrailerDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTrailerDownTime_er }}</small>
                           </div>

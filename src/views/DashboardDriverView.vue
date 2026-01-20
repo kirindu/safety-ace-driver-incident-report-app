@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 
 import { useRouter } from 'vue-router' // Importamos useRouter para manejar la redirección
 const router = useRouter() // Instanciamos el router
@@ -232,6 +232,7 @@ const errorsDowntime = ref({
 const formData = new FormData();
 const selectedFiles = ref([]); // Store File objects for FormData
 const selectedImages = ref([]);
+const existingLoadImages = ref([]); // Store existing images from edited Load
 const fileInput = ref(null);
 
 const loadList = ref([]);
@@ -252,6 +253,7 @@ const imagesLoad = ref([]); // Se tiene que pasar como images en el formdata
 const noteLoad = ref(""); // Se tiene que pasar como note en el formdata
 const preloadedLoad = ref(false); // Lo Inicializamos en false
 const preloadedNextDayLoad = ref(false); // Lo Inicializamos en false
+const isLoadingLoadData = ref(false); // Flag to prevent watch from clearing fields during data loading
 
 // const selectedHomeBaseLoad = ref("");
 const selectedOperatorLoad = ref("");
@@ -282,7 +284,7 @@ watch(preloadedNextDayLoad, (newValue) => {
 
 // Watch para deshabilitar campos cuando Preloaded está seleccionado
 watch(preloadedLoad, (newValue) => {
-  if (newValue) {
+  if (newValue && !isLoadingLoadData.value) {
     // Si se selecciona Preloaded, reseteamos los siguientes campos
     tunnelTimeInLoad.value = "";
     tunnelTimeOutLoad.value = "";
@@ -292,7 +294,7 @@ watch(preloadedLoad, (newValue) => {
 
 // Watch para deshabilitar campos cuando preloadedNextDayLoad está seleccionado
 watch(preloadedNextDayLoad, (newValue) => {
-  if (newValue) {
+  if (newValue && !isLoadingLoadData.value) {
     // Si se selecciona preloadedNextDayLoad, reseteamos los siguientes campos
     leaveYardLoad.value = "";
     selectedSourceLoad.value = "";
@@ -792,6 +794,7 @@ const resetLoad = () => {
 
   selectedImages.value = [];
   selectedFiles.value = []; // Clear files as well
+  existingLoadImages.value = []; // Clear existing images
   if (fileInput.value) {
     fileInput.value.value = "";
   }
@@ -1256,7 +1259,9 @@ const EditDowntime = (item) => {
   selectedDowntimeId.value = item.id || item._id; // Ensure the ID is captured
 };
 
-const EditLoad = (item) => {
+const EditLoad = async (item) => {
+  // Set flag to prevent watches from clearing fields
+  isLoadingLoadData.value = true;
 
   tunnelTimeInLoad.value = item.tunnelTimeInLoad ? setTimeFromDB(item.tunnelTimeInLoad) : "";
   tunnelTimeOutLoad.value = item.tunnelTimeOutLoad ? setTimeFromDB(item.tunnelTimeOutLoad) : "";
@@ -1282,6 +1287,14 @@ const EditLoad = (item) => {
   // Set editing mode
   isEditingLoad.value = true;
   selectedLoadId.value = item.id || item._id; // Ensure the ID is captured
+  // Store existing images from the Load being edited
+  existingLoadImages.value = item.images || [];
+  
+  // Wait for Vue to finish processing all reactive updates before resetting flag
+  await nextTick();
+  
+  // Reset flag AFTER all watches have been processed
+  isLoadingLoadData.value = false;
 };
 
 // Delete functions
@@ -1561,6 +1574,12 @@ const handleFileChange = (event) => {
 const removeImage = (index) => {
   selectedImages.value.splice(index, 1);
   selectedFiles.value.splice(index, 1);
+};
+
+// Function to download/view image
+const downloadImage = (imageUrl) => {
+  const fullUrl = `https://backend-fastapi-airc-coversheet-staging.onrender.com/${imageUrl}`;
+  window.open(fullUrl, '_blank');
 };
 
 // Metodos Utilitarios
@@ -1925,23 +1944,11 @@ const getDenverTimeAsUTCISOString = () => {
                     <Spinner v-if="storeHomeBase.loading || storeTruck.loading" />
 
 
-                    <div id="bordered_collapseOne" class="accordion-collapse collapse show"
+                    <div id="bordered_collapseOne" class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
                         <div class="row">
-
-                          <!-- <div class="mb-3 col-md-2">
-
-                            <label class="form-label">HomeBase</label>
-                            <v-select :options="storeHomeBase.homebases" v-model="selectedHomeBaseSpareTruckInfo"
-                              placeholder="Choose your HomeBase" :reduce="(homebase) => homebase.id"
-                              label="homeBaseName" class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedSpareTruckInfo  && !selectedHomeBaseSpareTruckInfo }" />
-                            <small v-if="errorsSpareTruckInfo.homebaseSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.homebaseSpareTruckInfo_er
-                              }}</small>
-                          </div> -->
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Leave Yard</label>
@@ -2158,7 +2165,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <v-select :options="storeTruck.trucks" v-model="selectedTruckDownTime"
                               placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTruckDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTruckDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTruckDownTime_er }}</small>
                           </div>
@@ -2208,7 +2215,7 @@ const getDenverTimeAsUTCISOString = () => {
                             <v-select :options="storeTrailer.trailers" v-model="selectedTrailerDownTime"
                               placeholder="Choose your Trailer" :reduce="(trailer) => trailer.id" label="trailerNumber"
                               class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedDowntime && !selectedTrailerDownTime }" />
+                               />
                             <small v-if="errorsDowntime.selectedTrailerDownTime_er" class="text-danger">{{
                               errorsDowntime.selectedTrailerDownTime_er }}</small>
                           </div>
@@ -2372,23 +2379,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                         </div>
 
-
-
-
                         <div class="row">
-
-
-
-                          <!-- <div class="mb-3 col-md-2">
-                            <label class="form-label">HomeBase</label>
-                            <v-select :options="storeHomeBase.homebases" v-model="selectedHomeBaseLoad"
-                              placeholder="Choose your HomeBase" :reduce="(homebase) => homebase.id"
-                              label="homeBaseName" class="form-control p-0"
-                              :class="{ 'is-invalid': formSubmittedLoad && !selectedHomeBaseLoad }" />
-                            <small v-if="errorsLoad.selectedHomeBaseLoad_er" class="text-danger">{{
-                              errorsLoad.selectedHomeBaseLoad_er }}</small>
-                          </div> -->
-
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tunnel Time In</label>
@@ -2442,6 +2433,7 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
 
                         </div>
+                        
                         <div class="row">
 
                           <div class="mb-3 col-md-2">
@@ -2588,6 +2580,23 @@ const getDenverTimeAsUTCISOString = () => {
                                 <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
                                 <button @click.prevent="removeImage(index)"
                                   class="btn btn-danger btn-xs">Remove</button>
+                              </div>
+                            </div>
+
+                            <!-- Existing images from Load -->
+                            <div v-if="existingLoadImages.length > 0" class="row mt-3">
+                              <h6 style="color: #000;">Existing Images:</h6>
+                              <div class="col-md-12">
+                                <div class="d-flex flex-wrap">
+                                  <img
+                                    v-for="(image, index) in existingLoadImages"
+                                    :key="'existing-' + index"
+                                    :src="'https://backend-fastapi-airc-coversheet-staging.onrender.com/' + image"
+                                    style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
+                                    @click="downloadImage(image)"
+                                    alt="Existing Load Image"
+                                  />
+                                </div>
                               </div>
                             </div>
                             <!-- <button
