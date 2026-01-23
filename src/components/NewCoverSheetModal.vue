@@ -1574,17 +1574,6 @@ const finalizeCoverSheet = () => {
 }
 
 
-const getDenverTimeAsUTCISOString = () => {
-  const now = DateTime.now().setZone('America/Denver'); // Get current time in Denver
-  return now.toUTC().toISO(); // Convert to UTC and return ISO string
-};
-
-// const getDenverTimeAsUTCISOString = () => {
-//   const denverTime = DateTime.now().setZone('America/Denver');
-//   // Mantener la fecha de Denver pero en formato ISO
-//   return denverTime.toFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-// };
-
 </script>
 
 <template>
