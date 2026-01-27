@@ -490,6 +490,7 @@ const onSubmit = async (event) => {
 
 
   errors.value.homebase_er = "";
+  errors.value.driver_er = "";
   errors.value.truck_er = "";
   errors.value.trailer_er = "";
   errors.value.clockIn_er = "";
@@ -532,6 +533,11 @@ const onSubmit = async (event) => {
 
   if (!timeClockIn.value) {
     errors.value.clockIn_er = "Required field";
+    hasError = true;
+  }
+
+  if(!selectedDriver.value){
+    errors.value.driver_er = "Required field";
     hasError = true;
   }
 
@@ -1636,8 +1642,8 @@ const finalizeCoverSheet = () => {
                   <v-select :options="storeDriver.drivers" v-model="selectedDriver" placeholder="Choose Driver"
                     :reduce="(driver) => driver.id" label="name" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmitted && !selectedDriver }" />
-                                <small v-if="errors.driver_er" class="text-danger">{{
-                    errors.driver_er
+                    <small v-if="errors.driver_er" class="text-danger">{{
+                      errors.driver_er
                   }}</small>
                 </div>
              
@@ -1651,9 +1657,9 @@ const finalizeCoverSheet = () => {
 
                 <div class="mb-3 col-md-3">
                   <label class="form-label">HomeBase</label>
-                  <v-select :options="storeHomeBase.homebases" v-model="selectedHomeBase"
-                    placeholder="Choose your HomeBase" :reduce="(homebase) => homebase.id" label="homeBaseName"
-                    class="form-control p-0" :class="{ 'is-invalid': formSubmitted && !selectedHomeBase }" />
+                  <v-select :options="storeHomeBase.homebases" v-model="selectedHomeBase" placeholder="Choose your HomeBase" 
+                  :reduce="(homebase) => homebase.id" label="homeBaseName" class="form-control p-0" 
+                  :class="{ 'is-invalid': formSubmitted && !selectedHomeBase }" />
                   <small v-if="errors.homebase_er" class="text-danger">{{
                     errors.homebase_er
                     }}</small>
