@@ -1,7 +1,7 @@
 {
-  "name": "AIRC CoverSheet App",
+  "name": "safety-ace-driver-incident-report-app",
   "permissions": ["camera"],
-  "short_name": "AIRC CoverSheet",
+  "short_name": "ACE Driver Incident Report",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",

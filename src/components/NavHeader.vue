@@ -33,11 +33,11 @@ export default {
         decoding="async"
         width="188"
         height="56"
-        src="@/assets/logo/AIRC-logo.png"
+        src="@/assets/logo/acedisposal-logo.png"
       />
 
       <div class="brand-title-container">
-        <span class="brand-title-text">AIRC CoverSheet</span>
+        <span class="brand-title-text">ACE Driver Incident Report</span>
       </div>
     </a>
   </div>

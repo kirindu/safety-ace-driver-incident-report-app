@@ -223,7 +223,7 @@ const togglePasswordVisibility = () => {
       <div class="d-flex flex-column-auto flex-column pt-lg-40 pt-15">
         <div class="text-center mb-4 pt-5">
           <a href="/" class="brand-logo">
-            <img fetchpriority="high" decoding="async" width="188" height="110" src="@/assets/logo/AIRC-logo.png" />
+            <img fetchpriority="high" decoding="async" width="188" height="110" src="@/assets/logo/acedisposal-logo.png" />
 
             <div>
               <div class="brand-title">
@@ -232,7 +232,7 @@ const togglePasswordVisibility = () => {
                     font-weight: bold;
                     margin-left: 10px;
                     color: black;
-                  ">AIRC CoverSheet</span>
+                  ">ACE Driver Incident Report</span>
               </div>
             </div>
           </a>
@@ -256,7 +256,7 @@ const togglePasswordVisibility = () => {
 
                   <a href="/" class="brand-logo">
                     <img fetchpriority="high" decoding="async" width="188" height="110"
-                      src="@/assets/logo/AIRC-logo.png" />
+                      src="@/assets/logo/acedisposal-logo.png" />
 
                     <div>
                       <div class="brand-title">
@@ -265,7 +265,7 @@ const togglePasswordVisibility = () => {
                             font-weight: bold;
                             margin-left: 10px;
                             color: black;
-                          ">AIRC CoverSheet</span>
+                          ">ACE Driver Incident Report</span>
                       </div>
                     </div>
                   </a>
