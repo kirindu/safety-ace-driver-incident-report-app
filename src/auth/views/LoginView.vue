@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 // Importamos el api
-import UserAPI from "@/api/UserAPI";
+import UserAPI from "@/api/Actors/UserAPI";
 
 // Importamos utilidades
 import { DateTime } from "luxon";

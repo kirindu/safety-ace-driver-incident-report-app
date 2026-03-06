@@ -18,10 +18,10 @@ import "vue-select/dist/vue-select.css";
 // const emit = defineEmits(['update-success'])
 
 // Importamos el api
-import CoverSheetAPI from "@/api/CoverSheetAPI.js";
-import SpareTruckInfoAPI from "@/api/SpareTruckInfoAPI";
-import DowntimeAPI from "@/api/DowntimeAPI";
-import LoadAPI from "@/api/LoadAPI";
+import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
+import SpareTruckInfoAPI from "@/api/Sections/SupervisorNoteAPI";
+import DowntimeAPI from "@/api/Sections/DuringTheIncidentAPI";
+import LoadAPI from "@/api/Sections/IncidentDetailAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -38,7 +38,7 @@ import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
 import { useUsersStore } from "@/stores/users.js";
-import UserAPI from "@/api/UserAPI";
+import UserAPI from "@/api/Actors/UserAPI";
 
 const user = ref(null);
 

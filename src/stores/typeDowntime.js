@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import TypeDowntimeAPI from "@/api/TypeDowntimeAPI.js";
+import TypeDowntimeAPI from "@/api/Combos/TypeDowntimeAPI.js";
 
 export const useTypeDownTimeStore = defineStore("typeDownTimes", () => {
   const typeDownTimes = ref([]);

@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import LandFillAPI from "@/api/LandFillAPI";
+import LandFillAPI from "@/api/Combos/DirectionAPI";
 
 export const useLandFillsStore = defineStore("landfills", () => {
   const landfills = ref([]);

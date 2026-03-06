@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import DestinationAPI from "@/api/DestinationAPI.js";
+import DestinationAPI from "@/api/Combos/DeptAPI.js";
 
 export const useDestinationsStore = defineStore("destinations", () => {
   const destinations = ref([]);

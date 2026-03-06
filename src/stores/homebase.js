@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import HomeBaseAPI from "@/api/HomeBaseAPI";
+import HomeBaseAPI from "@/api/Combos/WeatherConditionAPI";
 
 export const useHomeBasesStore = defineStore("homebases", () => {
   const homebases = ref([]);

@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import UserAPI from "@/api/UserAPI.js";
+import UserAPI from "@/api/Actors/UserAPI.js";
 
 export const useUsersStore = defineStore("users", () => {
   const users = ref([]);

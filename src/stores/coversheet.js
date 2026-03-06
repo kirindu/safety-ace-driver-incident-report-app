@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import CoverSheetAPI from "@/api/CoverSheetAPI.js";
+import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
 
 export const useCoverSheetStore = defineStore("coversheets", () => {
   const coversheets = ref([]);

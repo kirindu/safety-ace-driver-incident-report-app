@@ -16,8 +16,8 @@ export default {
     return data;
   },
 
-  async loginDriver(values) {
-    const data = await api.post("/drivers/login", values, {
+  async loginEmployee(values) {
+    const data = await api.post("/employees/login", values, {
       headers: {
         "Content-Type": "application/json",
       },

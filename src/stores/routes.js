@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import RouteAPI from "@/api/RouteAPI.js";
+import RouteAPI from "@/api/Combos/TypeIncidentAPI.js";
 
 export const useRoutesStore = defineStore("routes", () => {
   const routes = ref([]);

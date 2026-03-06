@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import SourceAPI from "@/api/SourceAPI.js";
+import SourceAPI from "@/api/Combos/SourceAPI.js";
 
 export const useSourcesStore = defineStore("sources", () => {
   const sources = ref([]);

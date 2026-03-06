@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import OperatorAPI from "@/api/OperatorAPI.js";
+import OperatorAPI from "@/api/Combos/OperatorAPI.js";
 
 export const useOperatorsStore = defineStore("operators", () => {
   const operators = ref([]);

@@ -18,10 +18,10 @@ import "vue-select/dist/vue-select.css";
 // const emit = defineEmits(['update-success'])
 
 // Importamos el api
-import CoverSheetAPI from "@/api/CoverSheetAPI.js";
-import SpareTruckInfoAPI from "@/api/SpareTruckInfoAPI";
-import DowntimeAPI from "@/api/DowntimeAPI";
-import LoadAPI from "@/api/LoadAPI";
+import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
+import SpareTruckInfoAPI from "@/api/Sections/SupervisorNoteAPI";
+import DowntimeAPI from "@/api/Sections/DuringTheIncidentAPI";
+import LoadAPI from "@/api/Sections/IncidentDetailAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -47,7 +47,7 @@ const storeTypeDowntime = useTypeDownTimeStore();
 
 import { useDriversStore } from "@/stores/drivers.js";
 import { is } from "@vee-validate/rules";
-import DriverAPI from "@/api/DriverAPI";
+import DriverAPI from "@/api/Actors/EmployeeAPI";
 
 const user = ref(null);
 

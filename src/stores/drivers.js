@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import DriverAPI from "@/api/DriverAPI.js";
+import DriverAPI from "@/api/Actors/EmployeeAPI.js";
 
 export const useDriversStore = defineStore("drivers", () => {
   const drivers = ref([]);

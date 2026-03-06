@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import MaterialAPI from "@/api/MaterialAPI.js";
+import MaterialAPI from "@/api/Combos/RoadConditionAPI.js";
 
 export const useMaterialsStore = defineStore("materials", () => {
   const materials = ref([]);
