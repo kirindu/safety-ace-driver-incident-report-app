@@ -1,39 +1,41 @@
 import api from "@/lib/axios.js";
 
+// Helper para extraer el token sin repetir código en cada método
+function getAuthHeader() {
+  const currentUser = localStorage.getItem('USER') || '';
+  const token = JSON.parse(currentUser).data.access_token;
+  return { Authorization: `Bearer ${token}` };
+}
+
 export default {
 
+  /**
+   * Obtener todas las general informations (sin paginación)
+   */
   async all() {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    return api.get("/coversheets/", {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    return api.get("/generalinformations/", {
+      headers: getAuthHeader()
     });
   },
 
   /**
-   * 🆕 NUEVO: Obtener coversheets con paginación y filtros del lado del servidor
+   * Obtener general informations con paginación y filtros del lado del servidor
    * @param {Object} params - Parámetros de paginación y filtros
-   * @param {number} params.page - Número de página (default: 1)
-   * @param {number} params.limit - Registros por página (default: 50)
-   * @param {string} params.start_date - Fecha inicial (YYYY-MM-DD)
-   * @param {string} params.end_date - Fecha final (YYYY-MM-DD)
-   * @param {string} params.truck_id - ID del camión
-   * @param {string} params.trailer_id - ID del trailer
-   * @param {string} params.driver_id - ID del conductor
-   * @param {string} params.homebase_id - ID del homebase
-   * @param {string} params.sort_by - Campo para ordenar (default: "date")
-   * @param {number} params.sort_order - Orden: -1 desc, 1 asc (default: -1)
+   * @param {number} params.page              - Número de página (default: 1)
+   * @param {number} params.limit             - Registros por página (default: 50)
+   * @param {string} params.start_date        - Fecha inicial (YYYY-MM-DD)
+   * @param {string} params.end_date          - Fecha final (YYYY-MM-DD)
+   * @param {string} params.employee_id       - ID del empleado
+   * @param {string} params.truck_id          - ID del camión
+   * @param {string} params.dept_id           - ID del departamento
+   * @param {string} params.supervisor_id     - ID del supervisor
+   * @param {string} params.typeOfIncident_id - ID del tipo de incidente
+   * @param {string} params.sort_by           - Campo para ordenar (default: "incidentDate")
+   * @param {number} params.sort_order        - Orden: -1 desc, 1 asc (default: -1)
    */
   async allPaginated(params = {}) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    // Construir query params solo con valores no vacíos
     const queryParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
         queryParams.append(key, value);
@@ -41,95 +43,104 @@ export default {
     });
 
     const queryString = queryParams.toString();
-    const url = queryString ? `/coversheets/?${queryString}` : '/coversheets/';
+    const url = queryString ? `/generalinformations/?${queryString}` : '/generalinformations/';
 
     return api.get(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: getAuthHeader()
     });
   },
 
+  /**
+   * Obtener general informations por fecha de incidente
+   * @param {string} date - Fecha en formato YYYY-MM-DD
+   */
   async allByDate(date) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    return api.get('/coversheets/by-date/' + date, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    return api.get(`/generalinformations/by-date/${date}`, {
+      headers: getAuthHeader()
     });
   },
-  
+
+  /**
+   * Obtener una general information por ID (incluye secciones hijas expandidas)
+   * @param {string} id - ID de la general information
+   */
+  async getById(id) {
+    return api.get(`/generalinformations/${id}`, {
+      headers: getAuthHeader()
+    });
+  },
+
+  /**
+   * Crear una nueva general information
+   * @param {Object} values - Datos del formulario
+   */
   async add(values) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    const data = await api.post('/coversheets/', values, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    return api.post('/generalinformations/', values, {
+      headers: getAuthHeader()
     });
-    return data;
   },
 
-  async edit(idCoverSheet, values) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    const data = await api.put('/coversheets/' + idCoverSheet, values, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Actualizar una general information existente
+   * @param {string} id     - ID de la general information
+   * @param {Object} values - Campos a actualizar
+   */
+  async edit(id, values) {
+    return api.put(`/generalinformations/${id}`, values, {
+      headers: getAuthHeader()
     });
-    return data;
   },
 
-  async getSpareTruckInfo(idCoverSheet) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    const data = await api.get('/coversheets/' + idCoverSheet + '/sparetruckinfo', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Soft delete — marca la general information como inactiva
+   * @param {string} id - ID de la general information
+   */
+  async delete(id) {
+    return api.delete(`/generalinformations/${id}`, {
+      headers: getAuthHeader()
     });
-    return data;
   },
 
-  async getDowntime(idCoverSheet) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    const data = await api.get('/coversheets/' + idCoverSheet + '/downtime', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Hard delete — elimina permanentemente la general information y todos sus documentos hijos
+   * ⚠️ Esta operación es IRREVERSIBLE
+   * @param {string} id - ID de la general information
+   */
+  async deletePermanent(id) {
+    return api.delete(`/generalinformations/${id}/permanent`, {
+      headers: getAuthHeader()
     });
-    return data;
   },
 
-  async getLoad(idCoverSheet) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
+  // --- SECCIONES HIJAS ---
 
-    const data = await api.get('/coversheets/' + idCoverSheet + '/load', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Obtener todas las secciones "During The Incident" de una general information
+   * @param {string} id - ID de la general information
+   */
+  async getDuringTheIncident(id) {
+    return api.get(`/generalinformations/${id}/duringtheincident`, {
+      headers: getAuthHeader()
     });
-    return data;
   },
 
-  async delete(idCoverSheet) {
-    const currentUser = localStorage.getItem('USER') || '';
-    const token = JSON.parse(currentUser).data.access_token;
-
-    const data = await api.delete('/coversheets/' + idCoverSheet, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Obtener todas las Supervisor Notes de una general information
+   * @param {string} id - ID de la general information
+   */
+  async getSupervisorNote(id) {
+    return api.get(`/generalinformations/${id}/supervisornote`, {
+      headers: getAuthHeader()
     });
-    return data;
+  },
+
+  /**
+   * Obtener todos los Incident Details de una general information
+   * @param {string} id - ID de la general information
+   */
+  async getIncidentDetail(id) {
+    return api.get(`/generalinformations/${id}/incidentdetail`, {
+      headers: getAuthHeader()
+    });
   },
 };

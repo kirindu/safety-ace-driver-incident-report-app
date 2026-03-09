@@ -3,20 +3,20 @@ import api from "@/lib/axios.js";
 export default {
 
  async all() {
-    return api.get("/trucks/");
+    return api.get("/supervisors/");
   },
   async add(values) {
-    const data = await api.post('/trucks/', values);
+    const data = await api.post('/supervisors/', values);
     return data;
   }
 ,
-  async edit(idTruck, values) { 
-    const data = await api.put('/trucks/' + idTruck, values);
+  async edit(idSupervisor, values) { 
+    const data = await api.put('/supervisors/' + idSupervisor, values);
     return data;
   }
 ,
-  async delete(idTruck) {
-    const data = await api.delete('/trucks/' + idTruck, {});
+  async delete(idSupervisor) {
+    const data = await api.delete('/supervisors/' + idSupervisor, {});
     return data;
   },
 };

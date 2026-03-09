@@ -2,18 +2,18 @@ import api from "@/lib/axios.js";
 
 export default {
   async all() {
-    return api.get("/routes/");
+    return api.get("/typeincidents/");
   },
   async add(values) {
-    const data = await api.post('/routes/', values);
+    const data = await api.post('/typeincidents/', values);
     return data;
   },
-  async edit(idRoute, values) {
-    const data = await api.put('/routes/' + idRoute, values);
+  async edit(idTypeIncident, values) {
+    const data = await api.put('/typeincidents/' + idTypeIncident, values);
     return data;
   },
-  async delete(idRoute) {
-    const data = await api.delete('/routes/' + idRoute, {});
+  async delete(idTypeIncident) {
+    const data = await api.delete('/typeincidents/' + idTypeIncident, {});
     return data;
   },
   
