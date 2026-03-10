@@ -32,35 +32,13 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 import Spinner from "@/components/Spinner.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
-const storeRoute = useRoutesStore();
 
-import { useHomeBasesStore } from "@/stores/homebase.js";
-const storeHomeBase = useHomeBasesStore();
 
-import { useOperatorsStore } from "@/stores/operator.js";
-const storeOperator = useOperatorsStore();
-
-import { useSourcesStore } from "@/stores/source.js";
-const storeSource = useSourcesStore();
-
-import { useDestinationsStore } from "@/stores/destination.js";
-const storeDestination = useDestinationsStore();
-
-import { useMaterialsStore } from "@/stores/material.js";
-const storeMaterial = useMaterialsStore();
-
-import { useLandFillsStore } from "@/stores/landfills";
-const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
-const storeTrailer = useTrailersStore();
 
-import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
-const storeTypeDowntime = useTypeDownTimeStore();
 
 const user = ref(null);
 

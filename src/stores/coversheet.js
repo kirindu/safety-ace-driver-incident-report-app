@@ -1,9 +1,9 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
+import GeneralInformationAPI from "@/api/Sections/GeneralInformationAPI.js";
 
-export const useCoverSheetStore = defineStore("coversheets", () => {
-  const coversheets = ref([]);
+export const useGeneralInformationStore = defineStore("generalinformations", () => {
+  const generalinformations = ref([]);
   const loading = ref(false);
   const error = ref("");
 
@@ -11,19 +11,19 @@ export const useCoverSheetStore = defineStore("coversheets", () => {
     loading.value = true;
 
     try {
-      const { data } = await CoverSheetAPI.all();
-      coversheets.value = data.data; // Recuerda que data es el wrap de axios
+      const { data } = await GeneralInformationAPI.all();
+      generalinformations.value = data.data; // Recuerda que data es el wrap de axios
 
-      //   console.log(coversheets.value);
+      //   console.log(generalinformations.value);
     } catch (err) {
-      error.value = `Ocurrio el siguiente error al intentar llamar al servicio de coversheet: ${err}`;
+      error.value = `Ocurrio el siguiente error al intentar llamar al servicio de generalinformation: ${err}`;
     } finally {
       loading.value = false;
     }
   });
 
   return {
-    coversheets,
+    generalinformations,
     loading,
     error,
   };
