@@ -27,43 +27,43 @@ import Spinner from "@/components/Spinner.vue";
 import CoverSheetModal from "@/components/CoverSheetModal.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useHomeBasesStore } from "@/stores/homebase.js";
+import { useHomeBasesStore } from "@/stores/weatherConditions.js";
 const storeHomeBase = useHomeBasesStore();
 
-import { useOperatorsStore } from "@/stores/operator.js";
+import { useOperatorsStore } from "@/stores/whoDidYouSendThePicturesTo.js";
 const storeOperator = useOperatorsStore();
 
-import { useSourcesStore } from "@/stores/source.js";
+import { useSourcesStore } from "@/stores/safetyPersonsNotified.js";
 const storeSource = useSourcesStore();
 
-import { useDestinationsStore } from "@/stores/destination.js";
+import { useDestinationsStore } from "@/stores/depts.js";
 const storeDestination = useDestinationsStore();
 
-import { useMaterialsStore } from "@/stores/material.js";
+import { useMaterialsStore } from "@/stores/roadConditions.js";
 const storeMaterial = useMaterialsStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
+import { useTrailersStore } from "@/stores/supervisors.js";
 const storeTrailer = useTrailersStore();
 
 import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
 const storeTypeDowntime = useTypeDownTimeStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useDriversStore } from "@/stores/drivers.js";
+import { useDriversStore } from "@/stores/employees.js";
 const storeDriver = useDriversStore();
 
 const user = ref(null);
 
 // Recuperamos el usuario
-const storedUser = localStorage.getItem("USER");
+const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
 if (storedUser) {
   try {

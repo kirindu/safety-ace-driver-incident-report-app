@@ -18,15 +18,15 @@ export default {
 
   },
 
-  async edit(idCoverSheet, values) {
+  async edit(idGeneralInformation, values) {
 
-    const data = await api.put('/supervisornotes/' + idCoverSheet, values);
+    const data = await api.put('/supervisornotes/' + idGeneralInformation, values);
     return data;
 
   },
-  async delete(idCoverSheet) {
+  async delete(idGeneralInformation) {
 
-    const data = await api.delete('/supervisornotes/' + idCoverSheet);
+    const data = await api.delete('/supervisornotes/' + idGeneralInformation);
     return data;  
 }
 };

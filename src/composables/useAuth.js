@@ -55,7 +55,7 @@ export function useAuth() {
   const clearUser = () => {
     currentUser.value = null;
     localStorage.removeItem('USER');
-    localStorage.removeItem('COVERSHEET');
+    localStorage.removeItem("ACE-INCIDENT-REPORT");
   };
 
   /**

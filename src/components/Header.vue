@@ -67,8 +67,8 @@ const currentDate = ref(
 const logout = () => {
   user.value = null;
   localStorage.removeItem('USER');
-  localStorage.removeItem('COVERSHEET');
-  localStorage.removeItem('COVERSHEET2');
+  localStorage.removeItem("ACE-INCIDENT-REPORT");
+  localStorage.removeItem("ACE-INCIDENT-REPORT2");
   router.push({ name: 'login' });
 }
 

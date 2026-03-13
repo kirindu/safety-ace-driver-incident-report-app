@@ -2,7 +2,7 @@ import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
 import GeneralInformationAPI from "@/api/Sections/GeneralInformationAPI.js";
 
-export const useGeneralInformationStore = defineStore("generalinformations", () => {
+export const useGeneralInformationsStore = defineStore("generalinformations", () => {
   const generalinformations = ref([]);
   const loading = ref(false);
   const error = ref("");

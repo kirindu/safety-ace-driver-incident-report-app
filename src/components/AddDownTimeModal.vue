@@ -28,16 +28,16 @@ import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
+import { useTrailersStore } from "@/stores/supervisors.js";
 const storeTrailer = useTrailersStore();
 
 import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
@@ -45,7 +45,7 @@ const storeTypeDowntime = useTypeDownTimeStore();
 
 
 
-import { useDriversStore } from "@/stores/drivers.js";
+import { useDriversStore } from "@/stores/employees.js";
 import { is } from "@vee-validate/rules";
 import DriverAPI from "@/api/Actors/EmployeeAPI";
 
@@ -143,7 +143,7 @@ const HandleDowntime = async (event) => {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let coversheet_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
   const downtime = {
     truck_id: selectedTruckDownTime.value,

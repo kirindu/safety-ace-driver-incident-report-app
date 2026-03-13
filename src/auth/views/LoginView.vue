@@ -98,7 +98,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
 
       if (data.ok) {
         // ✅ PASO 1: Guardar en localStorage
-        localStorage.setItem("USER", JSON.stringify(data));
+        localStorage.setItem("USER-SAFETY-ACE", JSON.stringify(data));
 
         // ✅ PASO 2: Obtener el user_id de forma correcta
         let user_id = null;           
@@ -187,7 +187,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
         });
 
         if (data.ok) {
-          localStorage.setItem("USER", JSON.stringify(data));
+          localStorage.setItem("USER-SAFETY-ACE", JSON.stringify(data));
           // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
           window.location.href = '/admin/dashboard';
         }

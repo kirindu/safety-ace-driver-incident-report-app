@@ -25,10 +25,10 @@ import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 const user = ref(null);
@@ -144,7 +144,7 @@ onMounted(async () => {
   }
   
 
-  const storedUser = localStorage.getItem("USER");
+  const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
   if (storedUser) {
     try {

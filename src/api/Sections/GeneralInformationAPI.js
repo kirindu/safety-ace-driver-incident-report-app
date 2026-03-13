@@ -2,7 +2,7 @@ import api from "@/lib/axios.js";
 
 // Helper para extraer el token sin repetir código en cada método
 function getAuthHeader() {
-  const currentUser = localStorage.getItem('USER') || '';
+  const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
   const token = JSON.parse(currentUser).data.access_token;
   return { Authorization: `Bearer ${token}` };
 }

@@ -4,7 +4,7 @@ import qs from "qs";
 export default {
 
   async all() {
-    const currentUser = localStorage.getItem('USER') || '';
+    const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
     const userData = JSON.parse(currentUser);
     const token = userData.data?.access_token;
 
@@ -62,7 +62,7 @@ export default {
   },
 
   async auth() {
-    const currentUser = localStorage.getItem('USER') || '';
+    const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
     const userData = JSON.parse(currentUser);
     const token = userData.data?.access_token;
 
@@ -75,7 +75,7 @@ export default {
   },
 
   async add(values) {
-    const currentUser = localStorage.getItem('USER') || '';
+    const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
     const userData = JSON.parse(currentUser);
     const token = userData.data?.access_token;
 
@@ -88,7 +88,7 @@ export default {
   },
 
   async delete(idUser) {
-    const currentUser = localStorage.getItem('USER') || '';
+    const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
     const userData = JSON.parse(currentUser);
     const token = userData.data?.access_token;
 
@@ -101,7 +101,7 @@ export default {
   },
 
   async edit(idUser, values) {
-    const currentUser = localStorage.getItem('USER') || '';
+    const currentUser = localStorage.getItem("USER-SAFETY-ACE") || '';
     const userData = JSON.parse(currentUser);
     const token = userData.data?.access_token;
 

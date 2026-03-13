@@ -33,43 +33,43 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 import Spinner from "@/components/Spinner.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useHomeBasesStore } from "@/stores/homebase.js";
+import { useHomeBasesStore } from "@/stores/weatherConditions.js";
 const storeHomeBase = useHomeBasesStore();
 
-import { useOperatorsStore } from "@/stores/operator.js";
+import { useOperatorsStore } from "@/stores/whoDidYouSendThePicturesTo.js";
 const storeOperator = useOperatorsStore();
 
-import { useSourcesStore } from "@/stores/source.js";
+import { useSourcesStore } from "@/stores/safetyPersonsNotified.js";
 const storeSource = useSourcesStore();
 
-import { useDestinationsStore } from "@/stores/destination.js";
+import { useDestinationsStore } from "@/stores/depts.js";
 const storeDestination = useDestinationsStore();
 
-import { useMaterialsStore } from "@/stores/material.js";
+import { useMaterialsStore } from "@/stores/roadConditions.js";
 const storeMaterial = useMaterialsStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
+import { useTrailersStore } from "@/stores/supervisors.js";
 const storeTrailer = useTrailersStore();
 
 import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
 const storeTypeDowntime = useTypeDownTimeStore();
 
-import { useDriversStore } from "@/stores/drivers.js";
+import { useDriversStore } from "@/stores/employees.js";
 const storeDriver = useDriversStore();	
 
 const user = ref(null);
 
 // Recuperamos el usuario
-const storedUser = localStorage.getItem("USER");
+const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
 if (storedUser) {
   try {
@@ -418,7 +418,7 @@ onMounted(() => {
   // ✅ Acceso seguro al ID del usuario
   let user_id = user.value?.id || null;
 
-const data = localStorage.getItem('COVERSHEET');
+const data = localStorage.getItem("ACE-INCIDENT-REPORT");
   if (data) {
     existeCover.value = true;
     isEditModeCoverShet.value = true;
@@ -434,7 +434,7 @@ const data = localStorage.getItem('COVERSHEET');
   if(existeCover.value){
 
        
-      const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+      const coversheet = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
       date.value = DateTime.fromISO(coversheet.date).toJSDate();
       selectedDriver.value = coversheet.driver_id;
@@ -579,8 +579,8 @@ const onSubmit = async (event) => {
       const response = await CoverSheetAPI.add(coverSheetData);
 
       if (response.data.ok) {
-        localStorage.setItem("COVERSHEET", JSON.stringify(response.data.data));
-        const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+        const coversheet = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
         selectedTruckDownTime.value = coversheet.truck_id;
         selectedTrailerDownTime.value = coversheet.trailer_id;
@@ -611,12 +611,12 @@ const onSubmit = async (event) => {
         });
       }
     } else {
-      let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+      let coversheet_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
       const response = await CoverSheetAPI.edit(coversheet_id, coverSheetData);
 
       if (response.data.ok) {
-        localStorage.setItem("COVERSHEET", JSON.stringify(response.data.data));
-        const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+        const coversheet = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
         selectedTruckDownTime.value = coversheet.truck_id;
         selectedTrailerDownTime.value = coversheet.trailer_id;
@@ -807,7 +807,7 @@ const HandleSpareTruckInfo = async (event) => {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let coversheet_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
   const spareTruckInfo = {
 
@@ -939,7 +939,7 @@ const HandleDowntime = async (event) => {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let coversheet_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
   const downtime = {
     truck_id: selectedTruckDownTime.value,
@@ -1074,7 +1074,7 @@ const HandleLoad = async (event) => {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let coversheet_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
   // Create a new FormData object
   const formData = new FormData();
@@ -1411,7 +1411,7 @@ const DeleteLoad = async (item) => {
 };
 
 const loadSpareTruckInfo = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
+  const rawCoverSheet = localStorage.getItem("ACE-INCIDENT-REPORT");
   if (!rawCoverSheet) return;
 
   const coverSheet = JSON.parse(rawCoverSheet);
@@ -1428,7 +1428,7 @@ const loadSpareTruckInfo = async () => {
 };
 
 const loadDowntime = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
+  const rawCoverSheet = localStorage.getItem("ACE-INCIDENT-REPORT");
   if (!rawCoverSheet) return;
 
 
@@ -1448,7 +1448,7 @@ const loadDowntime = async () => {
 };
 
 const loadLoad = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
+  const rawCoverSheet = localStorage.getItem("ACE-INCIDENT-REPORT");
   if (!rawCoverSheet) return;
 
 
@@ -1468,7 +1468,7 @@ const loadLoad = async () => {
 };
 
 const handleVisibleAcordion = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
+  const rawCoverSheet = localStorage.getItem("ACE-INCIDENT-REPORT");
   if (!rawCoverSheet) return;
 
   isVisibleAcordion.value = true
@@ -1568,13 +1568,13 @@ const setTimeFromDB = (timeString) => {
 // Método para manejar el logout
 const logout = () => {
   localStorage.removeItem('USER');// Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET'); // Eliminamos la variable COVERSHEET2 del localStorage
+  localStorage.removeItem("ACE-INCIDENT-REPORT"); // Eliminamos la variable COVERSHEET2 del localStorage
   router.push({ name: 'login' }); // Redirigimos al usuario a la página de login
 }
 
 // Método para manejar el logout
 const finalizeCoverSheet = () => {
-  localStorage.removeItem('COVERSHEET');
+  localStorage.removeItem("ACE-INCIDENT-REPORT");
   // ✅ Usar confirmModal en lugar de closeModal para indicar éxito
   confirmModal({ finalized: true });
 }

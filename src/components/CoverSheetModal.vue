@@ -28,31 +28,31 @@ import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useHomeBasesStore } from "@/stores/homebase.js";
+import { useHomeBasesStore } from "@/stores/weatherConditions.js";
 const storeHomeBase = useHomeBasesStore();
 
-import { useOperatorsStore } from "@/stores/operator.js";
+import { useOperatorsStore } from "@/stores/whoDidYouSendThePicturesTo.js";
 const storeOperator = useOperatorsStore();
 
-import { useSourcesStore } from "@/stores/source.js";
+import { useSourcesStore } from "@/stores/safetyPersonsNotified.js";
 const storeSource = useSourcesStore();
 
-import { useDestinationsStore } from "@/stores/destination.js";
+import { useDestinationsStore } from "@/stores/depts.js";
 const storeDestination = useDestinationsStore();
 
-import { useMaterialsStore } from "@/stores/material.js";
+import { useMaterialsStore } from "@/stores/roadConditions.js";
 const storeMaterial = useMaterialsStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
+import { useTrailersStore } from "@/stores/supervisors.js";
 const storeTrailer = useTrailersStore();
 
 import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
@@ -437,8 +437,8 @@ const onSubmit = async (event) => {
     const response = await CoverSheetAPI.edit(coversheet_id, coverSheetData);
 
     if (response.data.ok) {
-      localStorage.setItem("COVERSHEET", JSON.stringify(response.data.data));
-      const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+      localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+      const coversheet = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
       selectedTruckDownTime.value = coversheet.truck_id;
       selectedTrailerDownTime.value = coversheet.trailer_id;
@@ -1176,8 +1176,8 @@ const formatTime = (controlTimeValue) => {
 
 
 const logout = () => {
-  localStorage.removeItem("USER"); // Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET2') // Eliminamos la variable COVERSHEET2 del localStorage
+  localStorage.removeItem("USER-SAFETY-ACE"); // Eliminamos la variable USER-SAFETY-ACE del localStorage
+  localStorage.removeItem("ACE-INCIDENT-REPORT2") // Eliminamos la variable COVERSHEET2 del localStorage
   router.push({ name: "login" }); // Redirigimos al usuario a la página de login
 };
 

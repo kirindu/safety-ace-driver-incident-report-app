@@ -38,8 +38,6 @@ const storeTruck = useTrucksStore();
 
 import { useDriversStore } from "@/stores/employees.js";
 import DriverAPI from "@/api/Actors/EmployeeAPI";
-import RouteAPI from "@/api/Combos/TypeIncidentAPI";
-import TruckAPI from "@/api/Combos/TruckAPI";
 const storeDriver = useDriversStore();
 
 const user = ref(null);
@@ -61,32 +59,34 @@ if (storedUser) {
   }
 }
 
-const selectedTruck = ref("");
-const truckList = ref([]);
-
+const selectedDriver = ref("");
+const driverList = ref([]);
 const formSubmitted = ref(false);
 
-const SearchTruck = async (event) => {
+// Modo de edición de la informaciongeneral para el coversheet
+const isEditModeCoverShet = ref(false);
+
+const SearchDriver = async (event) => {
   if (event) {
     event.preventDefault();
   }
 
   try {
-    if (selectedTruck.value) {
-      truckList.value = storeTruck.trucks.filter(
-        (c) => c.id === selectedTruck.value
+    if (selectedDriver.value) {
+      driverList.value = storeDriver.drivers.filter(
+        (c) => c.id === selectedDriver.value
       );
     } else {
-      truckList.value = storeTruck.trucks;
+      driverList.value = storeDriver.drivers;
     }
   } catch (error) {
-    console.error("Error al obtener los trucks:", error);
+    console.error("Error al obtener CoverSheet:", error);
   }
 };
 
-const openNewTruckModal = async () => {
+const openNewDriverModal = async () => {
   await openModal(
-    defineAsyncComponent(() => import("@/components/AddTruckModal.vue")),
+    defineAsyncComponent(() => import("@/components/AddDriverModal.vue")),
     {
       // item: item,
     }
@@ -101,12 +101,12 @@ const openNewTruckModal = async () => {
     });
 };
 
-const editTruck = async (item) => {
+const editDriver = async (item) => {
   await openModal(
-    defineAsyncComponent(() => import("@/components/EditTruckModal.vue")),
+    defineAsyncComponent(() => import("@/components/EditDriverModal.vue")),
     {
       item: item,
-      onUpdateSuccess: SearchTruck, // Pass the function
+      onUpdateSuccess: SearchDriver, // Pass the function
     }
   )
     // runs when modal is closed via confirmModal
@@ -118,8 +118,45 @@ const editTruck = async (item) => {
       console.log("catch");
     });
 };
+const ffffff = async (item) => {
+  const result = await showSweetAlert({
+    title: "Are you sure you want to delete this driver?",
+    icon: "warning",
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+  });
 
-const deleteTruck = async (item) => {
+  if (result.isConfirmed) {
+    try {
+      const response = await DriverAPI.delete(item.id);
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "Driver deleted successfully!",
+          icon: "success",
+          confirmButtonText: "Ok",
+        }).then(() => {
+          SearchDriver(); // Refresh the driver list
+        });
+      } else {
+        showSweetAlert({
+          title: "Error deleting driver!",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+      showSweetAlert({
+        title: "Error deleting driver!",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+    }
+  }
+};
+
+const deleteDriver = async (item) => {
   showSweetAlert({
     title: "Are you sure?",
     text: "You won't be able to revert this!",
@@ -132,11 +169,11 @@ const deleteTruck = async (item) => {
   }).then(async () => {
     if (alertResult.value.isConfirmed) {
       try {
-        const { data } = await TruckAPI.delete(item.id);
+        const { data } = await DriverAPI.delete(item.id);
         if (data.ok) {
           showSweetAlert({
             title: "Deleted!",
-            text: "Truck has been deleted.",
+            text: "Driver has been deleted.",
             icon: "success",
             showCloseButton: true,
             allowOutsideClick: false,
@@ -145,7 +182,7 @@ const deleteTruck = async (item) => {
           });
         } else {
           await showSweetAlert({
-            title: "Truck hasn't been deleted!",
+            title: "Driver hasn't been deleted!",
             text: data.msg,
             icon: "warning",
             showCloseButton: true,
@@ -155,9 +192,9 @@ const deleteTruck = async (item) => {
           });
         }
       } catch (error) {
-        console.error("Error deleting truck:", error);
+        console.error("Error deleting driver:", error);
         showSweetAlert({
-          title: "Error deleting truck!",
+          title: "Error deleting driver!",
           icon: "error",
           confirmButtonText: "Ok",
         });
@@ -174,7 +211,7 @@ onMounted(() => {
   }
 
   setTimeout(() => {
-    SearchTruck();
+    SearchDriver();
   }, 1000);
 });
 </script>
@@ -185,7 +222,7 @@ onMounted(() => {
     <div class="page-titles">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">
-          <a href="javascript:void(0)"></a>
+          <a href="javascript:void(0)"></a> 
         </li>
       </ol>
     </div>
@@ -198,26 +235,26 @@ onMounted(() => {
           <div class="basic-form">
             <div class="row">
               <div class="mb-3 col-md-3">
-                <label class="form-label">Trucks</label>
+                <label class="form-label">Drivers</label>
                 <v-select
-                  :options="storeTruck.trucks"
-                  v-model="selectedTruck"
-                  placeholder="Choose Truck"
-                  :reduce="(truck) => truck.id"
-                  label="truckNumber"
+                  :options="storeDriver.drivers"
+                  v-model="selectedDriver"
+                  placeholder="Choose Driver"
+                  :reduce="(driver) => driver.id"
+                  label="name"
                   class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedTruck }"
+                  :class="{ 'is-invalid': formSubmitted && !selectedDriver }"
                 />
               </div>
             </div>
 
             <button
               style="margin-bottom: -5px !important"
-              @click="SearchTruck"
+              @click="SearchDriver"
               type="button"
               class="btn btn-info"
             >
-              Search Truck
+              Search Driver
               <span class="btn-icon-end">
                 <i class="fa fa-search"></i>
               </span>
@@ -225,11 +262,11 @@ onMounted(() => {
 
             <button
               style="margin-bottom: -5px !important; margin-left: 15px"
-              @click="openNewTruckModal"
+              @click="openNewDriverModal"
               type="button"
               class="btn btn-primary"
             >
-              Add Truck
+              Add Driver
               <span class="btn-icon-end">
                 <i class="fa fa-add"></i>
               </span>
@@ -244,7 +281,7 @@ onMounted(() => {
         <div class="card-body">
           <div class="basic-form">
             <div class="row">
-             <div style="text-align: end; color:blueviolet">{{truckList.length}} rows</div>
+            <div style="text-align: end; color:blueviolet">{{ driverList.length}} rows</div>
               <hr style="color: black" />
               <div class="table-responsive">
                 <table
@@ -252,22 +289,24 @@ onMounted(() => {
                 >
                   <thead class="thead-primary">
                     <tr>
-                      <th style="text-align: center">Truck Number</th>
+                      <th style="text-align: center">Name</th>
+                      <th style="text-align: center">User Name</th>
                       <th style="text-align: center !important">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(item, index) in truckList" :key="index">
-                      <td class="td">{{ item.truckNumber }}</td>
+                    <tr v-for="(item, index) in driverList" :key="index">
+                      <td class="td">{{ item.name }}</td>
+                      <td class="td">{{ item.username }}</td>
                       <td>
                         <div class="d-flex gap-1">
                           <a
-                            @click="editTruck(item)"
+                            @click="editDriver(item)"
                             class="btn btn-warning shadow btn-xs sharp"
                             ><i class="fa fa-edit"></i
                           ></a>
                           <a
-                            @click="deleteTruck(item)"
+                            @click="deleteDriver(item)"
                             class="btn btn-danger shadow btn-xs sharp"
                             ><i class="fa fa-trash"></i
                           ></a>

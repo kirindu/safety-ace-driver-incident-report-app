@@ -26,7 +26,7 @@ import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
 

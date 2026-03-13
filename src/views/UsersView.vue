@@ -27,10 +27,10 @@ import Spinner from "@/components/Spinner.vue";
 import CoverSheetModal from "@/components/CoverSheetModal.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
@@ -45,7 +45,7 @@ const storeUser = useUsersStore();
 const user = ref(null);
 
 // Recuperamos el usuario
-const storedUser = localStorage.getItem("USER");
+const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
 if (storedUser) {
   try {

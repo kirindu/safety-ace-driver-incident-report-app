@@ -28,10 +28,10 @@ import useSweetAlert2Notification from "@/composables/useSweetAlert2";
 const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
+import { useRoutesStore } from "@/stores/typeIncidents.js";
 const storeRoute = useRoutesStore();
 
-import { useLandFillsStore } from "@/stores/landfills";
+import { useLandFillsStore } from "@/stores/directions";
 const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
@@ -175,7 +175,7 @@ onMounted(async () => {
     userPassword.value = "";
   }
 
-  const storedUser = localStorage.getItem("USER");
+  const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
   if (storedUser) {
     try {
@@ -196,8 +196,8 @@ onMounted(async () => {
 
 
 const logout = () => {
-  localStorage.removeItem("USER"); // Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET2') // Eliminamos la variable COVERSHEET2 del localStorage
+  localStorage.removeItem("USER-SAFETY-ACE"); // Eliminamos la variable USER-SAFETY-ACE del localStorage
+  localStorage.removeItem("ACE-INCIDENT-REPORT2") // Eliminamos la variable COVERSHEET2 del localStorage
   router.push({ name: "login" }); // Redirigimos al usuario a la página de login
 };
 

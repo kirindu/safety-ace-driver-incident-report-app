@@ -18,15 +18,15 @@ export default {
 
   },
 
-  async edit(idCoverSheet, values) {
+  async edit(idGeneralInformation, values) {
 
-    const data = await api.put('/duringtheincidents/' + idCoverSheet, values);
+    const data = await api.put('/duringtheincidents/' + idGeneralInformation, values);
     return data;
 
   },
-  async delete(idCoverSheet) {
+  async delete(idGeneralInformation) {
 
-    const data = await api.delete('/duringtheincidents/' + idCoverSheet);
+    const data = await api.delete('/duringtheincidents/' + idGeneralInformation);
     return data;    
   }
 

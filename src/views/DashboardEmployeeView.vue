@@ -18,11 +18,13 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
 
-// Importamos el api
-import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
-import SpareTruckInfoAPI from "@/api/Sections/SupervisorNoteAPI";
-import DowntimeAPI from "@/api/Sections/DuringTheIncidentAPI";
-import LoadAPI from "@/api/Sections/IncidentDetailAPI";
+// Importamos los APIs de la diferentes secciones
+
+import GeneralInformationAPI from "@/api/Sections/GeneralInformationAPI";
+import DuringTheIncidentAPI from "@/api/Sections/DuringTheIncidentAPI";
+import IncidentDetailAPI from "@/api/Sections/IncidentDetailAPI";
+import SupervisorNoteAPI from "@/api/Sections/SupervisorNoteAPI";
+
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -33,12 +35,40 @@ import Spinner from "@/components/Spinner.vue";
 
 // Importamos Stores
 
+import {useDirectionsStore} from "@/stores/directions.js";
+const storeDirection = useDirectionsStore();
+
+import {useEmployeesStore} from "@/stores/employees.js";
+const storeEmployee = useEmployeesStore();  
+
+import { useGeneralInformationsStore } from "@/stores/generalInformations";
+const storeGeneralInformation = useGeneralInformationsStore();
+
+import { useRoadConditionsStore } from "@/stores/roadConditions";
+const storeRoadCondition = useRoadConditionsStore();
+
+
+import { useSafetyPersonsNotifiedStore } from "@/stores/safetyPersonsNotified";
+const storeSafetyPerson = useSafetyPersonsNotifiedStore();
+
+import { useSupervisorsStore } from "@/stores/supervisors";
+const storeSupervisor = useSupervisorsStore();
 
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
+import { useTypeIncidentsStore } from "@/stores/typeIncidents";
+const storeTypeIncident = useTypeIncidentsStore();
 
+import { useWeatherConditionsStore } from "@/stores/weatherConditions";
+const storeWeatherCondition = useWeatherConditionsStore();
+
+import { useWhoDidYouSendThePictureToStore } from "@/stores/whoDidYouSendThePicturesTo";
+const storeWhoDidYouSendThePicturesTo = useWhoDidYouSendThePictureToStore();
+
+import {useDeptsStore} from "@/stores/depts.js";
+const storeDept = useDeptsStore();
 
 const user = ref(null);
 
@@ -49,367 +79,148 @@ watch(authUser, (newUser) => {
 
 
 
-// General Info
-const selectedHomeBase = ref("");
+// General Information
+
+
+const selectedEmployee = ref("");
 const selectedTruck = ref("");
-const selectedTrailer = ref("");
+const selectedDept = ref("");
+const selectedSupervisor = ref("");
+const selectedTypeOfIncident = ref("");
 
-const timeClockIn = ref("");
-const timeClockOut = ref("");
-const timeClockInTrainee = ref("");
-const timeClockOutTrainee = ref("");
-const trainee = ref("");
+const date = ref(""); // Este campo se va a usar para guardar la fecha actual del incidente
+const trainee = ref(""); // Nombre del conductor en entrenamiento, si aplica
+const location = ref(""); // Direccion del incidente
+const time = ref(""); // Este campo se va a usar para guardar la hora del incidente
+const timeWorkedYears = ref(""); // Este campo se va a usar para guardar los años de experiencia del conductor
+const timeWorkedMonths = ref(""); // Este campo se va a usar para guardar los meses de experiencia del conductor
+const timeDayStarted = ref(""); // Este campo se va a usar para guardar la hora que el conductor empezó su día de trabajo
 
-const timePreTripStart = ref("");
-const timePreTripEnd = ref("");
-const timePostTripStart = ref("");
-const timePostTripEnd = ref("");
 
-const truckStartMiles = ref("");
-const truckEndMiles = ref("");
-const truckStartHours = ref("");
-const truckEndHours = ref("");
 
-const trailerStartMiles = ref("");
-const trailerEndMiles = ref("");
-const fuel = ref("");
-const dieselExhaustFluid = ref("");
-
-const notes = ref("");
-
-const formSubmitted = ref(false);
 const isVisibleAcordion = ref(false);
 
-const errors = ref({
+const errorsGeneralInformation = ref({
 
-  homebase_er: "",
+  employee_er: "",
   truck_er: "",
-  trailer_er: "",
-  clockIn_er: "",
-  clockOut_er: "",
-  clockInTrainee_er: "",
-  clockOutTrainee_er: "",
+  dept_er: "",
+  supervisor_er: "",
+  typeOfIncident_er: "",
+  date_er: "",
   trainee_er: "",
-  preTripStart_er: "",
-  preTripEnd_er: "",
-  postTripStart_er: "",
-  postTripEnd_er: "",
-  truckStartMiles_er: "",
-  truckEndMiles_er: "",
-  truckStartHours_er: "",
-  truckEndHours_er: "",
-  trailerStartMiles_er: "",
-  trailerEndMiles_er: "",
-  fuel_er: "",
-  dieselExhaustFluid_er: "",
+  location_er: "",
+  time_er: "",
+  timeWorkedYears_er: "",
+  timeWorkedMonths_er: "",
+  timeDayStarted_er: "",
 
 });
 
-// Modo de edición de la informaciongeneral para el coversheet
-const isEditModeCoverShet = ref(false);
+// Modo de edición de la informaciongeneral para el general information
+const isEditGeneralInformation = ref(false);
+const isLoadingGeneralInformation = ref(false); // To show loading spinner when fetching general information
+const formSubmittedGeneralInformation = ref(false);
 
 
+// During the incident
 
-// Spare Truck Info
+const duringTheIncidentList = ref([]);
+const selectedDuringTheIncidentId = ref(null); // To track the ID of the During The Incident info being edited
 
-const spareTruckList = ref([]);
-const isEditingSpareTruckInfo = ref(false); // To track if we are editing a spare truck record
-const selectedSpareTruckId = ref(null); // To store the ID of the spare truck being edited
+const usingElectronicDevice = ref("");
+const taskPerfomed = ref("");
+const wasSafetyDeptNotified = ref("");
+const didYouTakePictures = ref("");
+const howFastWereYouGoing = ref(false);
 
-// const selectedHomeBaseSpareTruckInfo = ref("");
-const selectedTruckSpareTruckInfo = ref("");
-const selectedTrailerSpareTruckInfo = ref("");
+const SelectedSafetyPersonNotified = ref("");
+const SelectedWhoDidYouSendThePicturesTo = ref("");
+const SelectedDirectionYouWereTraveling = ref("");
+const SelectedWeatherCondition = ref("");
+const SelectedRoadCondition = ref("");
 
+const wasThisIncidentInAnIntersection = ref("");
+const witness = ref(""); // Nombre del testigo, si aplica
+const witnessPhone = ref(""); // Telefono del testigo, si aplica
 
-const timeLeaveYardSpareTruckInfo = ref("");
-const timeBackInYardSpareTruckInfo = ref("");
-const fuelSpareTruckInfo = ref("");
-const dieselExhaustFluidSpareTruckInfo = ref("");
-
-const truckStartMilesSpareTruckInfo = ref("");
-const truckEndMilesSpareTruckInfo = ref("");
-const truckStartHoursSpareTruckInfo = ref("");
-const truckEndHoursSpareTruckInfo = ref("");
-
-const trailerStartMilesSpareTruckInfo = ref("");
-const trailerEndMilesSpareTruckInfo = ref("");
-
+const isEditDuringTheIncident = ref(false);
+const isLoadingDuringTheIncident = ref(false); // To show loading spinner when fetching during the incident info
+const formSubmittedDuringTheIncident = ref(false); // To track if During the Incident form has been submitted
 
 
-const isLoadingSpareTruckInfo = ref(false); // To show loading spinner when fetching spare truck info
-const formSubmittedSpareTruckInfo = ref(false); // Para Spare Truck Info
+const errorsDuringTheIncident = ref({
 
-// Si quieres mostrar la hora actual en el input de Spare Truck Info
-// const timeLeaveYardSpareTruckInfo = ref({
-//   hours: new Date().getHours(),
-//   minutes: new Date().getMinutes()
-// });
-
-// Si quieres mostrar una hora determinada en el input de Spare Truck Info
-// const timeLeaveYardSpareTruckInfo = ref({hours: 15, minutes: 26});
-
-const errorsSpareTruckInfo = ref({
-  homebaseSpareTruckInfo_er: "",
-  leaveYardSpareTruckInfo_er: "",
-  backInYardSpareTruckInfo_er: "",
-  fuelSpareTruckInfo_er: "",
-  dieselExhaustFluidSpareTruckInfo_er: "",
-
-  spareTruckSpareTruckInfo_er: "",
-  truckStartMilesSpareTruckInfo_er: "",
-  truckEndMilesSpareTruckInfo_er: "",
-  truckStartHoursSpareTruckInfo_er: "",
-  truckEndHoursSpareTruckInfo_er: "",
-
-  spareTrailerSpareTruckInfo_er: "",
-  trailerStartMilesSpareTruckInfo_er: "",
-  trailerEndMilesSpareTruckInfo_er: "",
+  usingElectronicDevice_er: "",
+  taskPerfomed_er: "",
+  wasSafetyDeptNotified_er: "",
+  didYouTakePictures_er: "",
+  howFastWereYouGoing_er: "",
+  SelectedSafetyPersonNotified_er: "",
+  SelectedWhoDidYouSendThePicturesTo_er: "",
+  SelectedDirectionYouWereTraveling_er: "",
+  SelectedWeatherCondition_er: "",
+  SelectedRoadCondition_er: "",
+  wasThisIncidentInAnIntersection_er: "",
+  witness_er: "",
+  witnessPhone_er: "",
 
 });
 
-// Downtime
-
-const downtimeList = ref([]);
-const isEditingDowntime = ref(false); // To track if we are editing a downtime record
-const selectedDowntimeId = ref(null); // To store the ID of the downtime being edited
-
-
-const selectedTruckDownTime = ref("");
-const selectedTrailerDownTime = ref("");
-
-const selectedTypeTruckDownTime = ref("");
-const selectedTypeTrailerDownTime = ref("");
-
-const truckDownTimeStartDownTime = ref("");
-const truckDownTimeEndDownTime = ref("");
-const trailerDownTimeStartDownTime = ref("");
-const trailerDownTimeEndDownTime = ref("");
-const downTimeReasonDownTime = ref("");
-
-
-const isLoadingDowntime = ref(false); // To show loading spinner when fetching downtime info
-const formSubmittedDowntime = ref(false); // To track if Downtime form has been submitted
-
-
-
-const errorsDowntime = ref({
-  selectedTruckDownTime_er: "",
-  selectedTrailerDownTime_er: "",
-  selectedTypeTruckDownTime_er: "",
-  selectedTypeTrailerDownTime_er: "",
-  truckDownTimeStartDownTime_er: "",
-  truckDownTimeEndDownTime_er: "",
-  trailerDownTimeStartDownTime_er: "",
-  trailerDownTimeEndDownTime_er: "",
-  downTimeReasonDownTime_er: "",
-});
-
-
-// Load
+// Incident Detail
 
 const formData = new FormData();
+const selectedIncidentDetailId = ref(null); // To track the ID of the Incident Detail being edited
 const selectedFiles = ref([]); // Store File objects for FormData
 const selectedImages = ref([]);
-const existingLoadImages = ref([]); // Store existing images from edited Load
+const existingIncidentDetailImages = ref([]); // Store existing images from edited Load
 const fileInput = ref(null);
 
-const loadList = ref([]);
-const isEditingLoad = ref(false); // To track if we are editing a load record
-const selectedLoadId = ref(null); // To store the ID of the load being edited
 
-const tunnelTimeInLoad = ref("");
-const tunnelTimeOutLoad = ref("");
-const leaveYardLoad = ref("");
-const timeInLoad = ref("");
-const timeOutLoad = ref("");
-const ticketNumberLoad = ref("");
-const grossWeightLoad = ref("");
-const tareWeightLoad = ref("");
-const tonsLoad = ref("");
-const backYardLoad = ref("");
-const imagesLoad = ref([]); // Se tiene que pasar como images en el formdata
-const noteLoad = ref(""); // Se tiene que pasar como note en el formdata
-const preloadedLoad = ref(false); // Lo Inicializamos en false
-const preloadedNextDayLoad = ref(false); // Lo Inicializamos en false
-const isLoadingLoadData = ref(false); // Flag to prevent watch from clearing fields during data loading
+const incidentDetailList = ref([]);
 
-// const selectedHomeBaseLoad = ref("");
-const selectedOperatorLoad = ref("");
-const selectedSourceLoad = ref("");
-const selectedDestinationLoad = ref("");
-const selectedMaterialLoad = ref("");
+const incidentDescription = ref("");
+const actionEventConditions = ref("");
+const wereAnyVehiclesTowed = ref("");
+const wasAnyOneHurt = ref("");
+const describeAnyInjuries = ref("");
 
-const isLoadingLoad = ref(false); // To show loading spinner when fetching load info
-const formSubmittedLoad = ref(false); // To track if Load form has been submitted
+const damageToAceTruck = ref("");
+const whatDamageWasDone = ref("");
+const incidentInThePastYear = ref("");
+const listDatesOfIncidents = ref("");
 
 
+const isEditingIncidentDetail = ref(false);
+const isLoadingIncidentDeail = ref(false);
+const formSubmittedIncidentDetail = ref(false); // To track if Incident Detail form has been submitted
 
-// Agregar después de las declaraciones de preloadedLoad y preloadedNextDayLoad
 
-// Watch para preloadedLoad
-watch(preloadedLoad, (newValue) => {
-  if (newValue && preloadedNextDayLoad.value) {
-    preloadedNextDayLoad.value = false;
-  }
+const errorsIncidentDetail = ref({
+  incidentDescription_er: "",
+  actionEventConditions_er: "",
+  wereAnyVehiclesTowed_er: "",
+  wasAnyOneHurt_er: "",
+  describeAnyInjuries_er: "",
+  damageToAceTruck_er: "",
+  whatDamageWasDone_er: "",
+  incidentInThePastYear_er: "",
+  listDatesOfIncidents_er: "",
 });
 
-// Watch para preloadedNextDayLoad
-watch(preloadedNextDayLoad, (newValue) => {
-  if (newValue && preloadedLoad.value) {
-    preloadedLoad.value = false;
-  }
+// Supervisor Note
+const supervisorNoteList = ref([]);
+const selectedSupervisorNoteId = ref(null); // To track the ID of the Supervisor Note being edited
+const supervisorNote = ref("");
+
+const isEditingSupervisorNote = ref(false);
+const isLoadingSupervisorNote = ref(false);
+const formSubmittedSupervisorNote = ref(false); // To track if Supervisor Note form has been submitted
+
+const errorsSupervisorNote = ref({
+  supervisorNote_er: "",
 });
 
-// Watch para deshabilitar campos cuando Preloaded está seleccionado
-watch(preloadedLoad, (newValue) => {
-  if (newValue && !isLoadingLoadData.value) {
-    // Si se selecciona Preloaded, reseteamos los siguientes campos
-    tunnelTimeInLoad.value = "";
-    tunnelTimeOutLoad.value = "";
-    selectedOperatorLoad.value = "";
-  }
-});
-
-// Watch para deshabilitar campos cuando preloadedNextDayLoad está seleccionado
-watch(preloadedNextDayLoad, (newValue) => {
-  if (newValue && !isLoadingLoadData.value) {
-    // Si se selecciona preloadedNextDayLoad, reseteamos los siguientes campos
-    leaveYardLoad.value = "";
-    selectedSourceLoad.value = "";
-    selectedDestinationLoad.value = "";
-    selectedMaterialLoad.value = "";
-    timeInLoad.value = "";
-    timeOutLoad.value = "";
-    ticketNumberLoad.value = "";
-    grossWeightLoad.value = "";
-    tareWeightLoad.value = "";
-    tonsLoad.value = "";
-    backYardLoad.value = "";
-
-  }
-});
-
-
-
-const errorsLoad = ref({
-  tunnelTimeInLoad_er: "",
-  tunnelTimeOutLoad_er: "",
-  leaveYardLoad_er: "",
-  timeInLoad_er: "",
-  timeOutLoad_er: "",
-  ticketNumberLoad_er: "",
-  grossWeightLoad_er: "",
-  tareWeightLoad_er: "",
-  tonsLoad_er: "",
-  backYardLoad_er: "",
-  imagesLoad_er: "",
-  noteLoad_er: "",
-  preloadedLoad_er: "",
-  preloadedNextDayLoad_er: "",
-  // selectedHomeBaseLoad_er: "",
-  selectedOperatorLoad_er: "",
-  selectedSourceLoad_er: "",
-  selectedDestinationLoad_er: "",
-  selectedMaterialLoad_er: "",
-});
-
-// ✅ Computed para calcular Tons automáticamente
-const calculatedTons = computed(() => {
-  const gross = parseFloat(grossWeightLoad.value);
-  const tare = parseFloat(tareWeightLoad.value);
-
-  // Si alguno de los valores está vacío o no es válido, retornar vacío
-  if (!grossWeightLoad.value || !tareWeightLoad.value || isNaN(gross) || isNaN(tare)) {
-    tonsLoad.value = "";
-    return "";
-  }
-
-  // Validar que Gross Weight >= Tare Weight
-  if (gross < tare) {
-    tonsLoad.value = "";
-    return "";
-  }
-
-  // Calcular tons (Gross - Tare) / 2000
-  const tons = (gross - tare) / 2000;
-
-  // Actualizar tonsLoad para que se envíe al backend (redondeado a 2 decimales)
-  tonsLoad.value = tons.toFixed(2);
-
-  return tons.toFixed(2);
-});
-
-// ✅ Validación para mostrar error
-const tonsError = computed(() => {
-  const gross = parseFloat(grossWeightLoad.value);
-  const tare = parseFloat(tareWeightLoad.value);
-
-  if (grossWeightLoad.value && tareWeightLoad.value && !isNaN(gross) && !isNaN(tare)) {
-    if (gross < tare) {
-      return "Gross Weight must be ≥ Tare Weight";
-    }
-  }
-  return "";
-});
-
-// Computed property para filtrar materiales basado en el source seleccionado
-const filteredMaterials = computed(() => {
-  // Obtener el source seleccionado
-  const selectedSource = storeSource.sources.find(
-    source => source.id === selectedSourceLoad.value
-  );
-  
-  // Si no hay source seleccionado, retornar todos los materiales menos CONTAMINATED
-  if (!selectedSource) {
-    return storeMaterial.materials.filter(
-      material => material.materialName !== "CONTAMINATED"
-    );
-  }
-  
-  const sourceName = selectedSource.sourceName;
-  
-  // Si el source es RMR, RMR-S o RMR-N, mostrar todos los materiales incluyendo CONTAMINATED
-  if (sourceName === "RMR" || sourceName === "RMR-S" || sourceName === "RMR-N") {
-    return storeMaterial.materials;
-  }
-  
-  // Para otros sources, filtrar CONTAMINATED
-  return storeMaterial.materials.filter(
-    material => material.materialName !== "CONTAMINATED"
-  );
-});
-
-// Watch para limpiar Material cuando Source cambia
-watch(selectedSourceLoad, (newSourceId, oldSourceId) => {
-  // Solo limpiar si ya había un source seleccionado anteriormente
-  if (!oldSourceId) return;
-  
-  // Obtener los nombres de los sources
-  const newSource = storeSource.sources.find(source => source.id === newSourceId);
-  const oldSource = storeSource.sources.find(source => source.id === oldSourceId);
-  
-  if (!newSource || !oldSource) return;
-  
-  const oldSourceName = oldSource.sourceName;
-  const newSourceName = newSource.sourceName;
-  
-  // Si el source antiguo era RMR, RMR-S o RMR-N
-  const wasRMR = oldSourceName === "RMR" || oldSourceName === "RMR-S" || oldSourceName === "RMR-N";
-  // Y el nuevo source NO es RMR, RMR-S o RMR-N
-  const isRMR = newSourceName === "RMR" || newSourceName === "RMR-S" || newSourceName === "RMR-N";
-  
-  // Si se cambia de RMR a no-RMR, verificar si el material seleccionado es CONTAMINATED
-  if (wasRMR && !isRMR && selectedMaterialLoad.value) {
-    const selectedMaterial = storeMaterial.materials.find(
-      material => material.id === selectedMaterialLoad.value
-    );
-    
-    if (selectedMaterial && selectedMaterial.materialName === "CONTAMINATED") {
-      // Limpiar el material si era CONTAMINATED
-      selectedMaterialLoad.value = "";
-    }
-  }
-});
 
 
 onMounted(() => {
@@ -423,7 +234,7 @@ onMounted(() => {
   if (user.value) {
     if (user.value.rol === "Admin") {
       router.push({ name: 'dashboard-admin' });
-      return; // Salir temprano si es admin
+      return; // Salir si es admin
     }
   }
 
@@ -431,13 +242,13 @@ onMounted(() => {
   let user_id = user.value?.id || null;
   console.log('User ID en dashboard:', user_id);
   
-  let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
+  let ace_incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.driver_id || null;
 
-  if (user_id !== coversheet_driver_id) {
-    localStorage.removeItem("COVERSHEET");
+  if (user_id !== ace_incident_report_employee_id) {
+    localStorage.removeItem("ACE-INCIDENT-REPORT");
   } else {
     // Parse the date from localStorage (assumed to be in UTC)
-    const dbDate = DateTime.fromISO(JSON.parse(localStorage.getItem("COVERSHEET")).date, { zone: 'utc' });
+    const dbDate = DateTime.fromISO(JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT")).date, { zone: 'utc' });
     const today = DateTime.now();
 
     const dbDateDenver = dbDate.setZone('America/Denver');
@@ -448,42 +259,29 @@ onMounted(() => {
       dbDateDenver.month !== todayDenver.month ||
       dbDateDenver.day !== todayDenver.day
     ) {
-      localStorage.removeItem("COVERSHEET");
+      localStorage.removeItem("ACE-INCIDENT-REPORT");
     } else {
-      // Cargar coversheet existente
-      isEditModeCoverShet.value = true;
-      const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+      // Cargar ace-incident-report existente
+      isEditGeneralInformation.value = true;
+      const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
-      selectedHomeBase.value = coversheet.homebase_id;
-      selectedTruck.value = coversheet.truck_id;
-      selectedTrailer.value = coversheet.trailer_id;
+      selectedEmployee.value = generalInformation.employee_id;
+      selectedTruck.value = generalInformation.truck_id;
+      selectedDept.value = generalInformation.dept_id;
+      selectedSupervisor.value = generalInformation.supervisor_id;
+      selectedTypeOfIncident.value = generalInformation.typeOfIncident_id;
 
-      timeClockIn.value = setTimeFromDB(coversheet.clockIn);
-      timeClockOut.value = setTimeFromDB(coversheet.clockOut);
-      timeClockInTrainee.value = setTimeFromDB(coversheet.clockInTrainee);
-      timeClockOutTrainee.value = setTimeFromDB(coversheet.clockOutTrainee);
-      trainee.value = coversheet.trainee;
-      timePreTripStart.value = setTimeFromDB(coversheet.timePreTripStart);
-      timePreTripEnd.value = setTimeFromDB(coversheet.timePreTripEnd);
-      timePostTripStart.value = setTimeFromDB(coversheet.timePostTripStart);
-      timePostTripEnd.value = setTimeFromDB(coversheet.timePostTripEnd);
-      truckStartMiles.value = coversheet.truckStartMiles;
-      truckEndMiles.value = coversheet.truckEndMiles;
-      truckStartHours.value = coversheet.truckStartHours;
-      truckEndHours.value = coversheet.truckEndHours;
-      trailerStartMiles.value = coversheet.trailerStartMiles;
-      trailerEndMiles.value = coversheet.trailerEndMiles;
-      fuel.value = coversheet.fuel;
-      dieselExhaustFluid.value = coversheet.dieselExhaustFluid;
-      notes.value = coversheet.notes;
+      location.value = generalInformation.location;
+      time.value = setTimeFromDB(generalInformation.time);
+      timeWorkedYears.value = generalInformation.timeWorkedYears;
+      timeWorkedMonths.value = generalInformation.timeWorkedMonths;
+      timeDayStarted.value = setTimeFromDB(generalInformation.timeDayStarted);
 
-      selectedTruckDownTime.value = coversheet.truck_id;
-      selectedTrailerDownTime.value = coversheet.trailer_id;
 
       handleVisibleAcordion();
-      loadSpareTruckInfo();
-      loadDowntime();
-      loadLoad();
+      // loadSpareTruckInfo();
+      // loadDowntime();
+      // loadLoad();
     }
   }
 });
@@ -493,107 +291,113 @@ onMounted(() => {
 // Handle form submission General Info
 const onSubmit = async (event) => {
   event.preventDefault();
-  formSubmitted.value = true;
+  formSubmittedGeneralInformation.value = true;
 
-  // Limpiar errores anteriores
-  // errors.value.route_er = "";
-  // errors.value.leaveYard_er = "";
-  // errors.value.backInYard_er = "";
-  // errors.value.startMiles_er = "";
-  // errors.value.endMiles_er = "";
+  // Limpiar errores anteriores General Information
 
-
-  errors.value.homebase_er = "";
-  errors.value.truck_er = "";
-  errors.value.trailer_er = "";
-  errors.value.clockIn_er = "";
-  errors.value.clockOut_er = "";
-  errors.value.clockInTrainee_er = "";
-  errors.value.clockOutTrainee_er = "";
-  errors.value.trainee_er = "";
-  errors.value.preTripStart_er = "";
-  errors.value.preTripEnd_er = "";
-  errors.value.postTripStart_er = "";
-  errors.value.postTripEnd_er = "";
-  errors.value.truckStartMiles_er = "";
-  errors.value.truckEndMiles_er = "";
-  errors.value.truckStartHours_er = "";
-  errors.value.truckEndHours_er = "";
-  errors.value.trailerStartMiles_er = "";
-  errors.value.trailerEndMiles_er = "";
-  errors.value.fuel_er = "";
-  errors.value.dieselExhaustFluid_er = "";
-
+  errorsGeneralInformation.value.employee_er = "";
+  errorsGeneralInformation.value.truck_er = "";
+  errorsGeneralInformation.value.dept_er = "";
+  errorsGeneralInformation.value.supervisor_er = "";
+  errorsGeneralInformation.value.typeOfIncident_er = "";
+  errorsGeneralInformation.value.date_er = "";
+  errorsGeneralInformation.value.trainee_er = "";
+  errorsGeneralInformation.value.location_er = "";
+  errorsGeneralInformation.value.time_er = "";
+  errorsGeneralInformation.value.timeWorkedYears_er = "";
+  errorsGeneralInformation.value.timeWorkedMonths_er = "";
+  errorsGeneralInformation.value.timeDayStarted_er = "";
 
 
 
   let hasError = false;
 
-  if (!selectedHomeBase.value) {
-    errors.value.homebase_er = "Required field";
+  if (!selectedEmployee .value) {
+    errorsGeneralInformation.value.employee_er = "Required field";
     hasError = true;
   }
 
   if (!selectedTruck.value) {
-    errors.value.truck_er = "Required field";
+    errorsGeneralInformation.value.truck_er = "Required field";
     hasError = true;
   }
 
-  if (!selectedTrailer.value) {
-    errors.value.trailer_er = "Required field";
+  if (!time.value) {
+    errorsGeneralInformation.value.time_er = "Required field";
     hasError = true;
   }
 
-  if (!timeClockIn.value) {
-    errors.value.clockIn_er = "Required field";
+  if (!selectedDept.value) {
+    errorsGeneralInformation.value.dept_er = "Required field";
     hasError = true;
   }
+
+  if (!selectedSupervisor.value) {
+    errorsGeneralInformation.value.supervisor_er = "Required field";
+    hasError = true;
+  }
+
+  if (!selectedTypeOfIncident.value) {
+    errorsGeneralInformation.value.typeOfIncident_er = "Required field";
+    hasError = true;
+  }
+
+  if (!trainee.value) {
+    errorsGeneralInformation.value.trainee_er = "Required field";
+    hasError = true;
+  }
+
+  if (!location.value) {
+    errorsGeneralInformation.value.location_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeWorkedYears.value) {
+    errorsGeneralInformation.value.timeWorkedYears_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeWorkedMonths.value) {
+    errorsGeneralInformation.value.timeWorkedMonths_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeDayStarted.value) {
+    errorsGeneralInformation.value.timeDayStarted_er = "Required field";
+    hasError = true;
+  } 
 
 
   if (hasError) {
     return;
   }
 
-  const coverSheetData = {
+  const generalInformationData = {
 
-    homebase_id: selectedHomeBase.value,
-    truck_id: selectedTruck.value,
-    trailer_id: selectedTrailer.value,
-    clockIn: formatTime(timeClockIn.value),
-    clockOut: formatTime(timeClockOut.value) || "",
-    clockInTrainee: formatTime(timeClockInTrainee.value) || "",
-    clockOutTrainee: formatTime(timeClockOutTrainee.value) || "",
-    trainee: trainee.value.toString() || "",
-    timePreTripStart: formatTime(timePreTripStart.value) || "",
-    timePreTripEnd: formatTime(timePreTripEnd.value) || "",
-    timePostTripStart: formatTime(timePostTripStart.value) || "",
-    timePostTripEnd: formatTime(timePostTripEnd.value) || "",
-    truckStartMiles: truckStartMiles.value.toString() || "",
-    truckEndMiles: truckEndMiles.value.toString() || "",
-    truckStartHours: truckStartHours.value.toString() || "",
-    truckEndHours: truckEndHours.value.toString() || "",
-    trailerStartMiles: trailerStartMiles.value.toString() || "",
-    trailerEndMiles: trailerEndMiles.value.toString() || "",
-    fuel: fuel.value.toString() || "",
-    dieselExhaustFluid: dieselExhaustFluid.value.toString() || "",
-
-    driver_id: user.value.id,
-    notes: notes.value,
     date: getDenverTimeAsUTCISOString(),
+    trainerName: trainee.value,
+    employee_id: selectedEmployee.value,
+    truck_id: selectedTruck.value,
+    dept_id: selectedDept.value,
+    supervisor_id: selectedSupervisor.value,
+    typeOfIncident_id: selectedTypeOfIncident.value,
+    location: location.value,
+    time: formatTime(time.value),
+    timeWorkedYears: timeWorkedYears.value.toString(),
+    timeWorkedMonths: timeWorkedMonths.value.toString(),
+    timeDayStarted: formatTime(timeDayStarted.value),
+
   };
 
   try {
-    if (!isEditModeCoverShet.value) {
-      const response = await CoverSheetAPI.add(coverSheetData);
+    if (!isEditGeneralInformation.value) {
+      const response = await GeneralInformationAPI.add(generalInformationData);
 
       if (response.data.ok) {
-        localStorage.setItem("COVERSHEET", JSON.stringify(response.data.data));
-        const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
+        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+        const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
-        selectedTruckDownTime.value = coversheet.truck_id;
-        selectedTrailerDownTime.value = coversheet.trailer_id;
-
-        isEditModeCoverShet.value = true;
+        isEditGeneralInformation.value = true;
 
         showSweetAlert({
           title: "General information saved successfully!",
@@ -619,15 +423,12 @@ const onSubmit = async (event) => {
         });
       }
     } else {
-      let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
-      const response = await CoverSheetAPI.edit(coversheet_id, coverSheetData);
+      let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
+      const response = await GeneralInformationAPI.edit(generalInformation_id, generalInformationData);
 
       if (response.data.ok) {
-        localStorage.setItem("COVERSHEET", JSON.stringify(response.data.data));
-        const coversheet = JSON.parse(localStorage.getItem("COVERSHEET"));
-
-        selectedTruckDownTime.value = coversheet.truck_id;
-        selectedTrailerDownTime.value = coversheet.trailer_id;
+        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+        const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
         showSweetAlert({
           title: "General information edited successfully!",
@@ -667,415 +468,274 @@ const onSubmit = async (event) => {
 };
 
 
-// Reset form after successful submission
-const resetForm = () => {
+// Reset General Information form
+const resetGeneralInformation = () => {
 
-  selectedHomeBase.value = "";
+  selectedEmployee.value = "";
   selectedTruck.value = "";
-  selectedTrailer.value = "";
-  timeClockIn.value = "";
-  timeClockOut.value = "";
-  timeClockInTrainee.value = "";
-  timeClockOutTrainee.value = "";
-  trainee.value = "";
-  timePreTripStart.value = "";
-  timePreTripEnd.value = "";
-  timePostTripStart.value = "";
-  timePostTripEnd.value = "";
-  truckStartMiles.value = "";
-  truckEndMiles.value = "";
-  truckStartHours.value = "";
-  truckEndHours.value = "";
-  trailerStartMiles.value = "";
-  trailerEndMiles.value = "";
-  fuel.value = "";
-  dieselExhaustFluid.value = "";
-  notes.value = "";
+  selectedDept.value = "";
+  selectedSupervisor.value = "";
+  selectedTypeOfIncident.value = "";
+  location.value = "";
+  time.value = "";
+  timeWorkedYears.value = "";
+  timeWorkedMonths.value = "";
+  timeDayStarted.value = "";
 
 
-  // timeLeaveYard.value = "";
-  // timeBackInYard.value = "";
-  // startMiles.value = "";
-  // endMiles.value = "";
-  // selectedRoute.value = "";
-
-  formSubmitted.value = false;
+  isEditGeneralInformation.value = false;
+  formSubmittedGeneralInformation.value = false;
 };
 
-// Reset Spare Truck Info form
-const resetSpareTruckInfo = () => {
+// Reset During the Incident form
+const resetDuringTheIncidentForm = () => {
 
-  // selectedHomeBaseSpareTruckInfo.value = "";
-  selectedTruckSpareTruckInfo.value = "";
-  selectedTrailerSpareTruckInfo.value = "";
+  selectedDuringTheIncidentId.value = null;
+  usingElectronicDevice.value = "";
+  taskPerfomed.value = "";
+  wasSafetyDeptNotified.value = "";
+  didYouTakePictures.value = "";
+  howFastWereYouGoing.value = false;
+  SelectedSafetyPersonNotified.value = "";
+  SelectedWhoDidYouSendThePicturesTo.value = "";
+  SelectedDirectionYouWereTraveling.value = "";
+  SelectedWeatherCondition.value = "";
+  SelectedRoadCondition.value = "";
+  wasThisIncidentInAnIntersection.value = "";
+  witness.value = "";
+  witnessPhone.value = "";
 
-  timeLeaveYardSpareTruckInfo.value = "";
-  timeBackInYardSpareTruckInfo.value = "";
-  fuelSpareTruckInfo.value = "";
-  dieselExhaustFluidSpareTruckInfo.value = "";
-
-  truckStartMilesSpareTruckInfo.value = "";
-  truckEndMilesSpareTruckInfo.value = "";
-  truckStartHoursSpareTruckInfo.value = "";
-  truckEndHoursSpareTruckInfo.value = "";
-
-  trailerStartMilesSpareTruckInfo.value = "";
-  trailerEndMilesSpareTruckInfo.value = "";
-
-  selectedSpareTruckId.value = null;
-  isEditingSpareTruckInfo.value = false;
-
-  formSubmittedSpareTruckInfo.value = false;
-
+  isEditDuringTheIncident.value = false;
+  formSubmittedDuringTheIncident.value = false;
+  
 };
 
-const resetDowntime = () => {
-
-  selectedTruckDownTime.value = "";
-  selectedTrailerDownTime.value = "";
-  selectedTypeTruckDownTime.value = "";
-  selectedTypeTrailerDownTime.value = "";
-
-  truckDownTimeStartDownTime.value = "";
-  truckDownTimeEndDownTime.value = "";
-  trailerDownTimeStartDownTime.value = "";
-  trailerDownTimeEndDownTime.value = "";
-  downTimeReasonDownTime.value = "";
-
-  selectedDowntimeId.value = null;
-  isEditingDowntime.value = false;
-
-  formSubmittedDowntime.value = false;
-
-};
-
-const resetLoad = () => {
-
-  tunnelTimeInLoad.value = "";
-  tunnelTimeOutLoad.value = "";
-  leaveYardLoad.value = "";
-  timeInLoad.value = "";
-  timeOutLoad.value = "";
-  ticketNumberLoad.value = "";
-  grossWeightLoad.value = "";
-  tareWeightLoad.value = "";
-  tonsLoad.value = "";
-  backYardLoad.value = "";
-  noteLoad.value = "";
-  preloadedLoad.value = false;
-  preloadedNextDayLoad.value = false;
-  // selectedHomeBaseLoad.value = "";
-  selectedOperatorLoad.value = "";
-  selectedSourceLoad.value = "";
-  selectedDestinationLoad.value = "";
-  selectedMaterialLoad.value = "";
+// Reset Incident Detail form
+const resetIncidentDetail = () => {
+  selectedIncidentDetailId.value = null;
+  incidentDescription.value = "";
+  actionEventConditions.value = "";
+  wereAnyVehiclesTowed.value = "";
+  wasAnyOneHurt.value = "";
+  describeAnyInjuries.value = "";
+  damageToAceTruck.value = "";
+  whatDamageWasDone.value = "";
+  incidentInThePastYear.value = "";
+  listDatesOfIncidents.value = "";
 
   selectedImages.value = [];
   selectedFiles.value = []; // Clear files as well
-  existingLoadImages.value = []; // Clear existing images
+  existingIncidentDetailImages.value = []; // Clear existing images
   if (fileInput.value) {
     fileInput.value.value = "";
   }
-  isEditingLoad.value = false;
-  selectedLoadId.value = null;
-  formSubmittedLoad.value = false;
+
+  isEditingIncidentDetail.value = false;
+  formSubmittedIncidentDetail.value = false;
+
 };
 
-// Handle form submission Spare Truck Info (Add or Edit)
-const HandleSpareTruckInfo = async (event) => {
+// Reset Supervisor Note form
+const resetSupervisorNote = () => {
+
+  supervisorNote.value = "";
+  selectedSupervisorNoteId.value = null;
+
+  isEditingSupervisorNote.value = false;
+  formSubmittedSupervisorNote.value = false;  
+};
+
+
+// Handle form submission During the Incident
+const HandleDuringTheIncident = async (event) => {
   event.preventDefault();
-  formSubmittedSpareTruckInfo.value = true;
+  formSubmittedDuringTheIncident.value = true;
 
   // Limpiar errores anteriores
-  errorsSpareTruckInfo.value.homebaseSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.leaveYardSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.backInYardSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.fuelSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.dieselExhaustFluidSpareTruckInfo_er = "";
-
-  errorsSpareTruckInfo.value.spareTruckSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.truckStartMilesSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.truckEndMilesSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.truckStartHoursSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.truckEndHoursSpareTruckInfo_er = "";
-
-  errorsSpareTruckInfo.value.spareTrailerSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.trailerStartMilesSpareTruckInfo_er = "";
-  errorsSpareTruckInfo.value.trailerEndMilesSpareTruckInfo_er = "";
+  errorsDuringTheIncident.value.usingElectronicDevice_er = "";
+  errorsDuringTheIncident.value.taskPerfomed_er = "";
+  errorsDuringTheIncident.value.wasSafetyDeptNotified_er = "";
+  errorsDuringTheIncident.value.didYouTakePictures_er = "";
+  errorsDuringTheIncident.value.howFastWereYouGoing_er = "";
+  errorsDuringTheIncident.value.SelectedSafetyPersonNotified_er = "";
+  errorsDuringTheIncident.value.SelectedWhoDidYouSendThePicturesTo_er = "";
+  errorsDuringTheIncident.value.SelectedDirectionYouWereTraveling_er = "";
+  errorsDuringTheIncident.value.SelectedWeatherCondition_er = "";
+  errorsDuringTheIncident.value.SelectedRoadCondition_er = "";
+  errorsDuringTheIncident.value.wasThisIncidentInAnIntersection_er = "";
+  errorsDuringTheIncident.value.witness_er = "";
+  errorsDuringTheIncident.value.witnessPhone_er = "";
 
   let hasError = false;
-
-  // if (!selectedHomeBaseSpareTruckInfo.value) {
-  //   errorsSpareTruckInfo.value.homebaseSpareTruckInfo_er = "Required field";
-  //   hasError = true;
-  // }
-
-
-
+    if (!usingElectronicDevice.value) {
+      errorsDuringTheIncident.value.usingElectronicDevice_er = "Required field";
+      hasError = true;
+    }
   if (hasError) {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
-  const spareTruckInfo = {
+  const duringTheIncident = {
+    usingElectronicDevice: usingElectronicDevice.value,
+    taskPerfomed: taskPerfomed.value,
+    wasSafetyDeptNotified: wasSafetyDeptNotified.value,
+    didYouTakePictures: didYouTakePictures.value,
+    howFastWereYouGoing: howFastWereYouGoing.value ? "Yes" : "No",
+    safetyPersonNotified_id: SelectedSafetyPersonNotified.value || "",
+    whoDidYouSendThePicturesTo_id: SelectedWhoDidYouSendThePicturesTo.value || "",
+    directionYouWereTraveling_id: SelectedDirectionYouWereTraveling.value || "",  
+    weatherCondition_id: SelectedWeatherCondition.value || "",
+    roadCondition_id: SelectedRoadCondition.value || "",
+    wasThisIncidentInAnIntersection: wasThisIncidentInAnIntersection.value,
+    witness: witness.value,
+    witnessPhone: witnessPhone.value,
 
-    // homebase_id: selectedHomeBaseSpareTruckInfo.value,
-    timeLeaveYardSpareTruckInfo: formatTime(timeLeaveYardSpareTruckInfo.value) || "",
-    timeBackInYardSpareTruckInfo: formatTime(timeBackInYardSpareTruckInfo.value) || "",
-    fuelSpareTruckInfo: fuelSpareTruckInfo.value.toString() || "",
-    dieselExhaustFluidSpareTruckInfo: dieselExhaustFluidSpareTruckInfo.value.toString() || "",
-
-    truck_id: selectedTruckSpareTruckInfo.value,
-    truckStartMilesSpareTruckInfo: truckStartMilesSpareTruckInfo.value.toString() || "",
-    truckEndMilesSpareTruckInfo: truckEndMilesSpareTruckInfo.value.toString() || "",
-    truckStartHoursSpareTruckInfo: truckStartHoursSpareTruckInfo.value.toString() || "",
-    truckEndHoursSpareTruckInfo: truckEndHoursSpareTruckInfo.value.toString() || "",
-
-    trailer_id: selectedTrailerSpareTruckInfo.value,
-    trailerStartMilesSpareTruckInfo: trailerStartMilesSpareTruckInfo.value.toString() || "",
-    trailerEndMilesSpareTruckInfo: trailerEndMilesSpareTruckInfo.value.toString() || "",
-
-    coversheet_id: coversheet_id,
+    generalInformation_id: generalInformation_id,
 
   };
 
   try {
-    if (isEditingSpareTruckInfo.value) {
-      // Edit existing Spare Truck Info
-      isLoadingSpareTruckInfo.value = true; // Show loading spinner
-      const response = await SpareTruckInfoAPI.edit(selectedSpareTruckId.value, spareTruckInfo);
+    if (isEditDuringTheIncident.value) {
+      // Edit existi
+      isLoadingDuringTheIncident.value = true; // Show loading spinner
+      const response = await DuringTheIncidentAPI.edit(selectedDuringTheIncidentId.value, duringTheIncident);
 
       if (response.data.ok) {
         showSweetAlert({
-          title: "Spare Truck Info updated successfully!",
+          title: "During The Incident Info updated successfully!",
           icon: "success",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingSpareTruckInfo.value = false; // Hide loading spinner
-          loadSpareTruckInfo();
-          resetSpareTruckInfo();
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+          loadDuringTheIncident();
+          resetDuringTheIncident();
         });
       } else {
         showSweetAlert({
-          title: "Error updating Spare Truck Info!",
+          title: "Error updating During The Incident Info!",
           icon: "warning",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingSpareTruckInfo.value = false; // Hide loading spinner
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
         });
       }
     } else {
-      // Add new Spare Truck Info
-      isLoadingSpareTruckInfo.value = true; // Show loading spinner
-      const response = await SpareTruckInfoAPI.add(spareTruckInfo);
+      // Add new During The Incident Info
+      isLoadingDuringTheIncident.value = true; // Show loading spinner
+      const response = await DuringTheIncidentAPI.add(duringTheIncident);
 
       if (response.data.ok) {
         showSweetAlert({
-          title: "Spare Truck Info saved successfully!",
+          title: "During The Incident Info saved successfully!",
           icon: "success",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingSpareTruckInfo.value = false; // Hide loading spinner
-          loadSpareTruckInfo();
-          resetSpareTruckInfo();
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+          loadDuringTheIncident();
+          resetDuringTheIncident();
         });
       } else {
         showSweetAlert({
-          title: "Error saving Spare Truck Info!",
+          title: "Error saving During The Incident Info!",
           icon: "warning",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingSpareTruckInfo.value = false; // Hide loading spinner
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
         });
       }
     }
   } catch (error) {
     showSweetAlert({
-      title: isEditingSpareTruckInfo.value
-        ? "Error updating Spare Truck Info!"
-        : "Error saving Spare Truck Info!",
+      title: isEditingDuringTheIncident.value
+        ? "Error updating During The Incident Info!"
+        : "Error saving During The Incident Info!",
       icon: "warning",
       showDenyButton: false,
       showCancelButton: false,
       confirmButtonText: "Ok",
       allowOutsideClick: false,
     }).then(() => {
-      isLoadingSpareTruckInfo.value = false; // Hide loading spinner
+      isLoadingDuringTheIncident.value = false; // Hide loading spinner
     });
   }
 };
 
-// Handle form submission Downtime
-const HandleDowntime = async (event) => {
+// Handle form submission Incident Detail
+const HandleIncidentDetail = async (event) => {
   event.preventDefault();
-  formSubmittedDowntime.value = true;
+  formSubmittedIncidentDetail.value = true;
 
-  // Limpiar errores anteriores
+  // Clear previous errorsIncidentDetail
+  errorsIncidentDetail.value.incidentDescription_er = "";
+  errorsIncidentDetail.value.actionEventConditions_er = "";
+  errorsIncidentDetail.value.wereAnyVehiclesTowed_er = "";
+  errorsIncidentDetail.value.wasAnyOneHurt_er = "";
+  errorsIncidentDetail.value.describeAnyInjuries_er = "";
+  errorsIncidentDetail.value.damageToAceTruck_er = "";
+  errorsIncidentDetail.value.whatDamageWasDone_er = "";
+  errorsIncidentDetail.value.incidentInThePastYear_er = "";
+  errorsIncidentDetail.value.listDatesOfIncidents_er = "";
 
-  errorsDowntime.value.selectedTruckDownTime_er = "";
-  errorsDowntime.value.selectedTrailerDownTime_er = "";
-  errorsDowntime.value.selectedTypeTruckDownTime_er = "";
-  errorsDowntime.value.selectedTypeTrailerDownTime_er = "";
-  errorsDowntime.value.truckDownTimeStartDownTime_er = "";
-  errorsDowntime.value.truckDownTimeEndDownTime_er = "";
-  errorsDowntime.value.trailerDownTimeStartDownTime_er = "";
-  errorsDowntime.value.trailerDownTimeEndDownTime_er = "";
-  errorsDowntime.value.downTimeReasonDownTime_er = "";
 
 
   let hasError = false;
 
-  if (!downTimeReasonDownTime.value) {
-    errorsDowntime.value.downTimeReasonDownTime_er = "Required field";
+  if (!incidentDescription.value) {
+    errorsIncidentDetail.value.incidentDescription_er = "Required field";
     hasError = true;
   }
 
-
-  if (hasError) {
-    return;
-  }
-
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
-
-  const downtime = {
-    truck_id: selectedTruckDownTime.value,
-    trailer_id: selectedTrailerDownTime.value,
-    typeTruckDownTime_id: selectedTypeTruckDownTime.value || "",
-    typeTrailerDownTime_id: selectedTypeTrailerDownTime.value || "",
-
-    truckDownTimeStartDownTime: formatTime(truckDownTimeStartDownTime.value) || "",
-    truckDownTimeEndDownTime: formatTime(truckDownTimeEndDownTime.value) || "",
-    trailerDownTimeStartDownTime: formatTime(trailerDownTimeStartDownTime.value) || "",
-    trailerDownTimeEndDownTime: formatTime(trailerDownTimeEndDownTime.value) || "",
-    downTimeReasonDownTime: downTimeReasonDownTime.value || "",
-
-    coversheet_id: coversheet_id,
-  };
-
-  try {
-    if (isEditingDowntime.value) {
-      isLoadingDowntime.value = true; // Show loading spinner
-      const response = await DowntimeAPI.edit(selectedDowntimeId.value, downtime);
-
-      if (response.data.ok) {
-        showSweetAlert({
-          title: "Downtime updated successfully!",
-          icon: "success",
-          showDenyButton: false,
-          showCancelButton: false,
-          confirmButtonText: "Ok",
-          allowOutsideClick: false,
-        }).then(() => {
-          isLoadingDowntime.value = false; // Hide loading spinner
-          loadDowntime();
-          resetDowntime();
-        });
-      } else {
-        showSweetAlert({
-          title: "Error updating Downtime!",
-          icon: "warning",
-          showDenyButton: false,
-          showCancelButton: false,
-          confirmButtonText: "Ok",
-          allowOutsideClick: false,
-        }).then(() => {
-          isLoadingDowntime.value = false; // Hide loading spinner
-        });
-      }
-    } else {
-      // Add new Downtime
-      isLoadingDowntime.value = true; // Show loading spinner
-      const response = await DowntimeAPI.add(downtime);
-
-      if (response.data.ok) {
-        showSweetAlert({
-          title: "Downtime saved successfully!",
-          icon: "success",
-          showDenyButton: false,
-          showCancelButton: false,
-          confirmButtonText: "Ok",
-          allowOutsideClick: false,
-        }).then(() => {
-          isLoadingDowntime.value = false; // Hide loading spinner
-          loadDowntime();
-          resetDowntime();
-        });
-      } else {
-        showSweetAlert({
-          title: "Error saving Downtime!",
-          icon: "warning",
-          showDenyButton: false,
-          showCancelButton: false,
-          confirmButtonText: "Ok",
-          allowOutsideClick: false,
-        }).then(() => {
-          isLoadingDowntime.value = false; // Hide loading spinner
-        });
-      }
-    }
-  } catch (error) {
-    showSweetAlert({
-      title: isEditingDowntime.value ? "Error updating Downtime!" : "Error saving Downtime!",
-      icon: "warning",
-      showDenyButton: false,
-      showCancelButton: false,
-      confirmButtonText: "Ok",
-      allowOutsideClick: false,
-    }).then(() => {
-      isLoadingDowntime.value = false; // Hide loading spinner
-    });
-  }
-};
-
-
-// Handle form submission for Load
-const HandleLoad = async (event) => {
-  event.preventDefault();
-  formSubmittedLoad.value = true;
-
-  // Clear previous errors
-  errorsLoad.value.tunnelTimeInLoad_er = "";
-  errorsLoad.value.tunnelTimeOutLoad_er = "";
-  errorsLoad.value.leaveYardLoad_er = "";
-  errorsLoad.value.timeInLoad_er = "";
-  errorsLoad.value.timeOutLoad_er = "";
-  errorsLoad.value.ticketNumberLoad_er = "";
-  errorsLoad.value.grossWeightLoad_er = "";
-  errorsLoad.value.tareWeightLoad_er = "";
-  errorsLoad.value.tonsLoad_er = "";
-  errorsLoad.value.backYardLoad_er = "";
-  errorsLoad.value.imagesLoad_er = "";
-  errorsLoad.value.noteLoad_er = "";
-  errorsLoad.value.preloadedLoad_er = "";
-  errorsLoad.value.preloadedNextDayLoad_er = "";
-  // errorsLoad.value.selectedHomeBaseLoad_er = "";
-  errorsLoad.value.selectedOperatorLoad_er = "";
-  errorsLoad.value.selectedSourceLoad_er = "";
-  errorsLoad.value.selectedDestinationLoad_er = "";
-  errorsLoad.value.selectedMaterialLoad_er = "";
-
-  let hasError = false;
-
-  if (!selectedSourceLoad.value) {
-    errorsLoad.value.selectedSourceLoad_er = "Required field";
+  if (!actionEventConditions.value) {
+    errorsIncidentDetail.value.actionEventConditions_er = "Required field";
     hasError = true;
   }
 
-  if (!selectedMaterialLoad.value) {
-    errorsLoad.value.selectedMaterialLoad_er = "Required field";
+  if (!wereAnyVehiclesTowed.value) {
+    errorsIncidentDetail.value.wereAnyVehiclesTowed_er = "Required field";
+    hasError = true;
+  }
+
+  if (!wasAnyOneHurt.value) {
+    errorsIncidentDetail.value.wasAnyOneHurt_er = "Required field";
+    hasError = true;
+  }
+
+  if (!describeAnyInjuries.value) {
+    errorsIncidentDetail.value.describeAnyInjuries_er = "Required field";
+    hasError = true;
+  }
+
+  if (!damageToAceTruck.value) {
+    errorsIncidentDetail.value.damageToAceTruck_er = "Required field";
+    hasError = true;
+  }
+
+  if (!whatDamageWasDone.value) {
+    errorsIncidentDetail.value.whatDamageWasDone_er = "Required field";
+    hasError = true;
+  }
+
+  if (!incidentInThePastYear.value) {
+    errorsIncidentDetail.value.incidentInThePastYear_er = "Required field";
+    hasError = true;
+  }
+
+  if (!listDatesOfIncidents.value) {
+    errorsIncidentDetail.value.listDatesOfIncidents_er = "Required field";
     hasError = true;
   }
 
@@ -1083,35 +743,24 @@ const HandleLoad = async (event) => {
     return;
   }
 
-  let coversheet_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.id || null;
+  let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
   // Create a new FormData object
   const formData = new FormData();
 
   // Add form fields to FormData
+  if (incidentDescription.value) formData.append("incidentDescription", incidentDescription.value);
+  if (actionEventConditions.value) formData.append("actionEventConditions", actionEventConditions.value);
+  if (wereAnyVehiclesTowed.value) formData.append("wereAnyVehiclesTowed", wereAnyVehiclesTowed.value);
+  if (wasAnyOneHurt.value) formData.append("wasAnyOneHurt", wasAnyOneHurt.value);
+  if (describeAnyInjuries.value) formData.append("describeAnyInjuries", describeAnyInjuries.value);
+  if (damageToAceTruck.value) formData.append("damageToAceTruck", damageToAceTruck.value);
+  if (whatDamageWasDone.value) formData.append("whatDamageWasDone", whatDamageWasDone.value);
+  if (incidentInThePastYear.value) formData.append("incidentInThePastYear ", incidentInThePastYear.value);
+  if (listDatesOfIncidents.value) formData.append("listDatesOfIncidents", listDatesOfIncidents.value);
 
-  // if (selectedHomeBaseLoad.value) formData.append("homebase_id", selectedHomeBaseLoad.value);
-  if (selectedOperatorLoad.value) formData.append("operator_id", selectedOperatorLoad.value);
-  if (selectedSourceLoad.value) formData.append("source_id", selectedSourceLoad.value);
-  if (selectedDestinationLoad.value) formData.append("destination_id", selectedDestinationLoad.value);
-  if (selectedMaterialLoad.value) formData.append("material_id", selectedMaterialLoad.value);
 
-  if (tunnelTimeInLoad.value) formData.append("tunnelTimeInLoad", formatTime(tunnelTimeInLoad.value));
-  if (tunnelTimeOutLoad.value) formData.append("tunnelTimeOutLoad", formatTime(tunnelTimeOutLoad.value));
-  if (leaveYardLoad.value) formData.append("leaveYardLoad", formatTime(leaveYardLoad.value));
-  if (timeInLoad.value) formData.append("timeInLoad", formatTime(timeInLoad.value));
-  if (timeOutLoad.value) formData.append("timeOutLoad", formatTime(timeOutLoad.value));
-
-  if (ticketNumberLoad.value) formData.append("ticketNumberLoad", ticketNumberLoad.value);
-  if (grossWeightLoad.value) formData.append("grossWeightLoad", grossWeightLoad.value.toString());
-  if (tareWeightLoad.value) formData.append("tareWeightLoad", tareWeightLoad.value.toString());
-  if (tonsLoad.value) formData.append("tonsLoad", tonsLoad.value.toString());
-  if (backYardLoad.value) formData.append("backYardLoad", formatTime(backYardLoad.value));
-  if (noteLoad.value) formData.append("noteLoad", noteLoad.value);
-  if (preloadedLoad.value) formData.append("preloadedLoad", preloadedLoad.value);
-  if (preloadedNextDayLoad.value) formData.append("preloadedNextDayLoad", preloadedNextDayLoad.value);
-
-  formData.append("coversheet_id", coversheet_id);
+  formData.append("generalInformation_ref_id", generalInformation_id);
 
   // Append all selected files to FormData
   selectedFiles.value.forEach((file, index) => {
@@ -1121,11 +770,11 @@ const HandleLoad = async (event) => {
   try {
     if (isEditingLoad.value) {
       isLoadingLoad.value = true;
-      const response = await LoadAPI.edit(selectedLoadId.value, formData);
+      const response = await IncidentDetailAPI.edit(selectedIncidentDetail.value, formData);
 
       if (response.data.ok) {
         showSweetAlert({
-          title: "Load updated successfully!",
+          title: "Incident Detail updated successfully!",
           icon: "success",
           showDenyButton: false,
           showCancelButton: false,
@@ -1133,41 +782,41 @@ const HandleLoad = async (event) => {
           allowOutsideClick: false,
         }).then(() => {
           isLoadingLoad.value = false;
-          loadLoad();
-          resetLoad();
+          loadIncidentDetail();
+          resetIncidentDetail();
         });
       } else {
         showSweetAlert({
-          title: "Error updating Load!",
+          title: "Error updating Incident Detail!",
           icon: "warning",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingLoad.value = false;
+          isLoadingIncidentDetail.value = false;
         });
       }
     } else {
-      isLoadingLoad.value = true;
-      const response = await LoadAPI.add(formData);
+     isLoadingIncidentDeail.value = true;
+      const response = await IncidentDetailAPI.add(formData);
 
       if (response.data.ok) {
         showSweetAlert({
-          title: "Load saved successfully!",
+          title: "Incident Detail saved successfully!",
           icon: "success",
           showDenyButton: false,
           showCancelButton: false,
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingLoad.value = false;
-          loadLoad();
-          resetLoad();
+          isLoadingIncidentDetail.value = false;
+          loadIncidentDetail();
+          resetIncidentDetail();
         });
       } else {
         showSweetAlert({
-          title: "Error saving Load!",
+          title: "Error saving Incident Detail!",
           text: response.data.msg,
           icon: "warning",
           showDenyButton: false,
@@ -1175,13 +824,13 @@ const HandleLoad = async (event) => {
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingLoad.value = false;
+          isLoadingIncidentDetail.value = false;
         });
       }
     }
   } catch (error) {
     showSweetAlert({
-      title: isEditingLoad.value ? "Error updating Load!" : "Error saving Load!",
+      title: isEditingLoad.value ? "Error updating Incident Detail!" : "Error saving Incident Detail!",
       text: error.response?.data?.msg || "An error occurred",
       icon: "warning",
       showDenyButton: false,
@@ -1189,96 +838,181 @@ const HandleLoad = async (event) => {
       confirmButtonText: "Ok",
       allowOutsideClick: false,
     }).then(() => {
-      isLoadingLoad.value = false;
+      isLoadingIncidentDetail.value = false;
     });
-    console.error("Error al enviar Load:", error);
+    console.error("Error al enviar Incident Detail:", error);
+  }
+};
+// Handle form submission Supervisor Note
+const HandleSupervisorNote = async (event) => {
+  event.preventDefault();
+  formSubmittedSupervisorNote.value = true;
+
+  // Limpiar errores anteriores
+  errorsSupervisorNote.value.supervisorNote_er = "";
+
+
+  let hasError = false;
+
+  if (!supervisorNote.value) {
+    errorsSupervisorNote.value.supervisorNote_er = "Required field";
+    hasError = true;
+  }
+
+  if (hasError) {
+    return;
+  }
+
+  let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
+
+  const supervisorNote = {
+    supervisorNote: supervisorNote.value,
+    generalInformation_id: generalInformation_id,
+
+  };
+
+  try {
+    if (isEditingSupervisorNote.value) {
+      isLoadingSupervisorNote.value = true; // Show loading spinner
+      const response = await SupervisorNoteAPI.edit(selectedSupervisorNoteId.value, supervisorNote);
+
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "Supervisor Note updated successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingSupervisorNote.value = false; // Hide loading spinner
+          loadSupervisorNote();
+          resetSupervisorNote();
+        });
+      } else {
+        showSweetAlert({
+          title: "Error updating Supervisor Note!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingSupervisorNote.value = false; // Hide loading spinner
+        });
+      }
+    } else {
+      // Add new Supervisor Note
+      isLoadingSupervisorNote.value = true; // Show loading spinner
+      const response = await SupervisorNoteAPI.add(supervisorNote);
+
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "Supervisor Note saved successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingSupervisorNote.value = false; // Hide loading spinner
+          loadSupervisorNote();
+          resetSupervisorNote();
+        });
+      } else {
+        showSweetAlert({
+          title: "Error saving Supervisor Note!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingSupervisorNote.value = false; // Hide loading spinner
+        });
+      }
+    }
+  } catch (error) {
+    showSweetAlert({
+      title: isEditingSupervisorNote.value ? "Error updating Supervisor Note!" : "Error saving Supervisor Note!",
+      icon: "warning",
+      showDenyButton: false,
+      showCancelButton: false,
+      confirmButtonText: "Ok",
+      allowOutsideClick: false,
+    }).then(() => {
+      isLoadingSupervisorNote.value = false; // Hide loading spinner
+    });
   }
 };
 
 
-const EditSpareTruckInfo = (item) => {
 
-  // selectedHomeBaseSpareTruckInfo.value = item.homebase_id;
-  timeLeaveYardSpareTruckInfo.value = setTimeFromDB(item.timeLeaveYardSpareTruckInfo);
-  timeBackInYardSpareTruckInfo.value = setTimeFromDB(item.timeBackInYardSpareTruckInfo);
-  fuelSpareTruckInfo.value = item.fuelSpareTruckInfo;
-  dieselExhaustFluidSpareTruckInfo.value = item.dieselExhaustFluidSpareTruckInfo;
 
-  selectedTruckSpareTruckInfo.value = item.truck_id;
-  truckStartMilesSpareTruckInfo.value = item.truckStartMilesSpareTruckInfo;
-  truckEndMilesSpareTruckInfo.value = item.truckEndMilesSpareTruckInfo;
-  truckStartHoursSpareTruckInfo.value = item.truckStartHoursSpareTruckInfo;
-  truckEndHoursSpareTruckInfo.value = item.truckEndHoursSpareTruckInfo;
 
-  selectedTrailerSpareTruckInfo.value = item.trailer_id;
-  trailerStartMilesSpareTruckInfo.value = item.trailerStartMilesSpareTruckInfo;
-  trailerEndMilesSpareTruckInfo.value = item.trailerEndMilesSpareTruckInfo;
+const EditDuringTheIncident = (item) => {
+  selectedDuringTheIncidentId.value = item.id || item._id; // Ensure the ID is captured
+  usingElectronicDevice.value = item.usingElectronicDevice || "";
+  taskPerfomed.value = item.taskPerfomed || "";
+  wasSafetyDeptNotified.value = item.wasSafetyDeptNotified || "";
+  didYouTakePictures.value = item.didYouTakePictures || "";
+  howFastWereYouGoing.value = item.howFastWereYouGoing || "";   
+  SelectedSafetyPersonNotified.value = item.safetyPersonNotified_id || "";
+  SelectedWhoDidYouSendThePicturesTo.value = item.whoDidYouSendThePicturesTo_id || "";
+  SelectedDirectionYouWereTraveling.value = item.directionYouWereTraveling_id || "";
+  SelectedWeatherCondition.value = item.weatherCondition_id || "";
+  SelectedRoadCondition.value = item.roadCondition_id || "";
+  wasThisIncidentInAnIntersection.value = item.wasThisIncidentInAnIntersection || "";
+  witness.value = item.witness || "";
+  witnessPhone.value = item.witnessPhone || "";
+
 
   // Set editing mode
-  isEditingSpareTruckInfo.value = true;
-  selectedSpareTruckId.value = item.id || item._id; // Ensure the ID is captured
+  isEditDuringTheIncident.value = true;
+  selectedDuringTheIncidentId.value = item.id || item._id; // Ensure the ID is captured
+
 };
 
-const EditDowntime = (item) => {
+const EditIncidentDetail = async (item) => {
 
-  selectedTruckDownTime.value = item.truck_id;
-  selectedTrailerDownTime.value = item.trailer_id;
-  selectedTypeTruckDownTime.value = item.typeTruckDownTime_id || "";
-  selectedTypeTrailerDownTime.value = item.typeTrailerDownTime_id || "";
-  truckDownTimeStartDownTime.value = setTimeFromDB(item.truckDownTimeStartDownTime);
-  truckDownTimeEndDownTime.value = setTimeFromDB(item.truckDownTimeEndDownTime);
-  trailerDownTimeStartDownTime.value = setTimeFromDB(item.trailerDownTimeStartDownTime);
-  trailerDownTimeEndDownTime.value = setTimeFromDB(item.trailerDownTimeEndDownTime);
-  downTimeReasonDownTime.value = item.downTimeReasonDownTime || "";
+  isLoadingIncidentDeail.value = true; // Set flag to prevent watches from clearing fields
 
+  selectedIncidentDetail.value = item.id || item._id; // Ensure the ID is captured
+  incidentDescription.value = item.incidentDescription || "";
+  actionEventConditions.value = item.actionEventConditions || "";
+  wereAnyVehiclesTowed.value = item.wereAnyVehiclesTowed || "";
+  wasAnyOneHurt.value = item.wasAnyOneHurt || "";
+  describeAnyInjuries.value = item.describeAnyInjuries || "";
+  damageToAceTruck.value = item.damageToAceTruck || "";
+  whatDamageWasDone.value = item.whatDamageWasDone || "";
+  incidentInThePastYear.value = item.incidentInThePastYear || "";
+  listDatesOfIncidents.value = item.listDatesOfIncidents || "";
 
-  // Set editing mode
-  isEditingDowntime.value = true;
-  selectedDowntimeId.value = item.id || item._id; // Ensure the ID is captured
-};
+  existingIncidentDetailImages.value = item.images || []; // Store existing images for the Load being edited
 
-const EditLoad = async (item) => {
-  // Set flag to prevent watches from clearing fields
-  isLoadingLoadData.value = true;
-
-  tunnelTimeInLoad.value = item.tunnelTimeInLoad ? setTimeFromDB(item.tunnelTimeInLoad) : "";
-  tunnelTimeOutLoad.value = item.tunnelTimeOutLoad ? setTimeFromDB(item.tunnelTimeOutLoad) : "";
-  leaveYardLoad.value = item.leaveYardLoad ? setTimeFromDB(item.leaveYardLoad) : "";
-  timeInLoad.value = item.timeInLoad ? setTimeFromDB(item.timeInLoad) : "";
-  timeOutLoad.value = item.timeOutLoad ? setTimeFromDB(item.timeOutLoad) : "";
-
-
-  ticketNumberLoad.value = item.ticketNumberLoad || "";
-  grossWeightLoad.value = item.grossWeightLoad ? item.grossWeightLoad.toString() : "";
-  tareWeightLoad.value = item.tareWeightLoad ? item.tareWeightLoad.toString() : "";
-  tonsLoad.value = item.tonsLoad ? item.tonsLoad.toString() : "";
-  backYardLoad.value = item.backYardLoad ? setTimeFromDB(item.backYardLoad) : "";
-  noteLoad.value = item.noteLoad || "";
-  preloadedLoad.value = item.preloadedLoad || false;
-  preloadedNextDayLoad.value = item.preloadedNextDayLoad || false;
-  // selectedHomeBaseLoad.value = item.homebase_id || "";
-  selectedOperatorLoad.value = item.operator_id || "";
-  selectedSourceLoad.value = item.source_id || "";
-  selectedDestinationLoad.value = item.destination_id || "";
-  selectedMaterialLoad.value = item.material_id || "";
-
-  // Set editing mode
-  isEditingLoad.value = true;
-  selectedLoadId.value = item.id || item._id; // Ensure the ID is captured
-  // Store existing images from the Load being edited
-  existingLoadImages.value = item.images || [];
-  
-  // Wait for Vue to finish processing all reactive updates before resetting flag
+  isEditingIncidentDetail.value = true;
   await nextTick();
-  
-  // Reset flag AFTER all watches have been processed
-  isLoadingLoadData.value = false;
+
+
+  // Set editing mode
+  isEditingIncidentDetail.value = true;
+  selectedIncidentDetailId.value = item.id || item._id; // Ensure the ID is captured
+
+  isLoadingIncidentDeail.value = false; // Reset loading flag after setting all fields
+};
+
+const EditSupervisorNote = async (item) => {
+  isLoadingSupervisorNote.value = true; // Set flag to prevent watches from clearing fields
+  selectedSupervisorNoteId.value = item.id || item._id; // Ensure the ID is captured
+  supervisorNote.value = item.supervisorNote || ""; 
+  isEditingSupervisorNote.value = true;
+
 };
 
 // Delete functions
-const DeleteSpareTruckInfo = async (item) => {
+const DeleteDuringTheIncident = async (item) => {
   showSweetAlert({
-    title: "Are you sure you want to delete this Spare Truck Info?",
+    title: "Are you sure you want to delete this During The Incident?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
@@ -1289,22 +1023,22 @@ const DeleteSpareTruckInfo = async (item) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await SpareTruckInfoAPI.delete(item.id || item._id);
+        const response = await DuringTheIncidentAPI.delete(item.id || item._id);
         
         if (response.data.ok) {
           showSweetAlert({
-            title: "Spare Truck Info deleted successfully!",
+            title: "During The Incident deleted successfully!",
             icon: "success",
             showDenyButton: false,
             showCancelButton: false,
             confirmButtonText: "Ok",
             allowOutsideClick: false,
           }).then(() => {
-            loadSpareTruckInfo();
+            loadDuringTheIncident();
           });
         } else {
           showSweetAlert({
-            title: "Error deleting Spare Truck Info!",
+            title: "Error deleting During The Incident!",
             icon: "error",
             showDenyButton: false,
             showCancelButton: false,
@@ -1313,9 +1047,9 @@ const DeleteSpareTruckInfo = async (item) => {
           });
         }
       } catch (error) {
-        console.error("Error deleting Spare Truck Info:", error);
+        console.error("Error deleting During The Incident:", error);
         showSweetAlert({
-          title: "Error deleting Spare Truck Info!",
+          title: "Error deleting During The Incident!",
           icon: "error",
           showDenyButton: false,
           showCancelButton: false,
@@ -1327,9 +1061,9 @@ const DeleteSpareTruckInfo = async (item) => {
   });
 };
 
-const DeleteDowntime = async (item) => {
+const DeleteIncidentDetail = async (item) => {
   showSweetAlert({
-    title: "Are you sure you want to delete this Downtime?",
+    title: "Are you sure you want to delete this Incident Detail?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
@@ -1340,22 +1074,22 @@ const DeleteDowntime = async (item) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await DowntimeAPI.delete(item.id || item._id);
+        const response = await IncidentDetailAPI.delete(item.id || item._id);
         
         if (response.data.ok) {
           showSweetAlert({
-            title: "Downtime deleted successfully!",
+            title: "Incident Detail deleted successfully!",
             icon: "success",
             showDenyButton: false,
             showCancelButton: false,
             confirmButtonText: "Ok",
             allowOutsideClick: false,
           }).then(() => {
-            loadDowntime();
+            loadIncidentDetail();
           });
         } else {
           showSweetAlert({
-            title: "Error deleting Downtime!",
+            title: "Error deleting Incident Detail!",
             icon: "error",
             showDenyButton: false,
             showCancelButton: false,
@@ -1364,9 +1098,9 @@ const DeleteDowntime = async (item) => {
           });
         }
       } catch (error) {
-        console.error("Error deleting Downtime:", error);
+        console.error("Error deleting Incident Detail:", error);
         showSweetAlert({
-          title: "Error deleting Downtime!",
+          title: "Error deleting Incident Detail!",
           icon: "error",
           showDenyButton: false,
           showCancelButton: false,
@@ -1378,9 +1112,9 @@ const DeleteDowntime = async (item) => {
   });
 };
 
-const DeleteLoad = async (item) => {
+const DeleteSupervisorNote = async (item) => {
   showSweetAlert({
-    title: "Are you sure you want to delete this Load?",
+    title: "Are you sure you want to delete this Supervisor Note?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
@@ -1395,18 +1129,18 @@ const DeleteLoad = async (item) => {
         
         if (response.data.ok) {
           showSweetAlert({
-            title: "Load deleted successfully!",
+            title: "Supervisor Note deleted successfully!",
             icon: "success",
             showDenyButton: false,
             showCancelButton: false,
             confirmButtonText: "Ok",
             allowOutsideClick: false,
           }).then(() => {
-            loadLoad();
+            loadSupervisorNote();
           });
         } else {
           showSweetAlert({
-            title: "Error deleting Load!",
+            title: "Error deleting Supervisor Note!",
             icon: "error",
             showDenyButton: false,
             showCancelButton: false,
@@ -1415,9 +1149,9 @@ const DeleteLoad = async (item) => {
           });
         }
       } catch (error) {
-        console.error("Error deleting Load:", error);
+        console.error("Error deleting Supervisor Note:", error);
         showSweetAlert({
-          title: "Error deleting Load!",
+          title: "Error deleting Supervisor Note!",
           icon: "error",
           showDenyButton: false,
           showCancelButton: false,
@@ -1429,66 +1163,60 @@ const DeleteLoad = async (item) => {
   });
 };
 
-const loadSpareTruckInfo = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
-  if (!rawCoverSheet) return;
+const loadDuringTheIncident = async () => {
+  const rawGeneralInformation = localStorage.getItem("ACE-INCIDENT-REPORT");
+  if (!rawGeneralInformation) return;
 
-  const coverSheet = JSON.parse(rawCoverSheet);
-  const coverSheetId = coverSheet?.id || coverSheet?._id;
+  const generalInformation = JSON.parse(rawGeneralInformation);
+  const generalInformationId = generalInfromation?.id || generalInformation?._id;
 
-  if (!coverSheetId) return;
+  if (!generalInformationId) return;
 
   try {
-    const response = await CoverSheetAPI.getSpareTruckInfo(coverSheetId);
-    spareTruckList.value = response.data.data || [];
+    const response = await GeneralInformationAPI.getDuringTheIncident(generalInformationId);
+    duringTheIncidentList.value = response.data.data || [];
   } catch (error) {
-    console.error("Error al obtener SpareTruckInfo:", error);
+    console.error("Error al obtener During The Incident:", error);
   }
 };
 
-const loadDowntime = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
-  if (!rawCoverSheet) return;
+const loadIncidentDetail = async () => {
+  const rawGeneralInformation = localStorage.getItem("ACE-INCIDENT-REPORT");
+  if (!rawGeneralInformation) return;
 
+  const generalInformation = JSON.parse(rawGeneralInformation);
+  const generalInformationId = generalInformation?.id || generalInformation?._id;
 
-
-  const coverSheet = JSON.parse(rawCoverSheet);
-  const coverSheetId = coverSheet?.id || coverSheet?._id;
-
-  if (!coverSheetId) return;
+  if (!generalInformationId) return;
 
   try {
-    // Llamamos al API para obtener la lista de Downtime
-    const response = await CoverSheetAPI.getDowntime(coverSheetId);
-    downtimeList.value = response.data.data || [];
+    const response = await GeneralInformationAPI.getIncidentDetail(generalInformationId);
+    incidentDetailList.value = response.data.data || [];
   } catch (error) {
-    console.error("Error al obtener Downtime:", error);
-  }
+    console.error("Error al obtener Incident Detail:", error);
+  } 
+
 };
 
-const loadLoad = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
-  if (!rawCoverSheet) return;
+const loadSupervisorNote = async () => {
+  const rawGeneralInformation = localStorage.getItem("ACE-INCIDENT-REPORT");
+  if (!rawGeneralInformation) return;
 
-
-
-  const coverSheet = JSON.parse(rawCoverSheet);
-  const coverSheetId = coverSheet?.id || coverSheet?._id;
-
-  if (!coverSheetId) return;
-
+  const generalInformation = JSON.parse(rawGeneralInformation);
+  const generalInformationId = generalInformation?.id || generalInformation?._id;
+  if (!generalInformationId) return;
   try {
-    // Llamamos al API para obtener la lista de Downtime
-    const response = await CoverSheetAPI.getLoad(coverSheetId);
-    loadList.value = response.data.data || [];
+    const response = await GeneralInformationAPI.getSupervisorNote(generalInformationId);
+    supervisorNoteList.value = response.data.data || [];
   } catch (error) {
-    console.error("Error al obtener Load:", error);
+    console.error("Error al obtener Supervisor Note:", error);
   }
+
 };
 
 const handleVisibleAcordion = async () => {
-  const rawCoverSheet = localStorage.getItem("COVERSHEET");
-  if (!rawCoverSheet) return;
+  const rawGeneralInformation = localStorage.getItem("ACE-INCIDENT-REPORT");
+  if (!rawGeneralInformation) return;
 
   isVisibleAcordion.value = true
 };
@@ -1593,7 +1321,7 @@ const setTimeFromDB = (timeString) => {
 // Método para manejar el logout
 const logout = () => {
   localStorage.removeItem('USER') // Eliminamos la variable USER del localStorage
-  localStorage.removeItem('COVERSHEET2') // Eliminamos la variable COVERSHEET2 del localStorage
+  localStorage.removeItem("ACE-INCIDENT-REPORT2") // Eliminamos la variable COVERSHEET2 del localStorage
   router.push({ name: 'login' }) // Redirigimos al usuario a la página de login
 }
 
@@ -1637,12 +1365,12 @@ const getDenverTimeAsUTCISOString = () => {
 
 
                 <div class="mb-3 col-md-3">
-                  <label class="form-label">HomeBase</label>
-                  <v-select :options="storeHomeBase.homebases" v-model="selectedHomeBase"
-                    placeholder="Choose your HomeBase" :reduce="(homebase) => homebase.id" label="homeBaseName"
-                    class="form-control p-0" :class="{ 'is-invalid': formSubmitted && !selectedHomeBase }" />
-                  <small v-if="errors.homebase_er" class="text-danger">{{
-                    errors.homebase_er
+                  <label class="form-label">Employee Name</label>
+                  <v-select :options="storeEmployee.employees" v-model="selectedEmployee"
+                    placeholder="Choose your Employee" :reduce="(employee) => employee.id" label="employeeName"
+                    class="form-control p-0" :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedEmployee }" />
+                  <small v-if="errorsGeneralInformation.employee_er" class="text-danger">{{
+                    errorsGeneralInformation.employee_er
                     }}</small>
                 </div>
 
@@ -1650,27 +1378,44 @@ const getDenverTimeAsUTCISOString = () => {
                   <label class="form-label">Truck #</label>
                   <v-select :options="storeTruck.trucks" v-model="selectedTruck" placeholder="Choose your Truck"
                     :reduce="(truck) => truck.id" label="truckNumber" class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmitted && !selectedTruck }" />
-                  <small v-if="errors.truck_er" class="text-danger">{{
-                    errors.truck_er
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTruck }" />
+                  <small v-if="errorsGeneralInformation.truck_er" class="text-danger">{{
+                    errorsGeneralInformation.truck_er
                     }}</small>
                 </div>
 
-                <div class="mb-3 col-md-2">
-                  <label class="form-label">Trailer #</label>
-                  <v-select :options="storeTrailer.trailers" v-model="selectedTrailer" placeholder="Choose your Trailer"
-                    :reduce="(trailer) => trailer.id" label="trailerNumber" class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmitted && !selectedTrailer }" />
-                  <small v-if="errors.trailer_er" class="text-danger">{{
-                    errors.trailer_er
+                 <div class="mb-3 col-md-3">
+                  <label class="form-label">Time</label>
+                  <div class="mt-0">
+                    <VueDatePicker light="true" v-model="time" time-picker placeholder="Select Time">
+                      <template #input-icon>
+                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
+                      </template>
+                    </VueDatePicker>
+                  </div>
+                  <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{
+                    errorsGeneralInformation.time_er
                     }}</small>
                 </div>
+
+
+              <div class="mb-3 col-md-2">
+                  <label class="form-label">Dept</label>
+                  <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
+                    :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedDept }" />
+                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{
+                    errorsGeneralInformation.dept_er
+                    }}</small>
+                </div>
+
+
 
                 <div class="mb-3 col-md-5">
                   <label class="form-label">Trainee (or Trainer)</label>
                   <input type="text" v-model="trainee" class="form-control form-control-lg border border-primary"
                     style="color: black;" />
-                  <small v-if="errors.trainee_er" class="text-danger">{{ errors.trainee_er }}</small>
+                  <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{ errorsGeneralInformation.trainee_er }}</small>
                 </div>
 
 
@@ -1679,64 +1424,16 @@ const getDenverTimeAsUTCISOString = () => {
 
               <div class="row">
 
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Clock In</label>
-                  <div class="mt-0">
-                    <VueDatePicker light="true" v-model="timeClockIn" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errors.clockIn_er" class="text-danger">{{
-                    errors.clockIn_er
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Supervisor</label>
+                  <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor" placeholder="Choose your Supervisor"
+                    :reduce="(supervisor) => supervisor.id" label="supervisorName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
+                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{
+                    errorsGeneralInformation.supervisor_er
                     }}</small>
                 </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Clock Out</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timeClockOut" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errors.clockOut_er" class="text-danger">{{
-                    errors.clockOut_er
-                    }}</small>
-                </div>
-
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Clock In (Trainee or Trainer)</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timeClockInTrainee" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errors.clockInTrainee_er" class="text-danger">{{
-                    errors.clockInTrainee_er
-                    }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Clock Out (Trainee or Trainer)</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timeClockOutTrainee" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errors.clockOutTrainee_er" class="text-danger">{{
-                    errors.clockOutTrainee_er
-                    }}</small>
-                </div>
-
-
 
 
 
@@ -1745,16 +1442,16 @@ const getDenverTimeAsUTCISOString = () => {
 
               <div class="row">
                 <div class="mb-3 col-md-3">
-                  <label class="form-label">Pre Trip Start</label>
+                  <label class="form-label">Time Day Started</label>
                   <div class="mt-0">
-                    <VueDatePicker v-model="timePreTripStart" time-picker placeholder="Select Time">
+                    <VueDatePicker v-model="timeDayStarted" time-picker placeholder="Select Time">
                       <template #input-icon>
                         <img class="input-slot-image" src="../assets/icons/clock2.png" />
                       </template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errors.preTripStart_er" class="text-danger">{{
-                    errors.preTripStart_er
+                  <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
+                    errorsGeneralInformation.timeDayStarted_er
                     }}</small>
                 </div>
 
@@ -1769,8 +1466,8 @@ const getDenverTimeAsUTCISOString = () => {
                       </template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errors.preTripEnd_er" class="text-danger">{{
-                    errors.preTripEnd_er
+                  <small v-if="errorsGeneralInformation.preTripEnd_er" class="text-danger">{{
+                    errorsGeneralInformation.preTripEnd_er
                     }}</small>
                 </div>
 
@@ -1783,8 +1480,8 @@ const getDenverTimeAsUTCISOString = () => {
                       </template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errors.postTripStart_er" class="text-danger">{{
-                    errors.postTripStart_er
+                  <small v-if="errorsGeneralInformation.postTripStart_er" class="text-danger">{{
+                    errorsGeneralInformation.postTripStart_er
                     }}</small>
                 </div>
 
@@ -1797,8 +1494,8 @@ const getDenverTimeAsUTCISOString = () => {
                       </template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errors.postTripEnd_er" class="text-danger">{{
-                    errors.postTripEnd_er
+                  <small v-if="errorsGeneralInformation.postTripEnd_er" class="text-danger">{{
+                    errorsGeneralInformation.postTripEnd_er
                     }}</small>
                 </div>
 
@@ -1806,45 +1503,13 @@ const getDenverTimeAsUTCISOString = () => {
 
               </div>
 
-              <div class="row">
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Truck Start Miles</label>
-                  <input type="number" step="any" v-model="truckStartMiles"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.truckStartMiles_er" class="text-danger">{{ errors.truckStartMiles_er }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Truck End Miles</label>
-                  <input type="number" step="any" v-model="truckEndMiles"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.truckEndMiles_er" class="text-danger">{{ errors.truckEndMiles_er }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Truck Start Hours</label>
-                  <input type="number" step="any" v-model="truckStartHours"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.truckStartHours_er" class="text-danger">{{ errors.truckStartHours_er }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Truck End Hours</label>
-                  <input type="number" step="any" v-model="truckEndHours"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.truckEndHours_er" class="text-danger">{{ errors.truckEndHours_er }}</small>
-                </div>
-
-
-
-              </div>
-
+   
               <div class="row">
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Trailer Start Miles</label>
                   <input type="number" step="any" v-model="trailerStartMiles"
                     class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.trailerStartMiles_er" class="text-danger">{{ errors.trailerStartMiles_er
+                  <small v-if="errorsGeneralInformation.trailerStartMiles_er" class="text-danger">{{ errorsGeneralInformation.trailerStartMiles_er
                     }}</small>
                 </div>
 
@@ -1852,7 +1517,7 @@ const getDenverTimeAsUTCISOString = () => {
                   <label class="form-label">Trailer End Miles</label>
                   <input type="number" step="any" v-model="trailerEndMiles"
                     class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.trailerEndMiles_er" class="text-danger">{{ errors.trailerEndMiles_er }}</small>
+                  <small v-if="errorsGeneralInformation.trailerEndMiles_er" class="text-danger">{{ errorsGeneralInformation.trailerEndMiles_er }}</small>
                 </div>
 
 
@@ -1860,14 +1525,14 @@ const getDenverTimeAsUTCISOString = () => {
                   <label class="form-label">Fuel</label>
                   <input type="number" step="any" v-model="fuel"
                     class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.fuel_er" class="text-danger">{{ errors.fuel_er }}</small>
+                  <small v-if="errorsGeneralInformation.fuel_er" class="text-danger">{{ errorsGeneralInformation.fuel_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
                   <label class="form-label">DEF</label>
                   <input type="number" step="any" v-model="dieselExhaustFluid"
                     class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errors.dieselExhaustFluid_er" class="text-danger">{{ errors.dieselExhaustFluid_er
+                  <small v-if="errorsGeneralInformation.dieselExhaustFluid_er" class="text-danger">{{ errorsGeneralInformation.dieselExhaustFluid_er
                     }}</small>
                 </div>
 
@@ -1882,7 +1547,7 @@ const getDenverTimeAsUTCISOString = () => {
               </div>
 
               <button type="submit" class="btn btn-primary">
-                {{ isEditModeCoverShet ? "Update CoverSheet" : "Start CoverSheet" }}
+                {{ isEditGeneralInformation ? "Update CoverSheet" : "Start CoverSheet" }}
               </button>
 
               <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
@@ -1891,7 +1556,7 @@ const getDenverTimeAsUTCISOString = () => {
             </form>
           </div>
         </div>
-      </div>
+      </div>-
     </div>
 
     <div v-if="isVisibleAcordion" class="col-lg-12">
@@ -1904,7 +1569,7 @@ const getDenverTimeAsUTCISOString = () => {
 
 
 
-              <div class="row">
+              <!-- <div class="row">
 
                 <div class="accordion accordion-primary-solid" id="accordion-two">
 
@@ -1989,10 +1654,6 @@ const getDenverTimeAsUTCISOString = () => {
                             <v-select :options="storeTruck.trucks" v-model="selectedTruckSpareTruckInfo"
                               placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
                               class="form-control p-0" />
-
-                            <!-- <small v-if="errorsSpareTruckInfo.spareTruckSpareTruckInfo_er" class="text-danger">{{
-                            errorsSpareTruckInfo.spareTruckSpareTruckInfo_er
-                            }}</small> -->
 
                           </div>
 
@@ -2082,8 +1743,7 @@ const getDenverTimeAsUTCISOString = () => {
                               class="table table-bordered header-border table-striped table-hover table-responsive-md">
                               <thead class="thead-primary">
                                 <tr>
-                                  <!-- <th style="width:50px;"></th> -->
-                                  <!-- <th>HomeBase</th> -->
+                       
                                   <th>Spare Truck</th>
                                   <th>Spare Trailer</th>
                                   <th>Leave Yard</th>
@@ -2095,8 +1755,7 @@ const getDenverTimeAsUTCISOString = () => {
                               </thead>
                               <tbody>
                                 <tr v-for="(item, index) in spareTruckList" :key="index">
-                                  <!-- <td></td> -->
-                                  <!-- <td class="td">{{ item.homeBaseName }}</td> -->
+    
                                   <td class="td">{{ item.truckNumber }}</td>
                                   <td class="td">{{ item.trailerNumber }}</td>
                                   <td class="td">{{ item.timeLeaveYardSpareTruckInfo }}</td>
@@ -2277,7 +1936,6 @@ const getDenverTimeAsUTCISOString = () => {
                               class="table table-bordered header-border table-striped table-hover table-responsive-md">
                               <thead class="thead-primary">
                                 <tr>
-                                  <!-- <th style="width:50px;"></th> -->
                                   <th>Truck #</th>
                                   <th>Truck Downtime Start</th>
                                   <th>Truck Downtime End</th>
@@ -2289,7 +1947,6 @@ const getDenverTimeAsUTCISOString = () => {
                               </thead>
                               <tbody>
                                 <tr v-for="(item, index) in downtimeList" :key="index">
-                                  <!-- <td></td> -->
                                   <td class="td">{{ item.truckNumber }}</td>
                                   <td class="td">{{ item.truckDownTimeStartDownTime }}</td>
                                   <td class="td">{{ item.truckDownTimeEndDownTime }}</td>
@@ -2482,7 +2139,7 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsLoad.ticketNumberLoad_er }}</small>
                           </div>
 
-                          <!-- ✅ GROSS WEIGHT -->
+
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Gross Weight</label>
                             <input type="number" step="any" v-model="grossWeightLoad" :disabled="preloadedNextDayLoad"
@@ -2493,7 +2150,7 @@ const getDenverTimeAsUTCISOString = () => {
                             </small>
                           </div>
 
-                          <!-- ✅ TARE WEIGHT -->
+    
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tare Weight</label>
                             <input type="number" step="any" v-model="tareWeightLoad" :disabled="preloadedNextDayLoad"
@@ -2504,7 +2161,7 @@ const getDenverTimeAsUTCISOString = () => {
                             </small>
                           </div>
 
-                          <!-- ✅ TONS - CALCULADO Y BLOQUEADO -->
+
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Tons</label>
                             <input type="number" step="any" v-model="calculatedTons" disabled readonly
@@ -2539,8 +2196,7 @@ const getDenverTimeAsUTCISOString = () => {
 
 
                           <div class="mb-3 col-md-9">
-                            <!-- <label class="form-label">Images</label> -->
-
+           
                             <input v-show="false" type="file" ref="fileInput"
                               class="form-control form-control-sm border border-primary" multiple accept="image/*"
                               capture="environment" @change="handleFileChange"
@@ -2561,7 +2217,7 @@ const getDenverTimeAsUTCISOString = () => {
                               </div>
                             </div>
 
-                            <!-- Existing images from Load -->
+
                             <div v-if="existingLoadImages.length > 0" class="row mt-3">
                               <h6 style="color: #000;">Existing Images:</h6>
                               <div class="col-md-12">
@@ -2577,14 +2233,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 </div>
                               </div>
                             </div>
-                            <!-- <button
-            v-if="selectedImages.length > 0"
-            @click.prevent="fileInput.click()"
-            class="btn btn-secondary"
-            style="height: 38px; margin-left: 10px;"
-          >
-            Capture Another
-          </button> -->
+ 
                             <small v-if="errorsLoad.imagesLoad_er" class="text-danger">{{ errorsLoad.imagesLoad_er
                               }}</small>
                           </div>
@@ -2624,7 +2273,7 @@ const getDenverTimeAsUTCISOString = () => {
                               class="table table-bordered header-border table-striped table-hover table-responsive-md">
                               <thead class="thead-primary">
                                 <tr>
-                                  <!-- <th>HomeBase</th> -->
+                 
                                   <th>Source</th>
                                   <th>Destination</th>
                                   <th>Material</th>
@@ -2637,7 +2286,6 @@ const getDenverTimeAsUTCISOString = () => {
                               </thead>
                               <tbody>
                                 <tr v-for="(item, index) in loadList" :key="index">
-                                  <!-- <td class="td">{{ item.homeBaseName }}</td> -->
                                   <td class="td">{{ item.sourceName }}</td>
                                   <td class="td">{{ item.destinationName }}</td>
                                   <td class="td">{{ item.materialName }}</td>
@@ -2665,7 +2313,7 @@ const getDenverTimeAsUTCISOString = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
 
             </form>
           </div>

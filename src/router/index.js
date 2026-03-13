@@ -4,7 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 //Importaciones del los Layouts
 import DefaultAdminLayout from '@/layouts/DefaultAdminLayout.vue'
-import DefaultDriverLayout from '@/layouts/DefaultDriverLayout.vue'
+import DefaultEmployeeLayout from '@/layouts/DefaultEmployeeLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 
 
@@ -16,13 +16,13 @@ const router = createRouter({
 {
   path: '/',
   name: 'general',
-  component: DefaultDriverLayout,
+  component: DefaultEmployeeLayout,
   meta: { requiresAuth: true },
   children: [
     {
       path: '/',
       name: 'dashboard',
-      component: () => import('../views/DashboardDriverView.vue'),
+      component: () => import('../views/DashboardEmployeeView.vue'),
     },
   ]
 },
@@ -44,9 +44,9 @@ const router = createRouter({
           component: () => import('../views/ReportView.vue'),
         },
         {
-          path: 'driver',
-          name: 'admin-drivers',
-          component: () => import('../views/DriversView.vue'),
+          path: 'employee',
+          name: 'admin-employees',
+          component: () => import('../views/EmployeesView.vue'),
         },
         {
           path: 'user',
@@ -54,22 +54,35 @@ const router = createRouter({
           component: () => import('../views/UsersView.vue'),
         },
         {
-          path: 'route',
-          name: 'admin-routes',
-          component: () => import('../views/RoutesView.vue'),
+          path: 'dept',
+          name: 'admin-depts',
+          component: () => import('../views/DeptsView.vue'),
         },
         {
-          path: 'trailer',
-          name: 'admin-trailers',
-          component: () => import('../views/TrailersView.vue'),
+          path: 'type-of-incident',
+          name: 'admin-type-of-incidents',
+          component: () => import('../views/TypeOfIncidentsView.vue'),
         },
         {
           path: 'truck',
           name: 'admin-trucks',
           component: () => import('../views/TrucksView.vue'),
         },
-
-
+        {
+          path: 'safety-person-notified',
+          name: 'admin-safety-persons-notified',
+          component: () => import('../views/SafetyPersonNotifiedView.vue'),
+        },
+        {
+          path: 'who-did-you-send-the-picture-to',
+          name: 'admin-who-did-you-send-the-pictures-to',
+          component: () => import('../views/WhoDidYouSendThePicturesToView.vue'),
+        },
+        {
+          path: 'supervisor',
+          name: 'admin-supervisors',
+          component: () => import('../views/SupervisorsView.vue'),
+        },
         {
           path: 'designer',
           name: 'admin-reports-designer',
@@ -119,7 +132,7 @@ router.beforeEach((to, from, next) => {
     try {
       user = JSON.parse(userRaw);
     } catch (e) {
-      localStorage.removeItem('USER');
+      localStorage.removeItem("USER-SAFETY-ACE");
       return next({ name: 'login' });
     }
 
@@ -129,8 +142,8 @@ router.beforeEach((to, from, next) => {
     } else if (user?.data?.user?.rol) {
       role = user.data.user.rol;
     } else {
-      console.warn('No se encontró un rol válido en el objeto USER');
-      localStorage.removeItem('USER');
+      console.warn('No se encontró un rol válido en el objeto USER-SAFETY-ACE');
+      localStorage.removeItem("USER-SAFETY-ACE");
       return next({ name: 'login' });
     }
 
@@ -138,7 +151,7 @@ router.beforeEach((to, from, next) => {
     if (to.name === 'login' || to.name === 'register') {
       if (role === 'Admin') {
         return next({ name: 'dashboard-admin' });
-      } else if (role === 'Driver') {
+      } else if (role === 'Employee') {
         return next({ name: 'dashboard' });
       }
     }
@@ -147,7 +160,7 @@ router.beforeEach((to, from, next) => {
     if (requiresAuth && to.name === 'general') {
       if (role === 'Admin') {
         return next({ name: 'dashboard-admin' });
-      } else if (role === 'Driver') {
+      } else if (role === 'Employee') {
         return next({ name: 'dashboard' });
       }
     }
@@ -156,35 +169,5 @@ router.beforeEach((to, from, next) => {
   // Si no hay conflictos, continuar con la navegación
   return next();
 });
-
-
-
-// router.beforeEach(async (to, from, next) => { // En cada cambio de paginas que requieren autencicaion , checara el user sino, lo manda al login
-
-//   const requiresAuth = to.matched.some(url => url.meta.requiresAuth);
-
-//   if(requiresAuth) { 
-
-//     try {
-
-//       const {data} = await UserAPI.auth();
-//       next();
-
-//      // console.log(data);
-      
-//     } catch (error) {
-
-//       next({name: 'login'});
-
-//       console.log(error.response.data.msg);
-      
-//     }
-
-//   } else {
-//     next();
-
-//   }
-
-// })
 
 export default router
