@@ -118,7 +118,7 @@ const router = createRouter({
 
 
 router.beforeEach((to, from, next) => {
-  const userRaw = localStorage.getItem('USER');
+  const userRaw = localStorage.getItem("USER-SAFETY-ACE");
   const requiresAuth = to.matched.some(route => route.meta.requiresAuth);
 
   // Si la ruta requiere autenticación y no hay usuario, redirigir al login

@@ -26,7 +26,7 @@ export const useTypeIncidentsStore = defineStore("typeIncidents", () => {
 
 
   const naturalSort = (a, b) =>{
-  return a.typeIncidentName.localeCompare(b.typeIncidentName, undefined, { numeric: true, sensitivity: 'base' });
+  return a.typeOfIncidentName.localeCompare(b.typeOfIncidentName, undefined, { numeric: true, sensitivity: 'base' });
 }
 
   return {

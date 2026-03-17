@@ -2,7 +2,7 @@ import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
 import EmployeeAPI from "@/api/Actors/EmployeeAPI.js";
 
-export const useEmployessStore = defineStore("employess", () => {
+export const useEmployeesStore = defineStore("employees", () => {
   const employees = ref([]);
   const loading = ref(false);
   const error = ref("");

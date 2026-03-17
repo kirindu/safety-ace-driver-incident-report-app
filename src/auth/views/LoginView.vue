@@ -112,19 +112,19 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
         console.log('User ID obtenido:', user_id);
 
         // ✅ PASO 3: Verificar incident-report asociado al usuario
-        let incident_report_employee_id = JSON.parse(localStorage.getItem("INCIDENT-REPORT"))?.employee_id || null;
+        let incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.employee_id || null;
 
         if (incident_report_employee_id) {
 
           if (user_id !== incident_report_employee_id) {
             console.log('Incident report de otro usuario, eliminando...');
-            localStorage.removeItem("INCIDENT-REPORT");
+            localStorage.removeItem("ACE-INCIDENT-REPORT");
             // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
             window.location.href = '/';
             
           } else {
             // El incident report es del mismo usuario, verificar fecha
-            const incidentReportData = JSON.parse(localStorage.getItem("INCIDENT-REPORT"));
+            const incidentReportData = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
             const dbDate = DateTime.fromISO(incidentReportData.date, { zone: 'utc' });
             const today = DateTime.now();
 
@@ -137,7 +137,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
               dbDateDenver.day !== todayDenver.day
             ) {
               console.log('Incident report de otro día, eliminando...');
-              localStorage.removeItem("INCIDENT-REPORT");
+              localStorage.removeItem("ACE-INCIDENT-REPORT");
               // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
               window.location.href = '/';
               
@@ -163,7 +163,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
                 window.location.href = '/';
               } else {
                 console.log('Usuario quiere crear un nuevo incident report');
-                localStorage.removeItem("INCIDENT-REPORT");
+                localStorage.removeItem("ACE-INCIDENT-REPORT");
                 // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
                 window.location.href = '/';
               }

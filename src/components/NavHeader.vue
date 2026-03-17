@@ -2,7 +2,7 @@
 export default {
   methods: {
     handleRedirect() {
-      const userRaw = localStorage.getItem('USER');
+      const userRaw = localStorage.getItem("USER-SAFETY-ACE");
       if (userRaw) {
         let user;
         try {

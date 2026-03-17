@@ -11,7 +11,7 @@ export function useAuth() {
    */
   const initUser = () => {
     isLoading.value = true;
-    const storedUser = localStorage.getItem('USER');
+    const storedUser = localStorage.getItem("USER-SAFETY-ACE");
     
     if (storedUser) {
       try {
@@ -54,7 +54,7 @@ export function useAuth() {
    */
   const clearUser = () => {
     currentUser.value = null;
-    localStorage.removeItem('USER');
+    localStorage.removeItem("USER-SAFETY-ACE");
     localStorage.removeItem("ACE-INCIDENT-REPORT");
   };
 

@@ -13,7 +13,7 @@ const user = ref(null)
 // Inicializar usuario desde localStorage directamente
 onMounted(() => {
   console.log('🟢 Header: onMounted ejecutado');
-  const storedUser = localStorage.getItem('USER');
+  const storedUser = localStorage.getItem("USER-SAFETY-ACE");
   
   if (storedUser) {
     try {
@@ -66,7 +66,7 @@ const currentDate = ref(
 // Método para manejar el logout
 const logout = () => {
   user.value = null;
-  localStorage.removeItem('USER');
+  localStorage.removeItem("USER-SAFETY-ACE");
   localStorage.removeItem("ACE-INCIDENT-REPORT");
   localStorage.removeItem("ACE-INCIDENT-REPORT2");
   router.push({ name: 'login' });

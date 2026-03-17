@@ -35,11 +35,11 @@ import Spinner from "@/components/Spinner.vue";
 
 // Importamos Stores
 
-import {useDirectionsStore} from "@/stores/directions.js";
+import { useDirectionsStore } from "@/stores/directions.js";
 const storeDirection = useDirectionsStore();
 
-import {useEmployeesStore} from "@/stores/employees.js";
-const storeEmployee = useEmployeesStore();  
+import { useEmployeesStore } from "@/stores/employees.js";
+const storeEmployee = useEmployeesStore();
 
 import { useGeneralInformationsStore } from "@/stores/generalInformations";
 const storeGeneralInformation = useGeneralInformationsStore();
@@ -67,7 +67,7 @@ const storeWeatherCondition = useWeatherConditionsStore();
 import { useWhoDidYouSendThePictureToStore } from "@/stores/whoDidYouSendThePicturesTo";
 const storeWhoDidYouSendThePicturesTo = useWhoDidYouSendThePictureToStore();
 
-import {useDeptsStore} from "@/stores/depts.js";
+import { useDeptsStore } from "@/stores/depts.js";
 const storeDept = useDeptsStore();
 
 const user = ref(null);
@@ -82,7 +82,7 @@ watch(authUser, (newUser) => {
 // General Information
 
 
-const selectedEmployee = ref("");
+// const selectedEmployee = ref("");
 const selectedTruck = ref("");
 const selectedDept = ref("");
 const selectedSupervisor = ref("");
@@ -102,7 +102,7 @@ const isVisibleAcordion = ref(false);
 
 const errorsGeneralInformation = ref({
 
-  employee_er: "",
+  // employee_er: "",
   truck_er: "",
   dept_er: "",
   supervisor_er: "",
@@ -226,7 +226,7 @@ const errorsSupervisorNote = ref({
 onMounted(() => {
   // ✅ Inicializar el usuario desde el composable
   initUser();
-  
+
   // ✅ Asignar el usuario al ref local
   user.value = authUser.value;
 
@@ -241,7 +241,7 @@ onMounted(() => {
   // ✅ Acceso seguro al ID del usuario
   let user_id = user.value?.id || null;
   console.log('User ID en dashboard:', user_id);
-  
+
   let ace_incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.driver_id || null;
 
   if (user_id !== ace_incident_report_employee_id) {
@@ -265,7 +265,7 @@ onMounted(() => {
       isEditGeneralInformation.value = true;
       const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
-      selectedEmployee.value = generalInformation.employee_id;
+      // selectedEmployee.value = generalInformation.employee_id;
       selectedTruck.value = generalInformation.truck_id;
       selectedDept.value = generalInformation.dept_id;
       selectedSupervisor.value = generalInformation.supervisor_id;
@@ -295,7 +295,7 @@ const onSubmit = async (event) => {
 
   // Limpiar errores anteriores General Information
 
-  errorsGeneralInformation.value.employee_er = "";
+  // errorsGeneralInformation.value.employee_er = "";
   errorsGeneralInformation.value.truck_er = "";
   errorsGeneralInformation.value.dept_er = "";
   errorsGeneralInformation.value.supervisor_er = "";
@@ -312,10 +312,10 @@ const onSubmit = async (event) => {
 
   let hasError = false;
 
-  if (!selectedEmployee .value) {
-    errorsGeneralInformation.value.employee_er = "Required field";
-    hasError = true;
-  }
+  // if (!selectedEmployee.value) {
+  //   errorsGeneralInformation.value.employee_er = "Required field";
+  //   hasError = true;
+  // }
 
   if (!selectedTruck.value) {
     errorsGeneralInformation.value.truck_er = "Required field";
@@ -365,7 +365,7 @@ const onSubmit = async (event) => {
   if (!timeDayStarted.value) {
     errorsGeneralInformation.value.timeDayStarted_er = "Required field";
     hasError = true;
-  } 
+  }
 
 
   if (hasError) {
@@ -376,7 +376,7 @@ const onSubmit = async (event) => {
 
     date: getDenverTimeAsUTCISOString(),
     trainerName: trainee.value,
-    employee_id: selectedEmployee.value,
+    employee_id: user.value.id,
     truck_id: selectedTruck.value,
     dept_id: selectedDept.value,
     supervisor_id: selectedSupervisor.value,
@@ -471,7 +471,7 @@ const onSubmit = async (event) => {
 // Reset General Information form
 const resetGeneralInformation = () => {
 
-  selectedEmployee.value = "";
+  // selectedEmployee.value = "";
   selectedTruck.value = "";
   selectedDept.value = "";
   selectedSupervisor.value = "";
@@ -507,7 +507,7 @@ const resetDuringTheIncidentForm = () => {
 
   isEditDuringTheIncident.value = false;
   formSubmittedDuringTheIncident.value = false;
-  
+
 };
 
 // Reset Incident Detail form
@@ -542,7 +542,7 @@ const resetSupervisorNote = () => {
   selectedSupervisorNoteId.value = null;
 
   isEditingSupervisorNote.value = false;
-  formSubmittedSupervisorNote.value = false;  
+  formSubmittedSupervisorNote.value = false;
 };
 
 
@@ -567,10 +567,10 @@ const HandleDuringTheIncident = async (event) => {
   errorsDuringTheIncident.value.witnessPhone_er = "";
 
   let hasError = false;
-    if (!usingElectronicDevice.value) {
-      errorsDuringTheIncident.value.usingElectronicDevice_er = "Required field";
-      hasError = true;
-    }
+  if (!usingElectronicDevice.value) {
+    errorsDuringTheIncident.value.usingElectronicDevice_er = "Required field";
+    hasError = true;
+  }
   if (hasError) {
     return;
   }
@@ -585,7 +585,7 @@ const HandleDuringTheIncident = async (event) => {
     howFastWereYouGoing: howFastWereYouGoing.value ? "Yes" : "No",
     safetyPersonNotified_id: SelectedSafetyPersonNotified.value || "",
     whoDidYouSendThePicturesTo_id: SelectedWhoDidYouSendThePicturesTo.value || "",
-    directionYouWereTraveling_id: SelectedDirectionYouWereTraveling.value || "",  
+    directionYouWereTraveling_id: SelectedDirectionYouWereTraveling.value || "",
     weatherCondition_id: SelectedWeatherCondition.value || "",
     roadCondition_id: SelectedRoadCondition.value || "",
     wasThisIncidentInAnIntersection: wasThisIncidentInAnIntersection.value,
@@ -798,7 +798,7 @@ const HandleIncidentDetail = async (event) => {
         });
       }
     } else {
-     isLoadingIncidentDeail.value = true;
+      isLoadingIncidentDeail.value = true;
       const response = await IncidentDetailAPI.add(formData);
 
       if (response.data.ok) {
@@ -956,7 +956,7 @@ const EditDuringTheIncident = (item) => {
   taskPerfomed.value = item.taskPerfomed || "";
   wasSafetyDeptNotified.value = item.wasSafetyDeptNotified || "";
   didYouTakePictures.value = item.didYouTakePictures || "";
-  howFastWereYouGoing.value = item.howFastWereYouGoing || "";   
+  howFastWereYouGoing.value = item.howFastWereYouGoing || "";
   SelectedSafetyPersonNotified.value = item.safetyPersonNotified_id || "";
   SelectedWhoDidYouSendThePicturesTo.value = item.whoDidYouSendThePicturesTo_id || "";
   SelectedDirectionYouWereTraveling.value = item.directionYouWereTraveling_id || "";
@@ -1004,7 +1004,7 @@ const EditIncidentDetail = async (item) => {
 const EditSupervisorNote = async (item) => {
   isLoadingSupervisorNote.value = true; // Set flag to prevent watches from clearing fields
   selectedSupervisorNoteId.value = item.id || item._id; // Ensure the ID is captured
-  supervisorNote.value = item.supervisorNote || ""; 
+  supervisorNote.value = item.supervisorNote || "";
   isEditingSupervisorNote.value = true;
 
 };
@@ -1024,7 +1024,7 @@ const DeleteDuringTheIncident = async (item) => {
     if (result.isConfirmed) {
       try {
         const response = await DuringTheIncidentAPI.delete(item.id || item._id);
-        
+
         if (response.data.ok) {
           showSweetAlert({
             title: "During The Incident deleted successfully!",
@@ -1075,7 +1075,7 @@ const DeleteIncidentDetail = async (item) => {
     if (result.isConfirmed) {
       try {
         const response = await IncidentDetailAPI.delete(item.id || item._id);
-        
+
         if (response.data.ok) {
           showSweetAlert({
             title: "Incident Detail deleted successfully!",
@@ -1126,7 +1126,7 @@ const DeleteSupervisorNote = async (item) => {
     if (result.isConfirmed) {
       try {
         const response = await LoadAPI.delete(item.id || item._id);
-        
+
         if (response.data.ok) {
           showSweetAlert({
             title: "Supervisor Note deleted successfully!",
@@ -1194,7 +1194,7 @@ const loadIncidentDetail = async () => {
     incidentDetailList.value = response.data.data || [];
   } catch (error) {
     console.error("Error al obtener Incident Detail:", error);
-  } 
+  }
 
 };
 
@@ -1320,7 +1320,7 @@ const setTimeFromDB = (timeString) => {
 
 // Método para manejar el logout
 const logout = () => {
-  localStorage.removeItem('USER') // Eliminamos la variable USER del localStorage
+  localStorage.removeItem("USER-SAFETY-ACE") // Eliminamos la variable USER del localStorage
   localStorage.removeItem("ACE-INCIDENT-REPORT2") // Eliminamos la variable COVERSHEET2 del localStorage
   router.push({ name: 'login' }) // Redirigimos al usuario a la página de login
 }
@@ -1352,7 +1352,7 @@ const getDenverTimeAsUTCISOString = () => {
       </ol>
     </div>
 
-    <Spinner v-if="storeHomeBase.loading || storeTruck.loading" />
+    <Spinner v-if="storeDept.loading || storeTruck.loading" />
 
     <div class="col-lg-12">
       <div class="card">
@@ -1361,18 +1361,20 @@ const getDenverTimeAsUTCISOString = () => {
 
             <form @submit="onSubmit" autocomplete="off">
 
+
               <div class="row">
 
 
-                <div class="mb-3 col-md-3">
+                <!-- <div class="mb-3 col-md-3">
                   <label class="form-label">Employee Name</label>
                   <v-select :options="storeEmployee.employees" v-model="selectedEmployee"
                     placeholder="Choose your Employee" :reduce="(employee) => employee.id" label="employeeName"
-                    class="form-control p-0" :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedEmployee }" />
+                    class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedEmployee }" />
                   <small v-if="errorsGeneralInformation.employee_er" class="text-danger">{{
                     errorsGeneralInformation.employee_er
-                    }}</small>
-                </div>
+                  }}</small>
+                </div> -->
 
                 <div class="mb-3 col-md-2">
                   <label class="form-label">Truck #</label>
@@ -1381,12 +1383,12 @@ const getDenverTimeAsUTCISOString = () => {
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTruck }" />
                   <small v-if="errorsGeneralInformation.truck_er" class="text-danger">{{
                     errorsGeneralInformation.truck_er
-                    }}</small>
+                  }}</small>
                 </div>
 
-                 <div class="mb-3 col-md-3">
+                <div class="mb-3 col-md-2">
                   <label class="form-label">Time</label>
-                  <div class="mt-0">
+                  <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !time }">
                     <VueDatePicker light="true" v-model="time" time-picker placeholder="Select Time">
                       <template #input-icon>
                         <img class="input-slot-image" src="../assets/icons/clock2.png" />
@@ -1395,55 +1397,108 @@ const getDenverTimeAsUTCISOString = () => {
                   </div>
                   <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{
                     errorsGeneralInformation.time_er
-                    }}</small>
+                  }}</small>
                 </div>
 
 
-              <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-2">
                   <label class="form-label">Dept</label>
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedDept }" />
                   <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{
                     errorsGeneralInformation.dept_er
-                    }}</small>
+                  }}</small>
+                </div>
+
+                <div class="mb-3 col-md-3">
+                  <label class="form-label">Supervisor</label>
+                  <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor"
+                    placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
+                    class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
+                  <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
+                    errorsGeneralInformation.supervisor_er
+                  }}</small>
                 </div>
 
 
+         
 
-                <div class="mb-3 col-md-5">
-                  <label class="form-label">Trainee (or Trainer)</label>
-                  <input type="text" v-model="trainee" class="form-control form-control-lg border border-primary"
-                    style="color: black;" />
-                  <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{ errorsGeneralInformation.trainee_er }}</small>
-                </div>
+
 
 
 
               </div>
 
               <div class="row">
-
 
                 <div class="mb-3 col-md-2">
-                  <label class="form-label">Supervisor</label>
-                  <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor" placeholder="Choose your Supervisor"
-                    :reduce="(supervisor) => supervisor.id" label="supervisorName" class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
-                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{
-                    errorsGeneralInformation.supervisor_er
-                    }}</small>
+                  <label class="form-label">Type of Incident</label>
+                  <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedTypeOfIncident"
+                    placeholder="Choose your Incident Type" :reduce="(incidentType) => incidentType.id"
+                    label="typeOfIncidentName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTypeOfIncident }" />
+                  <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{
+                    errorsGeneralInformation.typeOfIncident_er
+                  }}</small>
                 </div>
 
+                <div class="mb-3 col-md-3">
+                  <label class="form-label">Trainee</label>
+                  <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{
+                    errorsGeneralInformation.trainee_er
+                  }}</small>
+                </div>
+
+
+                <div class="mb-3 col-md-7">
+                  <label class="form-label">Location</label>
+                  <input type="text" v-model="location" class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !location }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{
+                    errorsGeneralInformation.location_er
+                  }}</small>
+                </div>
 
 
 
               </div>
 
+
+
+
               <div class="row">
-                <div class="mb-3 col-md-3">
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Time worked for company Years</label>
+                  <input type="number" step="any" v-model="timeWorkedYears"
+                    class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedYears }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.timeWorkedYears_er" class="text-danger">{{
+                    errorsGeneralInformation.timeWorkedYears_er }}</small>
+                </div>
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Months</label>
+                  <input type="number" step="any" v-model="timeWorkedMonths"
+                    class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedMonths }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.timeWorkedMonths_er" class="text-danger">{{
+                    errorsGeneralInformation.timeWorkedMonths_er }}</small>
+                </div>
+
+
+
+                
+                <div class="mb-3 col-md-2">
                   <label class="form-label">Time Day Started</label>
-                  <div class="mt-0">
+                  <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !timeDayStarted }">
                     <VueDatePicker v-model="timeDayStarted" time-picker placeholder="Select Time">
                       <template #input-icon>
                         <img class="input-slot-image" src="../assets/icons/clock2.png" />
@@ -1452,107 +1507,27 @@ const getDenverTimeAsUTCISOString = () => {
                   </div>
                   <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
                     errorsGeneralInformation.timeDayStarted_er
-                    }}</small>
-                </div>
-
-
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Pre Trip End</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timePreTripEnd" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errorsGeneralInformation.preTripEnd_er" class="text-danger">{{
-                    errorsGeneralInformation.preTripEnd_er
-                    }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Post Trip Start</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timePostTripStart" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errorsGeneralInformation.postTripStart_er" class="text-danger">{{
-                    errorsGeneralInformation.postTripStart_er
-                    }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Post Trip End</label>
-                  <div class="mt-0">
-                    <VueDatePicker v-model="timePostTripEnd" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errorsGeneralInformation.postTripEnd_er" class="text-danger">{{
-                    errorsGeneralInformation.postTripEnd_er
-                    }}</small>
-                </div>
-
-
-
-              </div>
-
-   
-              <div class="row">
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Trailer Start Miles</label>
-                  <input type="number" step="any" v-model="trailerStartMiles"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.trailerStartMiles_er" class="text-danger">{{ errorsGeneralInformation.trailerStartMiles_er
-                    }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Trailer End Miles</label>
-                  <input type="number" step="any" v-model="trailerEndMiles"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.trailerEndMiles_er" class="text-danger">{{ errorsGeneralInformation.trailerEndMiles_er }}</small>
-                </div>
-
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">Fuel</label>
-                  <input type="number" step="any" v-model="fuel"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.fuel_er" class="text-danger">{{ errorsGeneralInformation.fuel_er }}</small>
-                </div>
-
-                <div class="mb-3 col-md-3">
-                  <label class="form-label">DEF</label>
-                  <input type="number" step="any" v-model="dieselExhaustFluid"
-                    class="form-control form-control-lg border border-primary" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.dieselExhaustFluid_er" class="text-danger">{{ errorsGeneralInformation.dieselExhaustFluid_er
-                    }}</small>
+                  }}</small>
                 </div>
 
 
               </div>
 
-              <div class="row">
+              <!-- <div class="row">
                 <div class="mb-3 col-md-12">
                   <label class="form-label">Notes</label>
                   <textarea style="color: black;" v-model="notes" class="form-control border border-primary"></textarea>
                 </div>
-              </div>
+              </div> -->
 
               <button type="submit" class="btn btn-primary">
-                {{ isEditGeneralInformation ? "Update CoverSheet" : "Start CoverSheet" }}
+                {{ isEditGeneralInformation ? "Update General Information" : "Start ACE Driver Incident Report"
+                }}
               </button>
 
-              <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
+              <!-- <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
                 Finalize CoverSheet
-              </button>
+              </button> -->
             </form>
           </div>
         </div>
@@ -2481,6 +2456,12 @@ input[type="number"]:disabled {
 
 /* Borde rojo cuando hay error de validación */
 .border-danger {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Borde rojo para VueDatePicker cuando hay error de validación */
+.dp-error .dp__input {
   border-color: #dc3545 !important;
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
