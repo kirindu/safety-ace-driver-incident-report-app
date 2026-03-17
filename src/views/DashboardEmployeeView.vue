@@ -242,7 +242,7 @@ onMounted(() => {
   let user_id = user.value?.id || null;
   console.log('User ID en dashboard:', user_id);
 
-  let ace_incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.driver_id || null;
+  let ace_incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.employee_id || null;
 
   if (user_id !== ace_incident_report_employee_id) {
     localStorage.removeItem("ACE-INCIDENT-REPORT");
