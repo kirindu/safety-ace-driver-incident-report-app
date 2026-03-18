@@ -270,8 +270,10 @@ onMounted(() => {
       selectedDept.value = generalInformation.dept_id;
       selectedSupervisor.value = generalInformation.supervisor_id;
       selectedTypeOfIncident.value = generalInformation.typeOfIncident_id;
+      
 
       location.value = generalInformation.location;
+      trainee.value = generalInformation.trainerName;
       time.value = setTimeFromDB(generalInformation.time);
       timeWorkedYears.value = generalInformation.timeWorkedYears;
       timeWorkedMonths.value = generalInformation.timeWorkedMonths;

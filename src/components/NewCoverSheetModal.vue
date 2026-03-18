@@ -60,8 +60,8 @@ const storeTruck = useTrucksStore();
 import { useTrailersStore } from "@/stores/supervisors.js";
 const storeTrailer = useTrailersStore();
 
-import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
-const storeTypeDowntime = useTypeDownTimeStore();
+// import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
+// const storeTypeDowntime = useTypeDownTimeStore();
 
 import { useDriversStore } from "@/stores/employees.js";
 const storeDriver = useDriversStore();	
