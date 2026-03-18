@@ -91,6 +91,10 @@ const selectedTypeOfIncident = ref("");
 const date = ref(""); // Este campo se va a usar para guardar la fecha actual del incidente
 const trainee = ref(""); // Nombre del conductor en entrenamiento, si aplica
 const location = ref(""); // Direccion del incidente
+const locationSuggestions = ref([]); // Sugerencias de Nominatim
+const locationLoading = ref(false); // Loading mientras busca
+const showLocationDropdown = ref(false); // Controlar visibilidad del dropdown
+let locationDebounceTimer = null; // Timer para debounce
 const time = ref(""); // Este campo se va a usar para guardar la hora del incidente
 const timeWorkedYears = ref(""); // Este campo se va a usar para guardar los años de experiencia del conductor
 const timeWorkedMonths = ref(""); // Este campo se va a usar para guardar los meses de experiencia del conductor
@@ -467,6 +471,49 @@ const onSubmit = async (event) => {
       return;
     });
   }
+};
+
+
+// ✅ Nominatim Address Autocomplete
+const searchLocation = () => {
+  clearTimeout(locationDebounceTimer);
+  locationSuggestions.value = [];
+
+  if (!location.value || location.value.length < 3) {
+    showLocationDropdown.value = false;
+    return;
+  }
+
+  locationDebounceTimer = setTimeout(async () => {
+    locationLoading.value = true;
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location.value)}&format=json&limit=5&countrycodes=us`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      locationSuggestions.value = await res.json();
+      showLocationDropdown.value = locationSuggestions.value.length > 0;
+    } catch (e) {
+      locationSuggestions.value = [];
+      showLocationDropdown.value = false;
+    } finally {
+      locationLoading.value = false;
+    }
+  }, 400);
+};
+
+const selectLocation = (item) => {
+  location.value = item.display_name;
+  locationSuggestions.value = [];
+  showLocationDropdown.value = false;
+  // Limpiar error si existía
+  errorsGeneralInformation.value.location_er = "";
+};
+
+const hideLocationDropdown = () => {
+  setTimeout(() => {
+    showLocationDropdown.value = false;
+  }, 200); // pequeño delay para que el click en la opción se registre primero
 };
 
 
@@ -1459,9 +1506,61 @@ const getDenverTimeAsUTCISOString = () => {
 
                 <div class="mb-3 col-md-7">
                   <label class="form-label">Location</label>
-                  <input type="text" v-model="location" class="form-control form-control-md border border-primary"
-                    :class="{ 'border-danger': formSubmittedGeneralInformation && !location }"
-                    style="color: black;" />
+                  <div style="position: relative;">
+                    <input
+                      type="text"
+                      v-model="location"
+                      @input="searchLocation"
+                      @blur="hideLocationDropdown"
+                      class="form-control form-control-md border border-primary"
+                      :class="{ 'border-danger': formSubmittedGeneralInformation && !location }"
+                      style="color: black;"
+                      placeholder="Start typing an address..."
+                      autocomplete="off"
+                    />
+                    <!-- Loading indicator -->
+                    <div v-if="locationLoading" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                      <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                    </div>
+                    <!-- Dropdown de sugerencias -->
+                    <ul
+                      v-if="showLocationDropdown && locationSuggestions.length"
+                      style="
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        z-index: 1050;
+                        background: white;
+                        border: 1px solid #ced4da;
+                        border-top: none;
+                        border-radius: 0 0 0.375rem 0.375rem;
+                        max-height: 220px;
+                        overflow-y: auto;
+                        list-style: none;
+                        margin: 0;
+                        padding: 0;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                      "
+                    >
+                      <li
+                        v-for="item in locationSuggestions"
+                        :key="item.place_id"
+                        @mousedown.prevent="selectLocation(item)"
+                        style="
+                          padding: 8px 12px;
+                          cursor: pointer;
+                          font-size: 0.875rem;
+                          color: #212529;
+                          border-bottom: 1px solid #f0f0f0;
+                        "
+                        @mouseover="$event.target.style.backgroundColor='#e9f0ff'"
+                        @mouseleave="$event.target.style.backgroundColor='white'"
+                      >
+                        📍 {{ item.display_name }}
+                      </li>
+                    </ul>
+                  </div>
                   <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{
                     errorsGeneralInformation.location_er
                   }}</small>
