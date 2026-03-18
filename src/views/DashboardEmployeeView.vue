@@ -79,6 +79,8 @@ watch(authUser, (newUser) => {
 
 
 
+
+
 // General Information
 
 
@@ -132,11 +134,11 @@ const formSubmittedGeneralInformation = ref(false);
 const duringTheIncidentList = ref([]);
 const selectedDuringTheIncidentId = ref(null); // To track the ID of the During The Incident info being edited
 
-const usingElectronicDevice = ref("");
+const usingElectronicDevice = ref(false);
 const taskPerfomed = ref("");
-const wasSafetyDeptNotified = ref("");
-const didYouTakePictures = ref("");
-const howFastWereYouGoing = ref(false);
+const wasSafetyDeptNotified = ref(false);
+const didYouTakePictures = ref(false);
+const howFastWereYouGoing = ref("");
 
 const SelectedSafetyPersonNotified = ref("");
 const SelectedWhoDidYouSendThePicturesTo = ref("");
@@ -144,13 +146,46 @@ const SelectedDirectionYouWereTraveling = ref("");
 const SelectedWeatherCondition = ref("");
 const SelectedRoadCondition = ref("");
 
-const wasThisIncidentInAnIntersection = ref("");
+const wasThisIncidentInAnIntersection = ref(false);
 const witness = ref(""); // Nombre del testigo, si aplica
 const witnessPhone = ref(""); // Telefono del testigo, si aplica
+
+// ✅ Formateador de teléfono: (XXX) XXX-XXXX
+const formatPhone = (e) => {
+  // Extraer solo dígitos
+  const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+
+  let formatted = "";
+  if (digits.length === 0) {
+    formatted = "";
+  } else if (digits.length <= 3) {
+    formatted = `(${digits}`;
+  } else if (digits.length <= 6) {
+    formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  } else {
+    formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  witnessPhone.value = formatted;
+};
 
 const isEditDuringTheIncident = ref(false);
 const isLoadingDuringTheIncident = ref(false); // To show loading spinner when fetching during the incident info
 const formSubmittedDuringTheIncident = ref(false); // To track if During the Incident form has been submitted
+
+// ✅ Limpiar Safety Person Notified cuando el switch se desactiva
+watch(wasSafetyDeptNotified, (newValue) => {
+  if (!newValue) {
+    SelectedSafetyPersonNotified.value = "";
+  }
+});
+
+// ✅ Limpiar Who Did You Send The Pictures To cuando el switch se desactiva
+watch(didYouTakePictures, (newValue) => {
+  if (!newValue) {
+    SelectedWhoDidYouSendThePicturesTo.value = "";
+  }
+});
 
 
 const errorsDuringTheIncident = ref({
@@ -185,8 +220,8 @@ const incidentDetailList = ref([]);
 
 const incidentDescription = ref("");
 const actionEventConditions = ref("");
-const wereAnyVehiclesTowed = ref("");
-const wasAnyOneHurt = ref("");
+const wereAnyVehiclesTowed = ref(false);
+const wasAnyOneHurt = ref(false);
 const describeAnyInjuries = ref("");
 
 const damageToAceTruck = ref("");
@@ -540,17 +575,17 @@ const resetGeneralInformation = () => {
 const resetDuringTheIncidentForm = () => {
 
   selectedDuringTheIncidentId.value = null;
-  usingElectronicDevice.value = "";
+  usingElectronicDevice.value = false;
   taskPerfomed.value = "";
-  wasSafetyDeptNotified.value = "";
-  didYouTakePictures.value = "";
-  howFastWereYouGoing.value = false;
+  wasSafetyDeptNotified.value = false;
+  didYouTakePictures.value = false;
+  howFastWereYouGoing.value = "";
   SelectedSafetyPersonNotified.value = "";
   SelectedWhoDidYouSendThePicturesTo.value = "";
   SelectedDirectionYouWereTraveling.value = "";
   SelectedWeatherCondition.value = "";
   SelectedRoadCondition.value = "";
-  wasThisIncidentInAnIntersection.value = "";
+  wasThisIncidentInAnIntersection.value = false;
   witness.value = "";
   witnessPhone.value = "";
 
@@ -616,10 +651,44 @@ const HandleDuringTheIncident = async (event) => {
   errorsDuringTheIncident.value.witnessPhone_er = "";
 
   let hasError = false;
-  if (!usingElectronicDevice.value) {
-    errorsDuringTheIncident.value.usingElectronicDevice_er = "Required field";
+
+
+  if (!taskPerfomed.value) {
+    errorsDuringTheIncident.value.taskPerfomed_er = "Required field";
     hasError = true;
   }
+
+  if (!howFastWereYouGoing.value) {
+    errorsDuringTheIncident.value.howFastWereYouGoing_er = "Required field";
+    hasError = true;
+  }
+
+  if (!SelectedWhoDidYouSendThePicturesTo.value && didYouTakePictures.value) {
+    errorsDuringTheIncident.value.SelectedWhoDidYouSendThePicturesTo_er = "Required field";
+    hasError = true;
+  }
+
+    if (!SelectedDirectionYouWereTraveling.value) {
+      errorsDuringTheIncident.value.SelectedDirectionYouWereTraveling_er = "Required field";
+      hasError = true;
+    }
+
+  if (!SelectedWeatherCondition.value) {
+    errorsDuringTheIncident.value.SelectedWeatherCondition_er = "Required field";   
+    hasError = true;
+  }
+
+  if (!SelectedRoadCondition.value) {
+    errorsDuringTheIncident.value.SelectedRoadCondition_er = "Required field";
+    hasError = true;
+  }
+
+  if (!SelectedSafetyPersonNotified.value && wasSafetyDeptNotified.value) {
+    errorsDuringTheIncident.value.SelectedSafetyPersonNotified_er = "Required field";
+    hasError = true;
+  }
+
+
   if (hasError) {
     return;
   }
@@ -631,7 +700,7 @@ const HandleDuringTheIncident = async (event) => {
     taskPerfomed: taskPerfomed.value,
     wasSafetyDeptNotified: wasSafetyDeptNotified.value,
     didYouTakePictures: didYouTakePictures.value,
-    howFastWereYouGoing: howFastWereYouGoing.value ? "Yes" : "No",
+    howFastWereYouGoing: howFastWereYouGoing.value,
     safetyPersonNotified_id: SelectedSafetyPersonNotified.value || "",
     whoDidYouSendThePicturesTo_id: SelectedWhoDidYouSendThePicturesTo.value || "",
     directionYouWereTraveling_id: SelectedDirectionYouWereTraveling.value || "",
@@ -1001,17 +1070,17 @@ const HandleSupervisorNote = async (event) => {
 
 const EditDuringTheIncident = (item) => {
   selectedDuringTheIncidentId.value = item.id || item._id; // Ensure the ID is captured
-  usingElectronicDevice.value = item.usingElectronicDevice || "";
+  usingElectronicDevice.value = item.usingElectronicDevice === true || item.usingElectronicDevice === "true" || false;
   taskPerfomed.value = item.taskPerfomed || "";
-  wasSafetyDeptNotified.value = item.wasSafetyDeptNotified || "";
-  didYouTakePictures.value = item.didYouTakePictures || "";
+  wasSafetyDeptNotified.value = item.wasSafetyDeptNotified === true || item.wasSafetyDeptNotified === "true" || false;
+  didYouTakePictures.value = item.didYouTakePictures === true || item.didYouTakePictures === "true" || false;
   howFastWereYouGoing.value = item.howFastWereYouGoing || "";
   SelectedSafetyPersonNotified.value = item.safetyPersonNotified_id || "";
   SelectedWhoDidYouSendThePicturesTo.value = item.whoDidYouSendThePicturesTo_id || "";
   SelectedDirectionYouWereTraveling.value = item.directionYouWereTraveling_id || "";
   SelectedWeatherCondition.value = item.weatherCondition_id || "";
   SelectedRoadCondition.value = item.roadCondition_id || "";
-  wasThisIncidentInAnIntersection.value = item.wasThisIncidentInAnIntersection || "";
+  wasThisIncidentInAnIntersection.value = item.wasThisIncidentInAnIntersection === true || item.wasThisIncidentInAnIntersection === "true" || false;
   witness.value = item.witness || "";
   witnessPhone.value = item.witnessPhone || "";
 
@@ -1348,7 +1417,6 @@ const currentDate = ref(
   })
 );
 
-// Edit Spare Truck Info
 const formatTime = (controlTimeValue) => {
   if (!controlTimeValue) {
     return "";
@@ -1450,7 +1518,22 @@ const getDenverTimeAsUTCISOString = () => {
                 </div>
 
 
-                <div class="mb-3 col-md-2">
+              <div class="mb-3 col-md-2">
+                  <label class="form-label">Time Day Started</label>
+                  <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !timeDayStarted }">
+                    <VueDatePicker v-model="timeDayStarted" time-picker placeholder="Select Time">
+                      <template #input-icon>
+                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
+                      </template>
+                    </VueDatePicker>
+                  </div>
+                  <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
+                    errorsGeneralInformation.timeDayStarted_er
+                  }}</small>
+                </div>
+
+
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Dept</label>
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
@@ -1460,14 +1543,18 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
+
+
+
+
                 <div class="mb-3 col-md-3">
-                  <label class="form-label">Supervisor</label>
-                  <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor"
-                    placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
-                    class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
-                  <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
-                    errorsGeneralInformation.supervisor_er
+                  <label class="form-label">Type of Incident</label>
+                  <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedTypeOfIncident"
+                    placeholder="Choose Incident Type" :reduce="(incidentType) => incidentType.id"
+                    label="typeOfIncidentName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTypeOfIncident }" />
+                  <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{
+                    errorsGeneralInformation.typeOfIncident_er
                   }}</small>
                 </div>
 
@@ -1483,15 +1570,17 @@ const getDenverTimeAsUTCISOString = () => {
               <div class="row">
 
                 <div class="mb-3 col-md-2">
-                  <label class="form-label">Type of Incident</label>
-                  <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedTypeOfIncident"
-                    placeholder="Choose your Incident Type" :reduce="(incidentType) => incidentType.id"
-                    label="typeOfIncidentName" class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTypeOfIncident }" />
-                  <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{
-                    errorsGeneralInformation.typeOfIncident_er
+                  <label class="form-label">Supervisor</label>
+                  <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor"
+                    placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
+                    class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
+                  <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
+                    errorsGeneralInformation.supervisor_er
                   }}</small>
                 </div>
+
+ 
 
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Trainee</label>
@@ -1575,7 +1664,7 @@ const getDenverTimeAsUTCISOString = () => {
 
               <div class="row">
                 <div class="mb-3 col-md-2">
-                  <label class="form-label">Time worked for company Years</label>
+                  <label class="form-label">Time Worked (Years)</label>
                   <input type="number" step="any" v-model="timeWorkedYears"
                     class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedYears }"
@@ -1585,7 +1674,7 @@ const getDenverTimeAsUTCISOString = () => {
                 </div>
 
                 <div class="mb-3 col-md-2">
-                  <label class="form-label">Months</label>
+                  <label class="form-label">Time Worked (Months)</label>
                   <input type="number" step="any" v-model="timeWorkedMonths"
                     class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedMonths }"
@@ -1596,19 +1685,24 @@ const getDenverTimeAsUTCISOString = () => {
 
 
 
-                
-                <div class="mb-3 col-md-2">
-                  <label class="form-label">Time Day Started</label>
-                  <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !timeDayStarted }">
-                    <VueDatePicker v-model="timeDayStarted" time-picker placeholder="Select Time">
-                      <template #input-icon>
-                        <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                      </template>
-                    </VueDatePicker>
-                  </div>
-                  <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
-                    errorsGeneralInformation.timeDayStarted_er
-                  }}</small>
+
+
+             <div class="mb-3 col-md-3 d-flex align-items-end">
+
+               <!-- <button type="submit" class="btn btn-primary btn-md">
+                {{ isEditGeneralInformation ? "Update" : "Save"
+                }}
+              </button>  -->
+
+
+                            <button type="submit" :disabled="isLoadingGeneralInformation" class="btn btn-primary btn-md">
+                              {{ isEditGeneralInformation ? "Update" : "Save" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
+                              </span>
+                            </button>
+                        
+    
                 </div>
 
 
@@ -1621,10 +1715,10 @@ const getDenverTimeAsUTCISOString = () => {
                 </div>
               </div> -->
 
-              <button type="submit" class="btn btn-primary">
+              <!-- <button type="submit" class="btn btn-primary">
                 {{ isEditGeneralInformation ? "Update General Information" : "Start ACE Driver Incident Report"
                 }}
-              </button>
+              </button> -->
 
               <!-- <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
                 Finalize CoverSheet
@@ -1645,22 +1739,22 @@ const getDenverTimeAsUTCISOString = () => {
 
 
 
-              <!-- <div class="row">
+               <div class="row">
 
                 <div class="accordion accordion-primary-solid" id="accordion-two">
 
-                  <Spinner v-if="isLoadingSpareTruckInfo" />
+                  <Spinner v-if="isLoadingDuringTheIncident" />
 
 
                   <div class="accordion-item">
                     <h2 class="accordion-header">
                       <button class="accordion-button" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseOne">
-                        Spare
+                        During The Incident
                       </button>
                     </h2>
 
-                    <Spinner v-if="storeHomeBase.loading || storeTruck.loading" />
+                    <Spinner v-if="storeSafetyPerson.loading || storeWhoDidYouSendThePicturesTo.loading" />
 
 
                     <div id="bordered_collapseOne" class="accordion-collapse collapse"
@@ -1669,203 +1763,255 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Leave Yard</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="timeLeaveYardSpareTruckInfo" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Were you using an electronic device when the incident occurred ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="checkNativeSwitch"
+                                v-model="usingElectronicDevice"
+                              />
+                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
+                                :style="{ color: usingElectronicDevice ? '#198754' : '#dc3545' }">
+                                {{ usingElectronicDevice ? 'YES' : 'NO' }}
+                              </label>
                             </div>
                             <small v-if="
-                              errorsSpareTruckInfo.leaveYardSpareTruckInfo_er
+                              errorsDuringTheIncident.usingElectronicDevice_er
                             " class="text-danger">{{
-                              errorsSpareTruckInfo.leaveYardSpareTruckInfo_er
+                              errorsDuringTheIncident.usingElectronicDevice_er
                               }}</small>
                           </div>
 
+                <div class="mb-3 col-md-8">
+                  <label class="form-label">Task being performed when incident occurred </label>
+                  <input type="text" v-model="taskPerfomed" class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedDuringTheIncident && !taskPerfomed }"
+                    style="color: black;" />
+                  <small v-if="errorsDuringTheIncident.taskPerfomed_er" class="text-danger">{{
+                    errorsDuringTheIncident.taskPerfomed_er
+                  }}</small>
+                </div>
+
+
+                <div class="row">
+                
+
                           <div class="mb-3 col-md-2">
-                            <label class="form-label">Back In Yard</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="timeBackInYardSpareTruckInfo" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
+                            <label class="form-label">Was Safety Dept Notified ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="switchSafetyDeptNotified"
+                                v-model="wasSafetyDeptNotified"
+                              />
+                              <label class="form-check-label fw-semibold" for="switchSafetyDeptNotified"
+                                :style="{ color: wasSafetyDeptNotified ? '#198754' : '#dc3545' }">
+                                {{ wasSafetyDeptNotified ? 'YES' : 'NO' }}
+                              </label>
                             </div>
                             <small v-if="
-                              errorsSpareTruckInfo.backInYardSpareTruckInfo_er
+                              errorsDuringTheIncident.wasSafetyDeptNotified_er
                             " class="text-danger">{{
-                              errorsSpareTruckInfo.backInYardSpareTruckInfo_er
+                              errorsDuringTheIncident.wasSafetyDeptNotified_er
                               }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Fuel</label>
-                            <input type="number" step="any" v-model="fuelSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.fuelSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.fuelSpareTruckInfo_er }}</small>
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Safety Person Notified</label>
+                  <v-select
+                    :options="storeSafetyPerson.safetyPersonsNotified"
+                    v-model="SelectedSafetyPersonNotified"
+                    placeholder="Choose Safety Person"
+                    :reduce="(safetyPerson) => safetyPerson.id"
+                    label="safetyPersonNotifiedName"
+                    class="form-control p-0"
+                    :disabled="!wasSafetyDeptNotified"
+                    :class="{
+                      'is-invalid': formSubmittedDuringTheIncident && wasSafetyDeptNotified && !SelectedSafetyPersonNotified
+                    }" />
+                  <small v-if="errorsDuringTheIncident.SelectedSafetyPersonNotified_er" class="text-danger">{{
+                    errorsDuringTheIncident.SelectedSafetyPersonNotified_er
+                  }}</small>
+                </div>
+
+
+
+                            <div class="mb-3 col-md-2">
+                            <label class="form-label">Did you take pictures of the damages ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="switchDidYouTakePictures"
+                                v-model="didYouTakePictures"
+                              />
+                              <label class="form-check-label fw-semibold" for="switchDidYouTakePictures"
+                                :style="{ color: didYouTakePictures ? '#198754' : '#dc3545' }">
+                                {{ didYouTakePictures ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="
+                              errorsDuringTheIncident.didYouTakePictures_er
+                            " class="text-danger">{{
+                              errorsDuringTheIncident.didYouTakePictures_er
+                              }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">DEF</label>
-                            <input type="number" step="any" v-model="dieselExhaustFluidSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.dieselExhaustFluidSpareTruckInfo_er"
-                              class="text-danger">{{
-                                errorsSpareTruckInfo.dieselExhaustFluidSpareTruckInfo_er }}</small>
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Who did you send the pictures to ?</label>
+                  <v-select
+                    :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo"
+                    v-model="SelectedWhoDidYouSendThePicturesTo"
+                    placeholder="Choose a person"
+                    :reduce="(person) => person.id"
+                    label="whoDidYouSendThePictureToName"
+                    class="form-control p-0"
+                    :disabled="!didYouTakePictures"
+                    :class="{
+                      'is-invalid': formSubmittedDuringTheIncident && didYouTakePictures && !SelectedWhoDidYouSendThePicturesTo
+                    }" />
+                  <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er" class="text-danger">{{
+                    errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er
+                  }}</small>
+                </div>
+
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">How fast were you traveling ? (MPH)</label>
+                  <input type="number" step="any" v-model="howFastWereYouGoing"
+                    class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
+                    style="color: black;" />
+                  <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
+                    errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
+                </div>
+
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Direction you were traveling</label>
+                  <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
+                    placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName"
+                    class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
+                  <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{
+                    errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er
+                  }}</small>
+                </div>
+
+
+                        <div class="mb-3 col-md-2">
+                            <label class="form-label">Was this incident in an intersection ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="switchWasThisIncidentInAnIntersection"
+                                v-model="wasThisIncidentInAnIntersection"
+                              />
+                              <label class="form-check-label fw-semibold" for="switchWasThisIncidentInAnIntersection"
+                                :style="{ color: wasThisIncidentInAnIntersection ? '#198754' : '#dc3545' }">
+                                {{ wasThisIncidentInAnIntersection ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="
+                              errorsDuringTheIncident.wasThisIncidentInAnIntersection_er
+                            " class="text-danger">{{
+                              errorsDuringTheIncident.wasThisIncidentInAnIntersection_er
+                              }}</small>
                           </div>
+
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Weather</label>
+                  <v-select :options="storeWeatherCondition.weatherConditions" v-model="SelectedWeatherCondition" placeholder="Choose weather condition"
+                    :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedWeatherCondition }" />
+                  <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{
+                    errorsDuringTheIncident.SelectedWeatherCondition_er
+                  }}</small>
+                </div>
+
+                <div class="mb-3 col-md-2">
+                  <label class="form-label">Road Conditions</label>
+                  <v-select :options="storeRoadCondition.roadConditions" v-model="SelectedRoadCondition" placeholder="Choose road condition"
+                    :reduce="(roadCondition) => roadCondition.id" label="roadConditionName" class="form-control p-0"
+                    :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedRoadCondition }" />
+                  <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{
+                    errorsDuringTheIncident.SelectedRoadCondition_er
+                  }}</small>
+                </div>
+
+                <div class="mb-3 col-md-3">
+                  <label class="form-label">Witness</label>
+                  <input type="text" v-model="witness" class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }"
+                    style="color: black;" />
+                  <small v-if="errorsDuringTheIncident.witness_er" class="text-danger">{{
+                    errorsDuringTheIncident.witness_er
+                  }}</small>
+                </div>
+
+                <div class="mb-3 col-md-3">
+                  <label class="form-label">Witness Phone #</label>
+                  <input
+                    type="text"
+                    :value="witnessPhone"
+                    @input="formatPhone"
+                    placeholder="(XXX) XXX-XXXX"
+                    maxlength="14"
+                    class="form-control form-control-md border border-primary"
+                    :class="{ 'border-danger': formSubmittedDuringTheIncident && !witnessPhone }"
+                    style="color: black;" />
+                  <small v-if="errorsDuringTheIncident.witnessPhone_er" class="text-danger">{{
+                    errorsDuringTheIncident.witnessPhone_er
+                  }}</small>
+                </div>
+
+
+                </div>
 
 
                         </div>
 
-                        <div class="row">
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Spare Truck #</label>
-                            <v-select :options="storeTruck.trucks" v-model="selectedTruckSpareTruckInfo"
-                              placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
-                              class="form-control p-0" />
-
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Truck Start Miles</label>
-                            <input type="number" step="any" v-model="truckStartMilesSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.truckStartMilesSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.truckStartMilesSpareTruckInfo_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Truck End Miles</label>
-                            <input type="number" step="any" v-model="truckEndMilesSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.truckEndMilesSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.truckEndMilesSpareTruckInfo_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Truck Start Hours</label>
-                            <input type="number" step="any" v-model="truckStartHoursSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.truckStartHoursSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.truckStartHoursSpareTruckInfo_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Truck End Hours</label>
-                            <input type="number" step="any" v-model="truckEndHoursSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.truckEndHoursSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.truckEndHoursSpareTruckInfo_er }}</small>
-                          </div>
-
-
-
-                        </div>
-
-                        <div class="row">
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Spare Trailer #</label>
-                            <v-select :options="storeTrailer.trailers" v-model="selectedTrailerSpareTruckInfo"
-                              placeholder="Choose your Truck" :reduce="(trailer) => trailer.id" label="trailerNumber"
-                              class="form-control p-0" />
-
-
-
-                          </div>
-
-
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Trailer Start Miles</label>
-                            <input type="number" step="any" v-model="trailerStartMilesSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.trailerStartMilesSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.trailerStartMilesSpareTruckInfo_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Trailer End Miles</label>
-                            <input type="number" step="any" v-model="trailerEndMilesSpareTruckInfo"
-                              class="form-control form-control-lg border border-primary" style="color: black;" />
-                            <small v-if="errorsSpareTruckInfo.trailerEndMilesSpareTruckInfo_er" class="text-danger">{{
-                              errorsSpareTruckInfo.trailerEndMilesSpareTruckInfo_er }}</small>
-                          </div>
-
-                          <div class="mb-4 col-md-3 align-self-end">
-                            <button :disabled="isLoadingSpareTruckInfo" style="margin-bottom: -5px !important;"
-                              @click="HandleSpareTruckInfo" type="button" class="btn btn-info">
-                              {{ isEditingSpareTruckInfo ? "Save" : "Add" }}
+                        <!-- <div style="margin-bottom: -10px !important;" class="mb-0 col-md-3 d-flex">
+                            <button :disabled="isLoadingDuringTheIncident" @click="HandleDuringTheIncident" type="button" class="btn btn-primary"
+                              style="height: 38px; padding: 0.375rem 0.75rem;">
+                              {{ isEditDuringTheIncident ? "Update" : "Save" }}
                               <span class="btn-icon-end">
-                                <i :class="isEditingSpareTruckInfo ? 'fa fa-save' : 'fa fa-plus'"></i>
+                                <i :class="isEditDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
-                          </div>
+                          </div> -->
+                          
+
+                                   <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident" class="btn btn-primary btn-md">
+                              {{ isEditDuringTheIncident ? "Update" : "Save" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
+                              </span>
+                            </button>
 
 
-                        </div>
-
-                        <div class="row">
-                          <hr style="color: black" />
-                          <div class="table-responsive">
-                            <table
-                              class="table table-bordered header-border table-striped table-hover table-responsive-md">
-                              <thead class="thead-primary">
-                                <tr>
-                       
-                                  <th>Spare Truck</th>
-                                  <th>Spare Trailer</th>
-                                  <th>Leave Yard</th>
-                                  <th>Back In Yard</th>
-                                  <th>Fuel</th>
-                                  <th>DEF</th>
-                                  <th>Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="(item, index) in spareTruckList" :key="index">
-    
-                                  <td class="td">{{ item.truckNumber }}</td>
-                                  <td class="td">{{ item.trailerNumber }}</td>
-                                  <td class="td">{{ item.timeLeaveYardSpareTruckInfo }}</td>
-                                  <td class="td">{{ item.timeBackInYardSpareTruckInfo }}</td>
-                                  <td class="td">{{ item.fuelSpareTruckInfo }}</td>
-                                  <td class="td">{{ item.dieselExhaustFluidSpareTruckInfo }}</td>
-                                  <td>
-                                    <div>
-                                      <a @click="EditSpareTruckInfo(item)"
-                                        class="btn btn-primary shadow btn-xs sharp me-1"><i
-                                          class="fa fa-pencil"></i></a>
-                                      <a
-                                        @click="DeleteSpareTruckInfo(item)"
-                                        class="btn btn-danger shadow btn-xs sharp"
-                                        ><i class="fa fa-trash"></i
-                                      ></a>
-                                    </div>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
+           
                       </div>
                     </div>
                   </div>
 
-                  <Spinner v-if="isLoadingDowntime" />
+                  <Spinner v-if="isLoadingIncidentDeail" />
                   <div class="accordion-item">
                     <h2 class="accordion-header">
                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseTwo">
-                        Downtime
+                        Incident Detail
                       </button>
                     </h2>
                     <div id="bordered_collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordion-two">
@@ -1873,402 +2019,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Truck #</label>
-                            <v-select :options="storeTruck.trucks" v-model="selectedTruckDownTime"
-                              placeholder="Choose your Truck" :reduce="(truck) => truck.id" label="truckNumber"
-                              class="form-control p-0"
-                               />
-                            <small v-if="errorsDowntime.selectedTruckDownTime_er" class="text-danger">{{
-                              errorsDowntime.selectedTruckDownTime_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Truck Downtime Start</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="truckDownTimeStartDownTime" time-picker placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsDowntime.truckDownTimeStartDownTime_er" class="text-danger">{{
-                              errorsDowntime.truckDownTimeStartDownTime_er }}</small>
-                          </div>
-
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Truck Downtime End</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="truckDownTimeEndDownTime" time-picker placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsDowntime.truckDownTimeEndDownTime_er" class="text-danger">{{
-                              errorsDowntime.truckDownTimeEndDownTime_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Type</label>
-                            <v-select :options="storeTypeDowntime.typeDownTimes" v-model="selectedTypeTruckDownTime"
-                              placeholder="Choose your Type" :reduce="(typedowntimes) => typedowntimes.id"
-                              label="typeDownTimeName" class="form-control p-0" />
-                            <small v-if="errorsDowntime.selectedTypeTruckDownTime_er" class="text-danger">{{
-                              errorsDowntime.selectedTypeTruckDownTime_er }}</small>
-                          </div>
-
-
-                        </div>
-
-                        <div class="row">
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Trailer #</label>
-                            <v-select :options="storeTrailer.trailers" v-model="selectedTrailerDownTime"
-                              placeholder="Choose your Trailer" :reduce="(trailer) => trailer.id" label="trailerNumber"
-                              class="form-control p-0"
-                               />
-                            <small v-if="errorsDowntime.selectedTrailerDownTime_er" class="text-danger">{{
-                              errorsDowntime.selectedTrailerDownTime_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Trailer Downtime Start</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="trailerDownTimeStartDownTime" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsDowntime.trailerDownTimeStartDownTime_er" class="text-danger">{{
-                              errorsDowntime.trailerDownTimeStartDownTime_er }}</small>
-                          </div>
-
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Trailer Downtime End</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="trailerDownTimeEndDownTime" time-picker placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsDowntime.trailerDownTimeEndDownTime_er" class="text-danger">{{
-                              errorsDowntime.trailerDownTimeEndDownTime_er }}</small>
-                          </div>
-
-
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Type</label>
-                            <v-select :options="storeTypeDowntime.typeDownTimes" v-model="selectedTypeTrailerDownTime"
-                              placeholder="Choose your Type" :reduce="(typedowntimes) => typedowntimes.id"
-                              label="typeDownTimeName" class="form-control p-0" />
-                            <small v-if="errorsDowntime.selectedTypeTrailerDownTime_er" class="text-danger">{{
-                              errorsDowntime.selectedTypeTrailerDownTime_er }}</small>
-                          </div>
-
-
-                        </div>
-
-                        <div class="row">
-
-                          <div class="mb-3 col-md-9">
-                            <label class="form-label">Downtime Reason</label>
-                            <input type="text" v-model="downTimeReasonDownTime"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsDowntime.downTimeReasonDownTime_er" class="text-danger">{{
-                              errorsDowntime.downTimeReasonDownTime_er }}</small>
-                          </div>
-
-                          <div class="mb-4 col-md-3 align-self-end">
-
-
-
-                            <button :disabled="isLoadingDowntime" style="margin-bottom: -7px !important;"
-                              @click="HandleDowntime" type="button" class="btn btn-info">
-                              {{ isEditingDowntime ? "Save" : "Add" }}
-                              <span class="btn-icon-end">
-                                <i :class="isEditingDowntime ? 'fa fa-save' : 'fa fa-plus'"></i>
-                              </span>
-                            </button>
-
-
-                          </div>
-
-
-
-
-
-                        </div>
-
-                        <div class="row">
-                          <hr style="color: black" />
-                          <div class="table-responsive">
-                            <table
-                              class="table table-bordered header-border table-striped table-hover table-responsive-md">
-                              <thead class="thead-primary">
-                                <tr>
-                                  <th>Truck #</th>
-                                  <th>Truck Downtime Start</th>
-                                  <th>Truck Downtime End</th>
-                                  <th>Trailer #</th>
-                                  <th>Trailer Downtime Start</th>
-                                  <th>Trailer Downtime End</th>
-                                  <th>Action</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="(item, index) in downtimeList" :key="index">
-                                  <td class="td">{{ item.truckNumber }}</td>
-                                  <td class="td">{{ item.truckDownTimeStartDownTime }}</td>
-                                  <td class="td">{{ item.truckDownTimeEndDownTime }}</td>
-                                  <td class="td">{{ item.trailerNumber }}</td>
-                                  <td class="td">{{ item.trailerDownTimeStartDownTime }}</td>
-                                  <td class="td">{{ item.trailerDownTimeEndDownTime }}</td>
-                                  <td>
-                                    <div>
-                                      <a @click="EditDowntime(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
-                                          class="fa fa-pencil"></i></a>
-                                      <a
-                                        @click="DeleteDowntime(item)"
-                                        class="btn btn-danger shadow btn-xs sharp"
-                                        ><i class="fa fa-trash"></i
-                                      ></a>
-                                    </div>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
-
-
-
-
-
-
-                      </div>
-                    </div>
-                  </div>
-
-                  <Spinner v-if="isLoadingLoad" />
-
-                  <div class="accordion-item">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#bordered_collapseThree">
-                        Load
-                      </button>
-                    </h2>
-                    <div id="bordered_collapseThree" class="accordion-collapse collapse"
-                      data-bs-parent="#accordion-two">
-                      <div class="accordion-body">
-
-                        <div class="row">
-
-                          <div class="mb-3">
-                            <div class="form-check form-check-inline">
-                              <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" v-model="preloadedLoad"> Preloaded
-                              </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                              <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" v-model="preloadedNextDayLoad"> Preload
-                                for
-                                next day
-                              </label>
-                            </div>
-                          </div>
-
-
-
-                        </div>
-
-                        <div class="row">
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Tunnel Time In</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="tunnelTimeInLoad" :disabled="preloadedLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.tunnelTimeInLoad_er" class="text-danger">{{
-                              errorsLoad.tunnelTimeInLoad_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Tunnel Time Out</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="tunnelTimeOutLoad" :disabled="preloadedLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.tunnelTimeOutLoad_er" class="text-danger">{{
-                              errorsLoad.tunnelTimeOutLoad_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Leave Yard</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="leaveYardLoad" :disabled="preloadedNextDayLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.leaveYardLoad_er" class="text-danger">{{ errorsLoad.leaveYardLoad_er
-                              }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-4">
-                            <label class="form-label">Operator</label>
-                            <v-select :options="storeOperator.operators" v-model="selectedOperatorLoad"
-                              :disabled="preloadedLoad" placeholder="Choose your Operator"
-                              :reduce="(operator) => operator.id" label="operatorName" class="form-control p-0" />
-                            <small v-if="errorsLoad.selectedOperatorLoad_er" class="text-danger">{{
-                              errorsLoad.selectedOperatorLoad_er }}</small>
-                          </div>
-
-                        </div>
-                        
-                        <div class="row">
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Source</label>
-                            <v-select :options="storeSource.sources" v-model="selectedSourceLoad"
-                              placeholder="Choose your Source" :reduce="(source) => source.id" label="sourceName"
-                              class="form-control p-0" />
-                            <small v-if="errorsLoad.selectedSourceLoad_er" class="text-danger">{{
-                              errorsLoad.selectedSourceLoad_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Destination</label>
-                            <v-select :options="storeDestination.destinations" :disabled="preloadedNextDayLoad"
-                              v-model="selectedDestinationLoad" placeholder="Choose your Destination"
-                              :reduce="(destination) => destination.id" label="destinationName"
-                              class="form-control p-0" />
-                            <small v-if="errorsLoad.selectedDestinationLoad_er" class="text-danger">{{
-                              errorsLoad.selectedDestinationLoad_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Material</label>
-                            <v-select :options="filteredMaterials" v-model="selectedMaterialLoad"
-                              placeholder="Choose your Material" :reduce="(material) => material.id"
-                              label="materialName" class="form-control p-0" />
-                            <small v-if="errorsLoad.selectedMaterialLoad_er" class="text-danger">{{
-                              errorsLoad.selectedMaterialLoad_er }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Destination Time In</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="timeInLoad" :disabled="preloadedNextDayLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.timeInLoad_er" class="text-danger">{{ errorsLoad.timeInLoad_er
-                              }}</small>
-                          </div>
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Destination Time Out</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="timeOutLoad" :disabled="preloadedNextDayLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.timeOutLoad_er" class="text-danger">{{ errorsLoad.timeOutLoad_er
-                              }}</small>
-                          </div>
-
-
-                        </div>
-                        <div class="row">
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Ticket #</label>
-                            <input type="text" v-model="ticketNumberLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.ticketNumberLoad_er" class="text-danger">{{
-                              errorsLoad.ticketNumberLoad_er }}</small>
-                          </div>
-
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Gross Weight</label>
-                            <input type="number" step="any" v-model="grossWeightLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary"
-                              :class="{ 'border-danger': tonsError }" />
-                            <small v-if="errorsLoad.grossWeightLoad_er" class="text-danger">
-                              {{ errorsLoad.grossWeightLoad_er }}
-                            </small>
-                          </div>
-
-    
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Tare Weight</label>
-                            <input type="number" step="any" v-model="tareWeightLoad" :disabled="preloadedNextDayLoad"
-                              class="form-control form-control-sm border border-primary"
-                              :class="{ 'border-danger': tonsError }" />
-                            <small v-if="errorsLoad.tareWeightLoad_er" class="text-danger">
-                              {{ errorsLoad.tareWeightLoad_er }}
-                            </small>
-                          </div>
-
-
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Tons</label>
-                            <input type="number" step="any" v-model="calculatedTons" disabled readonly
-                              class="form-control form-control-sm border border-primary calculated-field"
-                              :class="{ 'border-danger': tonsError }" placeholder="Auto-calculated" />
-                            <small v-if="tonsError" class="text-danger">{{ tonsError }}</small>
-                            <small v-else-if="errorsLoad.tonsLoad_er" class="text-danger">
-                              {{ errorsLoad.tonsLoad_er }}
-                            </small>
-                          </div>
-                          <div class="mb-3 col-md-2">
-                            <label class="form-label">Return To Yard</label>
-                            <div class="mt-0">
-                              <VueDatePicker v-model="backYardLoad" :disabled="preloadedNextDayLoad" time-picker
-                                placeholder="Select Time">
-                                <template #input-icon>
-                                  <img class="input-slot-image" src="../assets/icons/clock2.png" />
-                                </template>
-                              </VueDatePicker>
-                            </div>
-                            <small v-if="errorsLoad.backYardLoad_er" class="text-danger">{{ errorsLoad.backYardLoad_er
-                              }}</small>
-                          </div>
-
-
-
-
-
-                        </div>
-
-                        <div class="row d-flex align-items-center">
+                                    <!-- <div class="row d-flex align-items-center">
 
 
                           <div class="mb-3 col-md-9">
@@ -2324,72 +2075,53 @@ const getDenverTimeAsUTCISOString = () => {
                               </span>
                             </button>
                           </div>
+                        </div> -->
+
+
+             
                         </div>
 
+          
 
+                      </div>
+                    </div>
+                  </div>
+
+                  <Spinner v-if="isLoadingSupervisorNote" />
+
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#bordered_collapseThree">
+                        Employee Signature
+                      </button>
+                    </h2>
+                    <div id="bordered_collapseThree" class="accordion-collapse collapse"
+                      data-bs-parent="#accordion-two">
+                      <div class="accordion-body">
+
+                
 
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-12">
+                          <!-- <div class="mb-3 col-md-12">
                             <label class="form-label">Note</label>
-                            <input type="text" v-model="noteLoad"
+                            <input type="text" v-model="note"
                               class="form-control form-control-sm border border-primary" />
                             <small v-if="errorsLoad.noteLoad_er" class="text-danger">{{ errorsLoad.noteLoad_er
                               }}</small>
-                          </div>
+                          </div> -->
 
 
                         </div>
 
-                        <div class="row">
-                          <hr style="color: black" />
-                          <div class="table-responsive">
-                            <table
-                              class="table table-bordered header-border table-striped table-hover table-responsive-md">
-                              <thead class="thead-primary">
-                                <tr>
-                 
-                                  <th>Source</th>
-                                  <th>Destination</th>
-                                  <th>Material</th>
-                                  <th>Tunnel Time In</th>
-                                  <th>Tunnel Time Out</th>
-                                  <th>Operator</th>
-                                  <th>Ticket #</th>
-                                  <th>Action</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="(item, index) in loadList" :key="index">
-                                  <td class="td">{{ item.sourceName }}</td>
-                                  <td class="td">{{ item.destinationName }}</td>
-                                  <td class="td">{{ item.materialName }}</td>
-                                  <td class="td">{{ item.tunnelTimeInLoad }}</td>
-                                  <td class="td">{{ item.tunnelTimeOutLoad }}</td>
-                                  <td class="td">{{ item.operatorName }}</td>
-                                  <td class="td">{{ item.ticketNumberLoad }}</td>
-                                  <td>
-                                    <div>
-                                      <a @click="EditLoad(item)" class="btn btn-primary shadow btn-xs sharp me-1"><i
-                                          class="fa fa-pencil"></i></a>
-                                      <a
-                                        @click="DeleteLoad(item)"
-                                        class="btn btn-danger shadow btn-xs sharp"
-                                        ><i class="fa fa-trash"></i
-                                      ></a>
-                                    </div>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
+                  
                       </div>
                     </div>
                   </div>
                 </div>
-              </div> -->
+              </div>
 
             </form>
           </div>
