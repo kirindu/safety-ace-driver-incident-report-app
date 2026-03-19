@@ -124,7 +124,7 @@ const errorsGeneralInformation = ref({
 });
 
 // Modo de edición de la informaciongeneral para el general information
-const isEditGeneralInformation = ref(false);
+const isEditingGeneralInformation = ref(false);
 const isLoadingGeneralInformation = ref(false); // To show loading spinner when fetching general information
 const formSubmittedGeneralInformation = ref(false);
 
@@ -169,7 +169,7 @@ const formatPhone = (e) => {
   witnessPhone.value = formatted;
 };
 
-const isEditDuringTheIncident = ref(false);
+const isEditingDuringTheIncident = ref(false);
 const isLoadingDuringTheIncident = ref(false); // To show loading spinner when fetching during the incident info
 const formSubmittedDuringTheIncident = ref(false); // To track if During the Incident form has been submitted
 
@@ -301,7 +301,7 @@ onMounted(() => {
       localStorage.removeItem("ACE-INCIDENT-REPORT");
     } else {
       // Cargar ace-incident-report existente
-      isEditGeneralInformation.value = true;
+      isEditingGeneralInformation.value = true;
       const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
       // selectedEmployee.value = generalInformation.employee_id;
@@ -431,14 +431,14 @@ const onSubmit = async (event) => {
   };
 
   try {
-    if (!isEditGeneralInformation.value) {
+    if (!isEditingGeneralInformation.value) {
       const response = await GeneralInformationAPI.add(generalInformationData);
 
       if (response.data.ok) {
         localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
         const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
-        isEditGeneralInformation.value = true;
+        isEditingGeneralInformation.value = true;
 
         showSweetAlert({
           title: "General information saved successfully!",
@@ -567,12 +567,12 @@ const resetGeneralInformation = () => {
   timeDayStarted.value = "";
 
 
-  isEditGeneralInformation.value = false;
+  isEditingGeneralInformation.value = false;
   formSubmittedGeneralInformation.value = false;
 };
 
 // Reset During the Incident form
-const resetDuringTheIncidentForm = () => {
+const resetDuringTheIncident = () => {
 
   selectedDuringTheIncidentId.value = null;
   usingElectronicDevice.value = false;
@@ -589,7 +589,7 @@ const resetDuringTheIncidentForm = () => {
   witness.value = "";
   witnessPhone.value = "";
 
-  isEditDuringTheIncident.value = false;
+  isEditingDuringTheIncident.value = false;
   formSubmittedDuringTheIncident.value = false;
 
 };
@@ -710,12 +710,12 @@ const HandleDuringTheIncident = async (event) => {
     witness: witness.value,
     witnessPhone: witnessPhone.value,
 
-    generalInformation_id: generalInformation_id,
+    generalInformation_ref_id: generalInformation_id,
 
   };
 
   try {
-    if (isEditDuringTheIncident.value) {
+    if (isEditingDuringTheIncident.value) {
       // Edit existi
       isLoadingDuringTheIncident.value = true; // Show loading spinner
       const response = await DuringTheIncidentAPI.edit(selectedDuringTheIncidentId.value, duringTheIncident);
@@ -731,7 +731,7 @@ const HandleDuringTheIncident = async (event) => {
         }).then(() => {
           isLoadingDuringTheIncident.value = false; // Hide loading spinner
           loadDuringTheIncident();
-          resetDuringTheIncident();
+          //resetDuringTheIncident();
         });
       } else {
         showSweetAlert({
@@ -761,7 +761,7 @@ const HandleDuringTheIncident = async (event) => {
         }).then(() => {
           isLoadingDuringTheIncident.value = false; // Hide loading spinner
           loadDuringTheIncident();
-          resetDuringTheIncident();
+          //resetDuringTheIncident();
         });
       } else {
         showSweetAlert({
@@ -985,7 +985,7 @@ const HandleSupervisorNote = async (event) => {
 
   const supervisorNote = {
     supervisorNote: supervisorNote.value,
-    generalInformation_id: generalInformation_id,
+    generalInformation_ref_id: generalInformation_id,
 
   };
 
@@ -1086,7 +1086,7 @@ const EditDuringTheIncident = (item) => {
 
 
   // Set editing mode
-  isEditDuringTheIncident.value = true;
+  isEditingDuringTheIncident.value = true;
   selectedDuringTheIncidentId.value = item.id || item._id; // Ensure the ID is captured
 
 };
@@ -1690,15 +1690,15 @@ const getDenverTimeAsUTCISOString = () => {
              <div class="mb-3 col-md-3 d-flex align-items-end">
 
                <!-- <button type="submit" class="btn btn-primary btn-md">
-                {{ isEditGeneralInformation ? "Update" : "Save"
+                {{ isEditingGeneralInformation ? "Update" : "Save"
                 }}
               </button>  -->
 
 
                             <button type="submit" :disabled="isLoadingGeneralInformation" class="btn btn-primary btn-md">
-                              {{ isEditGeneralInformation ? "Update" : "Save" }}
+                              {{ isEditingGeneralInformation ? "Update" : "Save" }}
                               <span class="btn-icon-end">
-                                <i :class="isEditGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
+                                <i :class="isEditingGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
                         
@@ -1716,7 +1716,7 @@ const getDenverTimeAsUTCISOString = () => {
               </div> -->
 
               <!-- <button type="submit" class="btn btn-primary">
-                {{ isEditGeneralInformation ? "Update General Information" : "Start ACE Driver Incident Report"
+                {{ isEditingGeneralInformation ? "Update General Information" : "Start ACE Driver Incident Report"
                 }}
               </button> -->
 
@@ -1985,18 +1985,18 @@ const getDenverTimeAsUTCISOString = () => {
                         <!-- <div style="margin-bottom: -10px !important;" class="mb-0 col-md-3 d-flex">
                             <button :disabled="isLoadingDuringTheIncident" @click="HandleDuringTheIncident" type="button" class="btn btn-primary"
                               style="height: 38px; padding: 0.375rem 0.75rem;">
-                              {{ isEditDuringTheIncident ? "Update" : "Save" }}
+                              {{ isEditingDuringTheIncident ? "Update" : "Save" }}
                               <span class="btn-icon-end">
-                                <i :class="isEditDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
+                                <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
                           </div> -->
                           
 
                                    <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident" class="btn btn-primary btn-md">
-                              {{ isEditDuringTheIncident ? "Update" : "Save" }}
+                              {{ isEditingDuringTheIncident ? "Update" : "Save" }}
                               <span class="btn-icon-end">
-                                <i :class="isEditDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
+                                <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
 
