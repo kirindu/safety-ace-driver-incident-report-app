@@ -320,7 +320,7 @@ onMounted(() => {
 
 
       handleVisibleAcordion();
-      // loadSpareTruckInfo();
+       loadDuringTheIncident();
       // loadDowntime();
       // loadLoad();
     }
@@ -652,39 +652,53 @@ const HandleDuringTheIncident = async (event) => {
 
   let hasError = false;
 
-
-  if (!taskPerfomed.value) {
-    errorsDuringTheIncident.value.taskPerfomed_er = "Required field";
+  if (!selectedTruck.value) {
+    errorsGeneralInformation.value.truck_er = "Required field";
     hasError = true;
   }
 
-  if (!howFastWereYouGoing.value) {
-    errorsDuringTheIncident.value.howFastWereYouGoing_er = "Required field";
+  if (!time.value) {
+    errorsGeneralInformation.value.time_er = "Required field";
     hasError = true;
   }
 
-  if (!SelectedWhoDidYouSendThePicturesTo.value && didYouTakePictures.value) {
-    errorsDuringTheIncident.value.SelectedWhoDidYouSendThePicturesTo_er = "Required field";
+  if (!selectedDept.value) {
+    errorsGeneralInformation.value.dept_er = "Required field";
     hasError = true;
   }
 
-    if (!SelectedDirectionYouWereTraveling.value) {
-      errorsDuringTheIncident.value.SelectedDirectionYouWereTraveling_er = "Required field";
-      hasError = true;
-    }
-
-  if (!SelectedWeatherCondition.value) {
-    errorsDuringTheIncident.value.SelectedWeatherCondition_er = "Required field";   
+  if (!selectedSupervisor.value) {
+    errorsGeneralInformation.value.supervisor_er = "Required field";
     hasError = true;
   }
 
-  if (!SelectedRoadCondition.value) {
-    errorsDuringTheIncident.value.SelectedRoadCondition_er = "Required field";
+  if (!selectedTypeOfIncident.value) {
+    errorsGeneralInformation.value.typeOfIncident_er = "Required field";
     hasError = true;
   }
 
-  if (!SelectedSafetyPersonNotified.value && wasSafetyDeptNotified.value) {
-    errorsDuringTheIncident.value.SelectedSafetyPersonNotified_er = "Required field";
+  if (!trainee.value) {
+    errorsGeneralInformation.value.trainee_er = "Required field";
+    hasError = true;
+  }
+
+  if (!location.value) {
+    errorsGeneralInformation.value.location_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeWorkedYears.value) {
+    errorsGeneralInformation.value.timeWorkedYears_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeWorkedMonths.value) {
+    errorsGeneralInformation.value.timeWorkedMonths_er = "Required field";
+    hasError = true;
+  }
+
+  if (!timeDayStarted.value) {
+    errorsGeneralInformation.value.timeDayStarted_er = "Required field";
     hasError = true;
   }
 
@@ -693,9 +707,21 @@ const HandleDuringTheIncident = async (event) => {
     return;
   }
 
-  let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
+  // Obtener el ID de General Information para asociarlo con During The Incident al momento de agregar
+   let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
-  const duringTheIncident = {
+     const response = await GeneralInformationAPI.getDuringTheIncident(generalInformation_id);
+    duringTheIncidentList.value = response.data.data || [];
+
+    if(duringTheIncidentList.value.length) {
+
+      // Si ya existe información de During The Incident obtenemos el ID para editar en lugar de agregar nueva información
+      selectedDuringTheIncidentId.value = duringTheIncidentList.value[0]?.id || duringTheIncidentList.value[0]?._id || null; // Capture ID for editing  
+      
+    
+    }
+
+   const duringTheIncident = {
     usingElectronicDevice: usingElectronicDevice.value,
     taskPerfomed: taskPerfomed.value,
     wasSafetyDeptNotified: wasSafetyDeptNotified.value,
@@ -709,14 +735,19 @@ const HandleDuringTheIncident = async (event) => {
     wasThisIncidentInAnIntersection: wasThisIncidentInAnIntersection.value,
     witness: witness.value,
     witnessPhone: witnessPhone.value,
+    selectedDuringTheIncidentId: selectedDuringTheIncidentId.value,
 
     generalInformation_ref_id: generalInformation_id,
 
   };
 
+
+
   try {
+
     if (isEditingDuringTheIncident.value) {
-      // Edit existi
+
+      
       isLoadingDuringTheIncident.value = true; // Show loading spinner
       const response = await DuringTheIncidentAPI.edit(selectedDuringTheIncidentId.value, duringTheIncident);
 
@@ -730,7 +761,7 @@ const HandleDuringTheIncident = async (event) => {
           allowOutsideClick: false,
         }).then(() => {
           isLoadingDuringTheIncident.value = false; // Hide loading spinner
-          loadDuringTheIncident();
+          //loadDuringTheIncident();
           //resetDuringTheIncident();
         });
       } else {
@@ -760,8 +791,9 @@ const HandleDuringTheIncident = async (event) => {
           allowOutsideClick: false,
         }).then(() => {
           isLoadingDuringTheIncident.value = false; // Hide loading spinner
-          loadDuringTheIncident();
+          //loadDuringTheIncident();
           //resetDuringTheIncident();
+          isEditingDuringTheIncident.value = true; // Switch to edit mode after adding new info
         });
       } else {
         showSweetAlert({
@@ -1152,7 +1184,7 @@ const DeleteDuringTheIncident = async (item) => {
             confirmButtonText: "Ok",
             allowOutsideClick: false,
           }).then(() => {
-            loadDuringTheIncident();
+            //loadDuringTheIncident();
           });
         } else {
           showSweetAlert({
@@ -1286,13 +1318,43 @@ const loadDuringTheIncident = async () => {
   if (!rawGeneralInformation) return;
 
   const generalInformation = JSON.parse(rawGeneralInformation);
-  const generalInformationId = generalInfromation?.id || generalInformation?._id;
+  const generalInformationId = generalInformation?.id || generalInformation?._id;
 
   if (!generalInformationId) return;
 
   try {
     const response = await GeneralInformationAPI.getDuringTheIncident(generalInformationId);
     duringTheIncidentList.value = response.data.data || [];
+
+    if(!duringTheIncidentList.value.length) {
+      resetDuringTheIncident(); // Clear form if no data
+      isEditingDuringTheIncident.value = false; // Ensure we're in add mode
+      return;
+    
+    } else {
+
+    // Cargamos la seccion de During the Incident
+
+    usingElectronicDevice.value = duringTheIncidentList.value[0]?.usingElectronicDevice || false;
+    taskPerfomed.value = duringTheIncidentList.value[0]?.taskPerfomed || "";
+    wasSafetyDeptNotified.value = duringTheIncidentList.value[0]?.wasSafetyDeptNotified || false;
+    didYouTakePictures.value = duringTheIncidentList.value[0]?.didYouTakePictures || false;
+    howFastWereYouGoing.value = duringTheIncidentList.value[0]?.howFastWereYouGoing || "";
+    SelectedSafetyPersonNotified.value = duringTheIncidentList.value[0]?.safetyPersonNotified_id || "";
+    SelectedWhoDidYouSendThePicturesTo.value = duringTheIncidentList.value[0]?.whoDidYouSendThePicturesTo_id || "";
+    SelectedDirectionYouWereTraveling.value = duringTheIncidentList.value[0]?.directionYouWereTraveling_id || "";
+    SelectedWeatherCondition.value = duringTheIncidentList.value[0]?.weatherCondition_id || ""; 
+    SelectedRoadCondition.value = duringTheIncidentList.value[0]?.roadCondition_id || "";
+    wasThisIncidentInAnIntersection.value = duringTheIncidentList.value[0]?.wasThisIncidentInAnIntersection || false;
+    witness.value = duringTheIncidentList.value[0]?.witness || "";
+    witnessPhone.value = duringTheIncidentList.value[0]?.witnessPhone || "";  
+
+    selectedDuringTheIncidentId.value = duringTheIncidentList.value[0]?.id || duringTheIncidentList.value[0]?._id || null; // Capture ID for editing  
+
+    isEditingDuringTheIncident.value = true; // Set edit mode if we have data
+       
+    }
+
   } catch (error) {
     console.error("Error al obtener During The Incident:", error);
   }
