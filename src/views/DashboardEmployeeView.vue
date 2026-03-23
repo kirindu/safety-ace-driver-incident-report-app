@@ -231,7 +231,7 @@ const listDatesOfIncidents = ref("");
 
 
 const isEditingIncidentDetail = ref(false);
-const isLoadingIncidentDeail = ref(false);
+const isLoadingIncidentDetail = ref(false);
 const formSubmittedIncidentDetail = ref(false); // To track if Incident Detail form has been submitted
 
 
@@ -245,6 +245,7 @@ const errorsIncidentDetail = ref({
   whatDamageWasDone_er: "",
   incidentInThePastYear_er: "",
   listDatesOfIncidents_er: "",
+  anyVehicleTowed_er: "",
 });
 
 // Supervisor Note
@@ -431,6 +432,7 @@ const onSubmit = async (event) => {
   };
 
   try {
+    isLoadingGeneralInformation.value = true; // ✅ Bloquea el botón durante el request
     if (!isEditingGeneralInformation.value) {
       const response = await GeneralInformationAPI.add(generalInformationData);
 
@@ -505,6 +507,8 @@ const onSubmit = async (event) => {
     }).then(() => {
       return;
     });
+  } finally {
+    isLoadingGeneralInformation.value = false; // ✅ Libera el botón siempre, éxito o error
   }
 };
 
@@ -652,55 +656,50 @@ const HandleDuringTheIncident = async (event) => {
 
   let hasError = false;
 
-  if (!selectedTruck.value) {
-    errorsGeneralInformation.value.truck_er = "Required field";
-    hasError = true;
-  }
+    if (!taskPerfomed.value) {
+      errorsDuringTheIncident.value.taskPerfomed_er = "Required field";
+      hasError = true;
+    }
 
-  if (!time.value) {
-    errorsGeneralInformation.value.time_er = "Required field";
-    hasError = true;
-  }
+    if (wasSafetyDeptNotified.value && !SelectedSafetyPersonNotified.value) {
+      errorsDuringTheIncident.value.SelectedSafetyPersonNotified_er = "Required field";
+      hasError = true;
+    }   
 
-  if (!selectedDept.value) {
-    errorsGeneralInformation.value.dept_er = "Required field";
-    hasError = true;
-  }
+    
+    if (didYouTakePictures.value && !SelectedWhoDidYouSendThePicturesTo.value) {
+      errorsDuringTheIncident.value.SelectedWhoDidYouSendThePicturesTo_er = "Required field";
+      hasError = true;
+    } 
 
-  if (!selectedSupervisor.value) {
-    errorsGeneralInformation.value.supervisor_er = "Required field";
-    hasError = true;
-  }
 
-  if (!selectedTypeOfIncident.value) {
-    errorsGeneralInformation.value.typeOfIncident_er = "Required field";
-    hasError = true;
-  }
 
-  if (!trainee.value) {
-    errorsGeneralInformation.value.trainee_er = "Required field";
-    hasError = true;
-  }
+    if (!howFastWereYouGoing.value) {
+      errorsDuringTheIncident.value.howFastWereYouGoing_er = "Required field";
+      hasError = true;
+    }     
 
-  if (!location.value) {
-    errorsGeneralInformation.value.location_er = "Required field";
-    hasError = true;
-  }
 
-  if (!timeWorkedYears.value) {
-    errorsGeneralInformation.value.timeWorkedYears_er = "Required field";
-    hasError = true;
-  }
+      if (!SelectedDirectionYouWereTraveling.value) {
+        errorsDuringTheIncident.value.SelectedDirectionYouWereTraveling_er = "Required field";
+        hasError = true;
+      } 
+      if (!SelectedWeatherCondition.value) {
+        errorsDuringTheIncident.value.SelectedWeatherCondition_er = "Required field";
+        hasError = true;
+      } 
+      if (!SelectedRoadCondition.value) {
+        errorsDuringTheIncident.value.SelectedRoadCondition_er = "Required field";
+        hasError = true;
+      } 
 
-  if (!timeWorkedMonths.value) {
-    errorsGeneralInformation.value.timeWorkedMonths_er = "Required field";
-    hasError = true;
-  }
 
-  if (!timeDayStarted.value) {
-    errorsGeneralInformation.value.timeDayStarted_er = "Required field";
-    hasError = true;
-  }
+        if (witnessPhone.value && !/^\(\d{3}\) \d{3}-\d{4}$/.test(witnessPhone.value)) {
+          errorsDuringTheIncident.value.witnessPhone_er = "Invalid phone format. Use (XXX) XXX-XXXX";
+          hasError = true;
+        }
+
+
 
 
   if (hasError) {
@@ -839,6 +838,7 @@ const HandleIncidentDetail = async (event) => {
   errorsIncidentDetail.value.whatDamageWasDone_er = "";
   errorsIncidentDetail.value.incidentInThePastYear_er = "";
   errorsIncidentDetail.value.listDatesOfIncidents_er = "";
+  errorsIncidentDetail.value.anyVehicleTowed_er = "";
 
 
 
@@ -948,7 +948,7 @@ const HandleIncidentDetail = async (event) => {
         });
       }
     } else {
-      isLoadingIncidentDeail.value = true;
+      isLoadingIncidentDetail.value = true;
       const response = await IncidentDetailAPI.add(formData);
 
       if (response.data.ok) {
@@ -1125,7 +1125,7 @@ const EditDuringTheIncident = (item) => {
 
 const EditIncidentDetail = async (item) => {
 
-  isLoadingIncidentDeail.value = true; // Set flag to prevent watches from clearing fields
+  isLoadingIncidentDetail.value = true; // Set flag to prevent watches from clearing fields
 
   selectedIncidentDetail.value = item.id || item._id; // Ensure the ID is captured
   incidentDescription.value = item.incidentDescription || "";
@@ -1148,7 +1148,7 @@ const EditIncidentDetail = async (item) => {
   isEditingIncidentDetail.value = true;
   selectedIncidentDetailId.value = item.id || item._id; // Ensure the ID is captured
 
-  isLoadingIncidentDeail.value = false; // Reset loading flag after setting all fields
+  isLoadingIncidentDetail.value = false; // Reset loading flag after setting all fields
 };
 
 const EditSupervisorNote = async (item) => {
@@ -1758,8 +1758,9 @@ const getDenverTimeAsUTCISOString = () => {
 
 
                             <button type="submit" :disabled="isLoadingGeneralInformation" class="btn btn-primary btn-md">
-                              {{ isEditingGeneralInformation ? "Update" : "Save" }}
-                              <span class="btn-icon-end">
+                              <span v-if="isLoadingGeneralInformation" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                              {{ isLoadingGeneralInformation ? 'Saving...' : (isEditingGeneralInformation ? "Update" : "Save") }}
+                              <span v-if="!isLoadingGeneralInformation" class="btn-icon-end">
                                 <i :class="isEditingGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
@@ -2044,16 +2045,6 @@ const getDenverTimeAsUTCISOString = () => {
 
                         </div>
 
-                        <!-- <div style="margin-bottom: -10px !important;" class="mb-0 col-md-3 d-flex">
-                            <button :disabled="isLoadingDuringTheIncident" @click="HandleDuringTheIncident" type="button" class="btn btn-primary"
-                              style="height: 38px; padding: 0.375rem 0.75rem;">
-                              {{ isEditingDuringTheIncident ? "Update" : "Save" }}
-                              <span class="btn-icon-end">
-                                <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
-                              </span>
-                            </button>
-                          </div> -->
-                          
 
                                    <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident" class="btn btn-primary btn-md">
                               {{ isEditingDuringTheIncident ? "Update" : "Save" }}
@@ -2068,7 +2059,7 @@ const getDenverTimeAsUTCISOString = () => {
                     </div>
                   </div>
 
-                  <Spinner v-if="isLoadingIncidentDeail" />
+                  <Spinner v-if="isLoadingIncidentDetail" />
                   <div class="accordion-item">
                     <h2 class="accordion-header">
                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -2079,70 +2070,149 @@ const getDenverTimeAsUTCISOString = () => {
                     <div id="bordered_collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
+<!-- 
                         <div class="row">
 
-                                    <!-- <div class="row d-flex align-items-center">
+
+                      <div class="mb-3 col-md-12">
+                            <label class="form-label">Incident Description: How did the incident occur? What happened? </label>
+                            <input type="text" v-model="incidentDescription"
+                              class="form-control form-control-sm border border-primary" />
+                            <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{ errorsIncidentDetail.incidentDescription_er
+                              }}</small>
+                          </div>
+
+                        </div> -->
 
 
-                          <div class="mb-3 col-md-9">
-           
-                            <input v-show="false" type="file" ref="fileInput"
-                              class="form-control form-control-sm border border-primary" multiple accept="image/*"
-                              capture="environment" @change="handleFileChange"
-                              style="height: 38px; padding: 0.375rem 0.75rem;" />
+                <div class="row">
 
-                            <button @click.prevent="fileInput.click()" style="height: 50px;" type="button"
-                              class="btn btn-primary btn-rounded btn-sm">Add Photos<span class="btn-icon-end"><i
-                                  class="fa fa-camera"></i></span>
-                            </button>
+                <div class="mb-3 col-md-12">
+                  <label class="form-label">Incident Description: How did the incident occur? What happened ?</label>
+                  <textarea v-model="incidentDescription" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{ errorsIncidentDetail.incidentDescription_er}}</small>
+                </div>
+                
+              </div>
 
 
-                            <div v-if="selectedImages.length > 0" class="row mt-2">
-                              <div v-for="(image, index) in selectedImages" :key="index" class="col-md-3">
-                                <img :src="image.url" alt="Preview" style="max-width: 100px; margin-bottom: 10px;" />
-                                <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
-                                <button @click.prevent="removeImage(index)"
-                                  class="btn btn-danger btn-xs">Remove</button>
-                              </div>
+                <div class="row">
+
+                <div class="mb-3 col-md-12">
+                  <label class="form-label">What Action, Event or Condition contributed most to this incident ?</label>
+                  <textarea v-model="actionEventConditions" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.actionEventConditions_er" class="text-danger">{{ errorsIncidentDetail.actionEventConditions_er}}</small>
+                </div>
+                
+              </div>
+
+
+                          <div class="row">
+
+                          <div class="mb-3 col-md-3">
+                            <label class="form-label">Was any vehicles towed ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="checkNativeSwitch"
+                                v-model="anyVehicleTowed"
+                              />
+                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
+                                :style="{ color: anyVehicleTowed ? '#198754' : '#dc3545' }">
+                                {{ anyVehicleTowed ? 'YES' : 'NO' }}
+                              </label>
                             </div>
-
-
-                            <div v-if="existingLoadImages.length > 0" class="row mt-3">
-                              <h6 style="color: #000;">Existing Images:</h6>
-                              <div class="col-md-12">
-                                <div class="d-flex flex-wrap">
-                                  <img
-                                    v-for="(image, index) in existingLoadImages"
-                                    :key="'existing-' + index"
-                                    :src="'https://backend-fastapi-airc-coversheet-staging.onrender.com/' + image"
-                                    style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
-                                    @click="downloadImage(image)"
-                                    alt="Existing Load Image"
-                                  />
-                                </div>
-                              </div>
-                            </div>
- 
-                            <small v-if="errorsLoad.imagesLoad_er" class="text-danger">{{ errorsLoad.imagesLoad_er
+                            <small v-if="
+                              errorsIncidentDetail.anyVehicleTowed_er
+                            " class="text-danger">{{
+                              errorsIncidentDetail.anyVehicleTowed_er
                               }}</small>
                           </div>
 
 
-                          <div style="margin-bottom: -10px !important;" class="mb-0 col-md-3 d-flex">
-                            <button :disabled="isLoadingLoad" @click="HandleLoad" type="button" class="btn btn-info"
-                              style="height: 38px; padding: 0.375rem 0.75rem;">
-                              {{ isEditingLoad ? "Save" : "Add" }}
-                              <span class="btn-icon-end">
-                                <i :class="isEditingLoad ? 'fa fa-save' : 'fa fa-plus'"></i>
-                              </span>
-                            </button>
-                          </div>
-                        </div> -->
+                                          <div class="mb-3 col-md-9">
+                  <label class="form-label">If YES please describe ?</label>
+                  <textarea v-model="describeAnyInjuries" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{ errorsIncidentDetail.describeAnyInjuries_er}}</small>
+                </div>
 
-
-             
+                          
                         </div>
 
+
+
+
+
+              <div class="row">
+                <div class="mb-3 col-md-12">
+                  <label class="form-label">Damage to Ace truck</label>
+                  <textarea v-model="damageToAceTruck" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.damageToAceTruck_er" class="text-danger">{{ errorsIncidentDetail.damageToAceTruck_er}}</small>
+                </div>
+                
+              </div>
+
+            <div class="row">
+                <div class="mb-3 col-md-12">
+                  <label class="form-label">What damage was done</label>
+                  <textarea v-model="whatDamageWasDone" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.whatDamageWasDone_er" class="text-danger">{{ errorsIncidentDetail.whatDamageWasDone_er}}</small>
+                </div>
+                
+              </div>
+
+
+                    <div class="row">
+
+                          <div class="mb-3 col-md-3">
+                            <label class="form-label">Have you had any incidents in the past year ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="checkNativeSwitch"
+                                v-model="incidentInThePastYear"
+                              />
+                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
+                                :style="{ color: incidentInThePastYear ? '#198754' : '#dc3545' }">
+                                {{ incidentInThePastYear ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="
+                              errorsIncidentDetail.incidentInThePastYear_er
+                            " class="text-danger">{{
+                              errorsIncidentDetail.incidentInThePastYear_er
+                              }}</small>
+                          </div>
+
+
+
+                                        <div class="mb-3 col-md-9">
+                  <label class="form-label">If yes, please list dates of incidents</label>
+                  <textarea v-model="incidentDetailList" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.incidentDetailList_er" class="text-danger">{{ errorsIncidentDetail.incidentDetailList_er}}</small>
+                </div>
+
+                          
+                        </div>
+
+
+     
+
+
+
+                   
+
+
+                    <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail" class="btn btn-primary btn-md">
+                              {{ isEditingIncidentDetail ? "Update" : "Save" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i>
+                              </span>
+                            </button>
           
 
                       </div>
@@ -2184,6 +2254,11 @@ const getDenverTimeAsUTCISOString = () => {
                   </div>
                 </div>
               </div>
+
+              <figure class="figure">
+  <img src="@assets/images/placeholder.jpg" class="figure-img img-fluid rounded" alt="...">
+  <figcaption class="figure-caption">A caption for the above image.</figcaption>
+</figure>
 
             </form>
           </div>
