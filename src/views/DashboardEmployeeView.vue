@@ -80,11 +80,8 @@ watch(authUser, (newUser) => {
 
 
 
-
 // General Information
 
-
-// const selectedEmployee = ref("");
 const selectedTruck = ref("");
 const selectedDept = ref("");
 const selectedSupervisor = ref("");
@@ -107,8 +104,6 @@ const timeDayStarted = ref(""); // Este campo se va a usar para guardar la hora 
 const isVisibleAcordion = ref(false);
 
 const errorsGeneralInformation = ref({
-
-  // employee_er: "",
   truck_er: "",
   dept_er: "",
   supervisor_er: "",
@@ -188,6 +183,8 @@ watch(didYouTakePictures, (newValue) => {
 });
 
 
+
+
 const errorsDuringTheIncident = ref({
 
   usingElectronicDevice_er: "",
@@ -212,7 +209,7 @@ const formData = new FormData();
 const selectedIncidentDetailId = ref(null); // To track the ID of the Incident Detail being edited
 const selectedFiles = ref([]); // Store File objects for FormData
 const selectedImages = ref([]);
-const existingIncidentDetailImages = ref([]); // Store existing images from edited Load
+const existingIncidentDetailImages = ref([]); // Store existing images from edited Incident Detail to display in the form
 const fileInput = ref(null);
 
 
@@ -226,13 +223,27 @@ const describeAnyInjuries = ref("");
 
 const damageToAceTruck = ref("");
 const whatDamageWasDone = ref("");
-const incidentInThePastYear = ref("");
+const incidentInThePastYear = ref(false);
 const listDatesOfIncidents = ref("");
 
 
 const isEditingIncidentDetail = ref(false);
 const isLoadingIncidentDetail = ref(false);
 const formSubmittedIncidentDetail = ref(false); // To track if Incident Detail form has been submitted
+
+// ✅ Limpiar describeAnyInjuries cuando wasAnyOneHurt se desactiva
+watch(wasAnyOneHurt, (newValue) => {
+  if (!newValue) {
+    describeAnyInjuries.value = "";
+  }
+});
+
+// ✅ Limpiar listDatesOfIncidents cuando incidentInThePastYear se desactiva
+watch(incidentInThePastYear, (newValue) => {
+  if (!newValue) {
+    listDatesOfIncidents.value = "";
+  }
+});
 
 
 const errorsIncidentDetail = ref({
@@ -246,6 +257,7 @@ const errorsIncidentDetail = ref({
   incidentInThePastYear_er: "",
   listDatesOfIncidents_er: "",
   anyVehicleTowed_er: "",
+  imagesIncidentDetail_er: "",
 });
 
 // Supervisor Note
@@ -305,7 +317,6 @@ onMounted(() => {
       isEditingGeneralInformation.value = true;
       const generalInformation = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
 
-      // selectedEmployee.value = generalInformation.employee_id;
       selectedTruck.value = generalInformation.truck_id;
       selectedDept.value = generalInformation.dept_id;
       selectedSupervisor.value = generalInformation.supervisor_id;
@@ -322,8 +333,8 @@ onMounted(() => {
 
       handleVisibleAcordion();
        loadDuringTheIncident();
-      // loadDowntime();
-      // loadLoad();
+       loadIncidentDetail();
+
     }
   }
 });
@@ -336,8 +347,6 @@ const onSubmit = async (event) => {
   formSubmittedGeneralInformation.value = true;
 
   // Limpiar errores anteriores General Information
-
-  // errorsGeneralInformation.value.employee_er = "";
   errorsGeneralInformation.value.truck_er = "";
   errorsGeneralInformation.value.dept_er = "";
   errorsGeneralInformation.value.supervisor_er = "";
@@ -353,11 +362,6 @@ const onSubmit = async (event) => {
 
 
   let hasError = false;
-
-  // if (!selectedEmployee.value) {
-  //   errorsGeneralInformation.value.employee_er = "Required field";
-  //   hasError = true;
-  // }
 
   if (!selectedTruck.value) {
     errorsGeneralInformation.value.truck_er = "Required field";
@@ -559,7 +563,6 @@ const hideLocationDropdown = () => {
 // Reset General Information form
 const resetGeneralInformation = () => {
 
-  // selectedEmployee.value = "";
   selectedTruck.value = "";
   selectedDept.value = "";
   selectedSupervisor.value = "";
@@ -603,12 +606,12 @@ const resetIncidentDetail = () => {
   selectedIncidentDetailId.value = null;
   incidentDescription.value = "";
   actionEventConditions.value = "";
-  wereAnyVehiclesTowed.value = "";
-  wasAnyOneHurt.value = "";
+  wereAnyVehiclesTowed.value = false;
+  wasAnyOneHurt.value = false;
   describeAnyInjuries.value = "";
   damageToAceTruck.value = "";
   whatDamageWasDone.value = "";
-  incidentInThePastYear.value = "";
+  incidentInThePastYear.value = false;
   listDatesOfIncidents.value = "";
 
   selectedImages.value = [];
@@ -760,8 +763,6 @@ const HandleDuringTheIncident = async (event) => {
           allowOutsideClick: false,
         }).then(() => {
           isLoadingDuringTheIncident.value = false; // Hide loading spinner
-          //loadDuringTheIncident();
-          //resetDuringTheIncident();
         });
       } else {
         showSweetAlert({
@@ -780,6 +781,8 @@ const HandleDuringTheIncident = async (event) => {
       isLoadingDuringTheIncident.value = true; // Show loading spinner
       const response = await DuringTheIncidentAPI.add(duringTheIncident);
 
+      isEditingDuringTheIncident.value = true; // Cambiar a modo edición después de agregar exitosamente para permitir futuras ediciones sin agregar nuevo registro 
+
       if (response.data.ok) {
         showSweetAlert({
           title: "During The Incident Info saved successfully!",
@@ -789,10 +792,7 @@ const HandleDuringTheIncident = async (event) => {
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingDuringTheIncident.value = false; // Hide loading spinner
-          //loadDuringTheIncident();
-          //resetDuringTheIncident();
-          isEditingDuringTheIncident.value = true; // Switch to edit mode after adding new info
+          isLoadingDuringTheIncident.value = false;
         });
       } else {
         showSweetAlert({
@@ -803,7 +803,7 @@ const HandleDuringTheIncident = async (event) => {
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+          isLoadingDuringTheIncident.value = false;
         });
       }
     }
@@ -854,17 +854,7 @@ const HandleIncidentDetail = async (event) => {
     hasError = true;
   }
 
-  if (!wereAnyVehiclesTowed.value) {
-    errorsIncidentDetail.value.wereAnyVehiclesTowed_er = "Required field";
-    hasError = true;
-  }
-
-  if (!wasAnyOneHurt.value) {
-    errorsIncidentDetail.value.wasAnyOneHurt_er = "Required field";
-    hasError = true;
-  }
-
-  if (!describeAnyInjuries.value) {
+  if (wasAnyOneHurt.value && !describeAnyInjuries.value) {
     errorsIncidentDetail.value.describeAnyInjuries_er = "Required field";
     hasError = true;
   }
@@ -879,12 +869,7 @@ const HandleIncidentDetail = async (event) => {
     hasError = true;
   }
 
-  if (!incidentInThePastYear.value) {
-    errorsIncidentDetail.value.incidentInThePastYear_er = "Required field";
-    hasError = true;
-  }
-
-  if (!listDatesOfIncidents.value) {
+  if (incidentInThePastYear.value && !listDatesOfIncidents.value) {
     errorsIncidentDetail.value.listDatesOfIncidents_er = "Required field";
     hasError = true;
   }
@@ -898,31 +883,39 @@ const HandleIncidentDetail = async (event) => {
   // Create a new FormData object
   const formData = new FormData();
 
-  // Add form fields to FormData
+  // ✅ Add form fields to FormData (bug fix: nombre correcto del campo y sin espacio)
   if (incidentDescription.value) formData.append("incidentDescription", incidentDescription.value);
-  if (actionEventConditions.value) formData.append("actionEventConditions", actionEventConditions.value);
+  if (actionEventConditions.value) formData.append("actionEventCondition", actionEventConditions.value); // ✅ sin 's'
   if (wereAnyVehiclesTowed.value) formData.append("wereAnyVehiclesTowed", wereAnyVehiclesTowed.value);
   if (wasAnyOneHurt.value) formData.append("wasAnyOneHurt", wasAnyOneHurt.value);
   if (describeAnyInjuries.value) formData.append("describeAnyInjuries", describeAnyInjuries.value);
   if (damageToAceTruck.value) formData.append("damageToAceTruck", damageToAceTruck.value);
   if (whatDamageWasDone.value) formData.append("whatDamageWasDone", whatDamageWasDone.value);
-  if (incidentInThePastYear.value) formData.append("incidentInThePastYear ", incidentInThePastYear.value);
+  if (incidentInThePastYear.value) formData.append("incidentInThePastYear", incidentInThePastYear.value); // ✅ sin espacio al final
   if (listDatesOfIncidents.value) formData.append("listDatesOfIncidents", listDatesOfIncidents.value);
-
 
   formData.append("generalInformation_ref_id", generalInformation_id);
 
   // Append all selected files to FormData
-  selectedFiles.value.forEach((file, index) => {
+  selectedFiles.value.forEach((file) => {
     formData.append("images", file, file.name); // Use "images" as the key
   });
 
   try {
-    if (isEditingLoad.value) {
-      isLoadingLoad.value = true;
-      const response = await IncidentDetailAPI.edit(selectedIncidentDetail.value, formData);
+    // ✅ Bug fix: usar isEditingIncidentDetail en lugar de isEditingLoad
+    if (isEditingIncidentDetail.value) {
+      isLoadingIncidentDetail.value = true; // ✅ Bug fix: usar isLoadingIncidentDetail
+      const response = await IncidentDetailAPI.edit(selectedIncidentDetailId.value, formData);
 
       if (response.data.ok) {
+        // ✅ Limpiar archivos seleccionados para que el próximo Update no los reenvíe y se dupliquen
+        selectedFiles.value = [];
+        selectedImages.value = [];
+        if (fileInput.value) fileInput.value.value = "";
+
+        // ✅ Actualizar imágenes existentes con las del response (incluye las recién subidas)
+        existingIncidentDetailImages.value = response.data.data.images || [];
+
         showSweetAlert({
           title: "Incident Detail updated successfully!",
           icon: "success",
@@ -931,9 +924,7 @@ const HandleIncidentDetail = async (event) => {
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          isLoadingLoad.value = false;
-          loadIncidentDetail();
-          resetIncidentDetail();
+          isLoadingIncidentDetail.value = false;
         });
       } else {
         showSweetAlert({
@@ -952,6 +943,19 @@ const HandleIncidentDetail = async (event) => {
       const response = await IncidentDetailAPI.add(formData);
 
       if (response.data.ok) {
+
+        // ✅ Capturar el ID del registro recién creado para que el siguiente Save sea un PUT correcto
+        selectedIncidentDetailId.value = response.data.data.id;
+        isEditingIncidentDetail.value = true; // Cambiar a modo edición después de agregar exitosamente para permitir futuras ediciones sin agregar nuevo registro
+
+        // ✅ Limpiar archivos seleccionados para que el próximo Update no los reenvíe y se dupliquen
+        selectedFiles.value = [];
+        selectedImages.value = [];
+        if (fileInput.value) fileInput.value.value = "";
+
+        // ✅ Cargar las imágenes subidas como "existentes" para mostrarlas via proxy
+        existingIncidentDetailImages.value = response.data.data.images || [];
+
         showSweetAlert({
           title: "Incident Detail saved successfully!",
           icon: "success",
@@ -961,8 +965,6 @@ const HandleIncidentDetail = async (event) => {
           allowOutsideClick: false,
         }).then(() => {
           isLoadingIncidentDetail.value = false;
-          loadIncidentDetail();
-          resetIncidentDetail();
         });
       } else {
         showSweetAlert({
@@ -980,7 +982,7 @@ const HandleIncidentDetail = async (event) => {
     }
   } catch (error) {
     showSweetAlert({
-      title: isEditingLoad.value ? "Error updating Incident Detail!" : "Error saving Incident Detail!",
+      title: isEditingIncidentDetail.value ? "Error updating Incident Detail!" : "Error saving Incident Detail!", // ✅ Bug fix
       text: error.response?.data?.msg || "An error occurred",
       icon: "warning",
       showDenyButton: false,
@@ -993,6 +995,7 @@ const HandleIncidentDetail = async (event) => {
     console.error("Error al enviar Incident Detail:", error);
   }
 };
+
 // Handle form submission Supervisor Note
 const HandleSupervisorNote = async (event) => {
   event.preventDefault();
@@ -1015,16 +1018,15 @@ const HandleSupervisorNote = async (event) => {
 
   let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
 
-  const supervisorNote = {
+  const supervisorNoteData = {
     supervisorNote: supervisorNote.value,
     generalInformation_ref_id: generalInformation_id,
-
   };
 
   try {
     if (isEditingSupervisorNote.value) {
       isLoadingSupervisorNote.value = true; // Show loading spinner
-      const response = await SupervisorNoteAPI.edit(selectedSupervisorNoteId.value, supervisorNote);
+      const response = await SupervisorNoteAPI.edit(selectedSupervisorNoteId.value, supervisorNoteData);
 
       if (response.data.ok) {
         showSweetAlert({
@@ -1054,7 +1056,7 @@ const HandleSupervisorNote = async (event) => {
     } else {
       // Add new Supervisor Note
       isLoadingSupervisorNote.value = true; // Show loading spinner
-      const response = await SupervisorNoteAPI.add(supervisorNote);
+      const response = await SupervisorNoteAPI.add(supervisorNoteData);
 
       if (response.data.ok) {
         showSweetAlert({
@@ -1099,7 +1101,6 @@ const HandleSupervisorNote = async (event) => {
 
 
 
-
 const EditDuringTheIncident = (item) => {
   selectedDuringTheIncidentId.value = item.id || item._id; // Ensure the ID is captured
   usingElectronicDevice.value = item.usingElectronicDevice === true || item.usingElectronicDevice === "true" || false;
@@ -1127,18 +1128,18 @@ const EditIncidentDetail = async (item) => {
 
   isLoadingIncidentDetail.value = true; // Set flag to prevent watches from clearing fields
 
-  selectedIncidentDetail.value = item.id || item._id; // Ensure the ID is captured
+  selectedIncidentDetailId.value = item.id || item._id; // Ensure the ID is captured
   incidentDescription.value = item.incidentDescription || "";
-  actionEventConditions.value = item.actionEventConditions || "";
-  wereAnyVehiclesTowed.value = item.wereAnyVehiclesTowed || "";
-  wasAnyOneHurt.value = item.wasAnyOneHurt || "";
+  actionEventConditions.value = item.actionEventCondition || ""; // ✅ nombre correcto del campo del backend
+  wereAnyVehiclesTowed.value = item.wereAnyVehiclesTowed === true || item.wereAnyVehiclesTowed === "true" || false;
+  wasAnyOneHurt.value = item.wasAnyOneHurt === true || item.wasAnyOneHurt === "true" || false;
   describeAnyInjuries.value = item.describeAnyInjuries || "";
   damageToAceTruck.value = item.damageToAceTruck || "";
   whatDamageWasDone.value = item.whatDamageWasDone || "";
-  incidentInThePastYear.value = item.incidentInThePastYear || "";
+  incidentInThePastYear.value = item.incidentInThePastYear === true || item.incidentInThePastYear === "true" || false;
   listDatesOfIncidents.value = item.listDatesOfIncidents || "";
 
-  existingIncidentDetailImages.value = item.images || []; // Store existing images for the Load being edited
+  existingIncidentDetailImages.value = item.images || []; // ✅ Imágenes existentes (URLs de OneDrive)
 
   isEditingIncidentDetail.value = true;
   await nextTick();
@@ -1275,7 +1276,7 @@ const DeleteSupervisorNote = async (item) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await LoadAPI.delete(item.id || item._id);
+        const response = await SupervisorNoteAPI.delete(item.id || item._id);
 
         if (response.data.ok) {
           showSweetAlert({
@@ -1372,6 +1373,28 @@ const loadIncidentDetail = async () => {
   try {
     const response = await GeneralInformationAPI.getIncidentDetail(generalInformationId);
     incidentDetailList.value = response.data.data || [];
+
+    if(!incidentDetailList.value.length) {
+      resetIncidentDetail(); // Clear form if no data
+      isEditingIncidentDetail.value = false; // Ensure we're in add mode
+      return;
+    
+    } else {      
+    // Cargamos la seccion de Incident Detail
+    incidentDescription.value = incidentDetailList.value[0]?.incidentDescription || "";
+    actionEventConditions.value = incidentDetailList.value[0]?.actionEventCondition || "";
+    wereAnyVehiclesTowed.value = incidentDetailList.value[0]?.wereAnyVehiclesTowed || false;
+    wasAnyOneHurt.value = incidentDetailList.value[0]?.wasAnyOneHurt || false;  
+    describeAnyInjuries.value = incidentDetailList.value[0]?.describeAnyInjuries || "";
+    damageToAceTruck.value = incidentDetailList.value[0]?.damageToAceTruck || "";
+    whatDamageWasDone.value = incidentDetailList.value[0]?.whatDamageWasDone || "";
+    incidentInThePastYear.value = incidentDetailList.value[0]?.incidentInThePastYear || false;
+    listDatesOfIncidents.value = incidentDetailList.value[0]?.listDatesOfIncidents || "";
+    existingIncidentDetailImages.value = incidentDetailList.value[0]?.images || []; // Cargar imágenes existentes 
+    selectedIncidentDetailId.value = incidentDetailList.value[0]?.id || incidentDetailList.value[0]?._id || null; // Capture ID for editing 
+    isEditingIncidentDetail.value = true; // Set edit mode if we have data
+    }
+    
   } catch (error) {
     console.error("Error al obtener Incident Detail:", error);
   }
@@ -1462,10 +1485,16 @@ const removeImage = (index) => {
   selectedFiles.value.splice(index, 1);
 };
 
-// Function to download/view image
+// ✅ Convierte URL de OneDrive Graph API a URL del proxy del backend
+const getProxyImageUrl = (imageUrl) => {
+  if (!imageUrl) return '';
+  return `https://safetybackendstaging.kizunadata.cloud/api/media/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+};
+
+// ✅ Abre la imagen a través del proxy de OneDrive
 const downloadImage = (imageUrl) => {
-  const fullUrl = `https://backend-fastapi-airc-coversheet-staging.onrender.com/${imageUrl}`;
-  window.open(fullUrl, '_blank');
+  const proxyUrl = getProxyImageUrl(imageUrl);
+  window.open(proxyUrl, '_blank');
 };
 
 // Metodos Utilitarios
@@ -1504,12 +1533,6 @@ const logout = () => {
   router.push({ name: 'login' }) // Redirigimos al usuario a la página de login
 }
 
-
-// const getDenverTimeAsUTCISOString = () => {
-//   const now = DateTime.now().setZone('America/Denver'); // Get current time in Denver
-//   return now.toUTC().toISO(); // Convert to UTC and return ISO string
-// };
-
 const getDenverTimeAsUTCISOString = () => {
   const now = DateTime.now().setZone('America/Denver');
   return now.toFormat('yyyy-MM-dd'); // ✅ Solo fecha, sin hora
@@ -1542,18 +1565,6 @@ const getDenverTimeAsUTCISOString = () => {
 
 
               <div class="row">
-
-
-                <!-- <div class="mb-3 col-md-3">
-                  <label class="form-label">Employee Name</label>
-                  <v-select :options="storeEmployee.employees" v-model="selectedEmployee"
-                    placeholder="Choose your Employee" :reduce="(employee) => employee.id" label="employeeName"
-                    class="form-control p-0"
-                    :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedEmployee }" />
-                  <small v-if="errorsGeneralInformation.employee_er" class="text-danger">{{
-                    errorsGeneralInformation.employee_er
-                  }}</small>
-                </div> -->
 
                 <div class="mb-3 col-md-2">
                   <label class="form-label">Truck #</label>
@@ -1605,10 +1616,6 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-
-
-
-
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Type of Incident</label>
                   <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedTypeOfIncident"
@@ -1619,13 +1626,6 @@ const getDenverTimeAsUTCISOString = () => {
                     errorsGeneralInformation.typeOfIncident_er
                   }}</small>
                 </div>
-
-
-         
-
-
-
-
 
               </div>
 
@@ -1642,8 +1642,6 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
- 
-
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Trainee</label>
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
@@ -1653,7 +1651,6 @@ const getDenverTimeAsUTCISOString = () => {
                     errorsGeneralInformation.trainee_er
                   }}</small>
                 </div>
-
 
                 <div class="mb-3 col-md-7">
                   <label class="form-label">Location</label>
@@ -1717,12 +1714,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-
-
               </div>
-
-
-
 
               <div class="row">
                 <div class="mb-3 col-md-2">
@@ -1745,18 +1737,7 @@ const getDenverTimeAsUTCISOString = () => {
                     errorsGeneralInformation.timeWorkedMonths_er }}</small>
                 </div>
 
-
-
-
-
              <div class="mb-3 col-md-3 d-flex align-items-end">
-
-               <!-- <button type="submit" class="btn btn-primary btn-md">
-                {{ isEditingGeneralInformation ? "Update" : "Save"
-                }}
-              </button>  -->
-
-
                             <button type="submit" :disabled="isLoadingGeneralInformation" class="btn btn-primary btn-md">
                               <span v-if="isLoadingGeneralInformation" class="spinner-border spinner-border-sm me-1" role="status"></span>
                               {{ isLoadingGeneralInformation ? 'Saving...' : (isEditingGeneralInformation ? "Update" : "Save") }}
@@ -1764,32 +1745,14 @@ const getDenverTimeAsUTCISOString = () => {
                                 <i :class="isEditingGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
-                        
-    
                 </div>
-
 
               </div>
 
-              <!-- <div class="row">
-                <div class="mb-3 col-md-12">
-                  <label class="form-label">Notes</label>
-                  <textarea style="color: black;" v-model="notes" class="form-control border border-primary"></textarea>
-                </div>
-              </div> -->
-
-              <!-- <button type="submit" class="btn btn-primary">
-                {{ isEditingGeneralInformation ? "Update General Information" : "Start ACE Driver Incident Report"
-                }}
-              </button> -->
-
-              <!-- <button style="margin-left: 20px;" class="btn btn-secondary" @click.prevent="logout">
-                Finalize CoverSheet
-              </button> -->
             </form>
           </div>
         </div>
-      </div>-
+      </div>
     </div>
 
     <div v-if="isVisibleAcordion" class="col-lg-12">
@@ -1798,16 +1761,11 @@ const getDenverTimeAsUTCISOString = () => {
           <div class="basic-form">
             <form autocomplete="off">
 
-
-
-
-
                <div class="row">
 
                 <div class="accordion accordion-primary-solid" id="accordion-two">
 
                   <Spinner v-if="isLoadingDuringTheIncident" />
-
 
                   <div class="accordion-item">
                     <h2 class="accordion-header">
@@ -1818,7 +1776,6 @@ const getDenverTimeAsUTCISOString = () => {
                     </h2>
 
                     <Spinner v-if="storeSafetyPerson.loading || storeWhoDidYouSendThePicturesTo.loading" />
-
 
                     <div id="bordered_collapseOne" class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two">
@@ -1841,9 +1798,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 {{ usingElectronicDevice ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsDuringTheIncident.usingElectronicDevice_er
-                            " class="text-danger">{{
+                            <small v-if="errorsDuringTheIncident.usingElectronicDevice_er" class="text-danger">{{
                               errorsDuringTheIncident.usingElectronicDevice_er
                               }}</small>
                           </div>
@@ -1860,7 +1815,6 @@ const getDenverTimeAsUTCISOString = () => {
 
 
                 <div class="row">
-                
 
                           <div class="mb-3 col-md-2">
                             <label class="form-label">Was Safety Dept Notified ?</label>
@@ -1877,9 +1831,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 {{ wasSafetyDeptNotified ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsDuringTheIncident.wasSafetyDeptNotified_er
-                            " class="text-danger">{{
+                            <small v-if="errorsDuringTheIncident.wasSafetyDeptNotified_er" class="text-danger">{{
                               errorsDuringTheIncident.wasSafetyDeptNotified_er
                               }}</small>
                           </div>
@@ -1903,8 +1855,6 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-
-
                             <div class="mb-3 col-md-2">
                             <label class="form-label">Did you take pictures of the damages ?</label>
 
@@ -1920,9 +1870,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 {{ didYouTakePictures ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsDuringTheIncident.didYouTakePictures_er
-                            " class="text-danger">{{
+                            <small v-if="errorsDuringTheIncident.didYouTakePictures_er" class="text-danger">{{
                               errorsDuringTheIncident.didYouTakePictures_er
                               }}</small>
                           </div>
@@ -1985,9 +1933,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 {{ wasThisIncidentInAnIntersection ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsDuringTheIncident.wasThisIncidentInAnIntersection_er
-                            " class="text-danger">{{
+                            <small v-if="errorsDuringTheIncident.wasThisIncidentInAnIntersection_er" class="text-danger">{{
                               errorsDuringTheIncident.wasThisIncidentInAnIntersection_er
                               }}</small>
                           </div>
@@ -2039,9 +1985,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-
                 </div>
-
 
                         </div>
 
@@ -2053,8 +1997,6 @@ const getDenverTimeAsUTCISOString = () => {
                               </span>
                             </button>
 
-
-           
                       </div>
                     </div>
                   </div>
@@ -2070,42 +2012,21 @@ const getDenverTimeAsUTCISOString = () => {
                     <div id="bordered_collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
-<!-- 
-                        <div class="row">
-
-
-                      <div class="mb-3 col-md-12">
-                            <label class="form-label">Incident Description: How did the incident occur? What happened? </label>
-                            <input type="text" v-model="incidentDescription"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{ errorsIncidentDetail.incidentDescription_er
-                              }}</small>
-                          </div>
-
-                        </div> -->
-
-
                 <div class="row">
-
                 <div class="mb-3 col-md-12">
                   <label class="form-label">Incident Description: How did the incident occur? What happened ?</label>
                   <textarea v-model="incidentDescription" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
                   <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{ errorsIncidentDetail.incidentDescription_er}}</small>
                 </div>
-                
-              </div>
-
+                </div>
 
                 <div class="row">
-
                 <div class="mb-3 col-md-12">
                   <label class="form-label">What Action, Event or Condition contributed most to this incident ?</label>
                   <textarea v-model="actionEventConditions" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
                   <small v-if="errorsIncidentDetail.actionEventConditions_er" class="text-danger">{{ errorsIncidentDetail.actionEventConditions_er}}</small>
                 </div>
-                
-              </div>
-
+                </div>
 
                           <div class="row">
 
@@ -2116,34 +2037,52 @@ const getDenverTimeAsUTCISOString = () => {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                id="checkNativeSwitch"
-                                v-model="anyVehicleTowed"
+                                id="switchWereAnyVehiclesTowed"
+                                v-model="wereAnyVehiclesTowed"
                               />
-                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
-                                :style="{ color: anyVehicleTowed ? '#198754' : '#dc3545' }">
-                                {{ anyVehicleTowed ? 'YES' : 'NO' }}
+                              <label class="form-check-label fw-semibold" for="switchWereAnyVehiclesTowed"
+                                :style="{ color: wereAnyVehiclesTowed ? '#198754' : '#dc3545' }">
+                                {{ wereAnyVehiclesTowed ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsIncidentDetail.anyVehicleTowed_er
-                            " class="text-danger">{{
-                              errorsIncidentDetail.anyVehicleTowed_er
+                            <small v-if="errorsIncidentDetail.wereAnyVehiclesTowed_er" class="text-danger">{{
+                              errorsIncidentDetail.wereAnyVehiclesTowed_er
+                            }}</small>
+                          </div>
+
+                          <div class="mb-3 col-md-3">
+                            <label class="form-label">Was anyone hurt ?</label>
+
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="switchWasAnyoneHurt"
+                                v-model="wasAnyOneHurt"
+                              />
+                              <label class="form-check-label fw-semibold" for="switchWasAnyoneHurt"
+                                :style="{ color: wasAnyOneHurt ? '#198754' : '#dc3545' }">
+                                {{ wasAnyOneHurt ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="errorsIncidentDetail.wasAnyOneHurt_er" class="text-danger">{{
+                              errorsIncidentDetail.wasAnyOneHurt_er
                               }}</small>
                           </div>
 
-
-                                          <div class="mb-3 col-md-9">
+                                          <div class="mb-3 col-md-6">
                   <label class="form-label">If YES please describe ?</label>
-                  <textarea v-model="describeAnyInjuries" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
-                  <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{ errorsIncidentDetail.describeAnyInjuries_er}}</small>
+                  <textarea
+                    v-model="describeAnyInjuries"
+                    :disabled="!wasAnyOneHurt"
+                    class="form-control border border-primary"
+                    :class="{ 'border-danger': errorsIncidentDetail.describeAnyInjuries_er }"
+                    style="color: black;"
+                    rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{ errorsIncidentDetail.describeAnyInjuries_er }}</small>
                 </div>
 
-                          
-                        </div>
-
-
-
-
+                          </div>
 
               <div class="row">
                 <div class="mb-3 col-md-12">
@@ -2151,7 +2090,6 @@ const getDenverTimeAsUTCISOString = () => {
                   <textarea v-model="damageToAceTruck" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
                   <small v-if="errorsIncidentDetail.damageToAceTruck_er" class="text-danger">{{ errorsIncidentDetail.damageToAceTruck_er}}</small>
                 </div>
-                
               </div>
 
             <div class="row">
@@ -2160,9 +2098,7 @@ const getDenverTimeAsUTCISOString = () => {
                   <textarea v-model="whatDamageWasDone" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
                   <small v-if="errorsIncidentDetail.whatDamageWasDone_er" class="text-danger">{{ errorsIncidentDetail.whatDamageWasDone_er}}</small>
                 </div>
-                
-              </div>
-
+            </div>
 
                     <div class="row">
 
@@ -2173,39 +2109,85 @@ const getDenverTimeAsUTCISOString = () => {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                id="checkNativeSwitch"
+                                id="switchIncidentInThePastYear"
                                 v-model="incidentInThePastYear"
                               />
-                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
+                              <label class="form-check-label fw-semibold" for="switchIncidentInThePastYear"
                                 :style="{ color: incidentInThePastYear ? '#198754' : '#dc3545' }">
                                 {{ incidentInThePastYear ? 'YES' : 'NO' }}
                               </label>
                             </div>
-                            <small v-if="
-                              errorsIncidentDetail.incidentInThePastYear_er
-                            " class="text-danger">{{
+                            <small v-if="errorsIncidentDetail.incidentInThePastYear_er" class="text-danger">{{
                               errorsIncidentDetail.incidentInThePastYear_er
                               }}</small>
                           </div>
 
-
-
                                         <div class="mb-3 col-md-9">
-                  <label class="form-label">If yes, please list dates of incidents</label>
-                  <textarea v-model="incidentDetailList" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
-                  <small v-if="errorsIncidentDetail.incidentDetailList_er" class="text-danger">{{ errorsIncidentDetail.incidentDetailList_er}}</small>
+                  <label class="form-label">If YES, please list dates of incidents</label>
+                  <textarea
+                    v-model="listDatesOfIncidents"
+                    :disabled="!incidentInThePastYear"
+                    class="form-control border border-primary"
+                    :class="{ 'border-danger': errorsIncidentDetail.listDatesOfIncidents_er }"
+                    style="color: black;"
+                    rows="3"></textarea>
+                  <small v-if="errorsIncidentDetail.listDatesOfIncidents_er" class="text-danger">{{ errorsIncidentDetail.listDatesOfIncidents_er }}</small>
                 </div>
 
-                          
                         </div>
 
 
-     
+                        <div class="row">
+
+                                 <div class="row d-flex align-items-center">
+
+                          <div class="mb-3 col-md-9">
+
+                            <input v-show="false" type="file" ref="fileInput"
+                              class="form-control form-control-sm border border-primary" multiple accept="image/*"
+                              capture="environment" @change="handleFileChange"
+                              style="height: 38px; padding: 0.375rem 0.75rem;" />
+
+                            <button @click.prevent="fileInput.click()" style="height: 30px;" type="button"
+                              class="btn btn-info btn-rounded btn-sm">Add Photos<span class="btn-icon-end"><i
+                                  class="fa fa-camera"></i></span>
+                            </button>
 
 
+                            <!-- Preview de imágenes nuevas seleccionadas -->
+                            <div v-if="selectedImages.length > 0" class="row mt-2">
+                              <div v-for="(image, index) in selectedImages" :key="index" class="col-md-3">
+                                <img :src="image.url" alt="Preview" style="max-width: 100px; margin-bottom: 10px;" />
+                                <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
+                                <button @click.prevent="removeImage(index)"
+                                  class="btn btn-danger btn-xs">Remove</button>
+                              </div>
+                            </div>
 
-                   
+                            <!-- ✅ Imágenes existentes desde OneDrive via proxy -->
+                            <div v-if="existingIncidentDetailImages.length > 0" class="row mt-3">
+                              <h6 style="color: #000;">Existing Images:</h6>
+                              <div class="col-md-12">
+                                <div class="d-flex flex-wrap">
+                                  <img
+                                    v-for="(image, index) in existingIncidentDetailImages"
+                                    :key="'existing-' + index"
+                                    :src="getProxyImageUrl(image)"
+                                    style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
+                                    @click="downloadImage(image)"
+                                    alt="Existing Incident Detail Image"
+                                  />
+                                </div>
+                              </div>
+                            </div>
 
+                            <small v-if="errorsIncidentDetail.imagesIncidentDetail_er" class="text-danger">{{ errorsIncidentDetail.imagesIncidentDetail_er
+                              }}</small>
+                          </div>
+
+
+                        </div>
+                        </div>
 
                     <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail" class="btn btn-primary btn-md">
                               {{ isEditingIncidentDetail ? "Update" : "Save" }}
@@ -2213,7 +2195,6 @@ const getDenverTimeAsUTCISOString = () => {
                                 <i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i>
                               </span>
                             </button>
-          
 
                       </div>
                     </div>
@@ -2232,40 +2213,28 @@ const getDenverTimeAsUTCISOString = () => {
                       data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
-                
-
-
                         <div class="row">
-
-                          <!-- <div class="mb-3 col-md-12">
-                            <label class="form-label">Note</label>
-                            <input type="text" v-model="note"
-                              class="form-control form-control-sm border border-primary" />
-                            <small v-if="errorsLoad.noteLoad_er" class="text-danger">{{ errorsLoad.noteLoad_er
-                              }}</small>
-                          </div> -->
-
 
                         </div>
 
-                  
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <figure class="figure">
-  <img src="@assets/images/placeholder.jpg" class="figure-img img-fluid rounded" alt="...">
-  <figcaption class="figure-caption">A caption for the above image.</figcaption>
-</figure>
-
             </form>
+
           </div>
         </div>
       </div>
     </div>
+      <div class="d-flex justify-content-center my-3">
+        <img decoding="async" width="650" height="300" src="/assets/smith.png" alt="Five Keys of Smith System Driving" />
+      </div>
+
   </div>
+
 </template>
 
 <style scoped>
