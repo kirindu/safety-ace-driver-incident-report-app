@@ -2022,10 +2022,10 @@ const getDenverTimeAsUTCISOString = () => {
                             </label>
 
                         <!-- ── Pad de firma ── -->
-                        <div class="row">
-                          <div class="mb-2 col-md-12 ">
-                          <!-- <div class="row justify-content-center">
-                            <div class="mb-2 col-md-auto text-center"> -->
+                        <!-- <div class="row">
+                          <div class="mb-2 col-md-12 "> -->
+                          <div class="row justify-content-center">
+                            <div class="mb-2 col-md-auto text-center">
                             <div
                               :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']"
                               style="display: inline-block; line-height: 0;"
