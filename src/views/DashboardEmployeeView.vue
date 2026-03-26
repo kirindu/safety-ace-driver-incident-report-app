@@ -1746,15 +1746,23 @@ const getDenverTimeAsUTCISOString = () => {
 
                           </div>
 
-                        </div>
+                          <div class="row">
+                                            <div class="d-flex justify-content-center">
 
-                        <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident"
+                                                            <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident"
                           class="btn btn-primary btn-md">
                           {{ isEditingDuringTheIncident ? "Update" : "Save" }}
                           <span class="btn-icon-end">
                             <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
                           </span>
                         </button>
+
+                                            </div>
+                          </div>
+
+                        </div>
+
+        
 
                       </div>
                     </div>
@@ -1928,13 +1936,21 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
                         </div>
 
-                        <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail"
+                                            <div class="row">
+                                            <div class="d-flex justify-content-center">
+                                                         <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail"
                           class="btn btn-primary btn-md">
                           {{ isEditingIncidentDetail ? "Update" : "Save" }}
                           <span class="btn-icon-end">
                             <i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i>
                           </span>
                         </button>
+                                            </div>
+                                            </div>
+
+
+
+           
 
                       </div>
                     </div>
@@ -2059,7 +2075,7 @@ const getDenverTimeAsUTCISOString = () => {
                                             <div class="d-flex justify-content-center">
                             <button
                               type="button"
-                              class="btn btn-primary btn-md"
+                              class="btn btn-danger btn-md"
                               :disabled="isSubmittingReport"
                               @click="SubmitIncidentReport"
                             >
