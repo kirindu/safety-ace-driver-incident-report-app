@@ -3,6 +3,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
+import Vue3Signature from "vue3-signature";
 import '@mescius/activereportsjs/styles/ar-js-ui.css'
 
 import { createModal } from '@kolirt/vue-modal'
@@ -23,6 +24,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(ToastPlugin);
 app.use(router)
+app.use(Vue3Signature);
 
 // Seleccion de temas, light, dark, auto
 dzSettingsOptions.version = 'light';
