@@ -1846,7 +1846,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
-                            <label class="form-label">Damage to Ace truck</label>
+                            <label class="form-label">Damage to Ace Truck</label>
                             <textarea v-model="damageToAceTruck" class="form-control border border-primary"
                               style="color: black;" rows="3"></textarea>
                             <small v-if="errorsIncidentDetail.damageToAceTruck_er" class="text-danger">{{
@@ -2023,11 +2023,9 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <!-- ── Pad de firma ── -->
                         <div class="row">
-                          <div class="mb-2 col-md-12">
-                            <!-- <label class="form-label fw-semibold">
-                              Employee Signature <span class="text-danger">*</span>
-                            </label> -->
-
+                          <div class="mb-2 col-md-12 ">
+                          <!-- <div class="row justify-content-center">
+                            <div class="mb-2 col-md-auto text-center"> -->
                             <div
                               :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']"
                               style="display: inline-block; line-height: 0;"
