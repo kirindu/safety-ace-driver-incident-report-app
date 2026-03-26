@@ -18,7 +18,7 @@ import "vue-select/dist/vue-select.css";
 // const emit = defineEmits(['update-success'])
 
 // Importamos el api
-import TrailerAPI from "@/api/TrailerAPI";
+//import TrailerAPI from "@/api/TrailerAPI";
 
 
 // Import composables
@@ -135,7 +135,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container-fluid">
+  <!-- <div class="container-fluid">
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header">
@@ -184,7 +184,7 @@ onMounted(async () => {
     </div>
 
  
-  </div>
+  </div> -->
 </template>
 
 <style scoped>

@@ -13,7 +13,7 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
 // Importamos el api
-import TrailerAPI from "@/api/TrailerAPI";
+//import TrailerAPI from "@/api/TrailerAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -170,8 +170,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- row -->
-  <div class="container-fluid">
+
+  <!-- <div class="container-fluid">
     <div class="page-titles">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">
@@ -273,7 +273,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <ModalTarget />
+  <ModalTarget /> -->
 </template>
 
 <style scoped>

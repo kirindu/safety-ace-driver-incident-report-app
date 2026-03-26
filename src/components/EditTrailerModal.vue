@@ -18,7 +18,7 @@ import "vue-select/dist/vue-select.css";
 // const emit = defineEmits(['update-success'])
 
 // Importamos el api
-import TrailerAPI from "@/api/TrailerAPI";
+//import TrailerAPI from "@/api/TrailerAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -165,7 +165,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container-fluid">
+  <!-- <div class="container-fluid">
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header">
@@ -192,15 +192,7 @@ onMounted(async () => {
                   <small v-if="errorsTrailer.trailerNumber_er" class="text-danger">{{errorsTrailer.trailerNumber_er}}</small>
                 </div>
 
-                <!-- <div class="mb-3 col-md-3">
-                  <label class="form-label">Lob</label>
-                  <input
-                    type="text"
-                    v-model="lob"
-                    class="form-control form-control-sm border border-primary"
-                  />
-                  <small v-if="errorsRoute.lob_er" class="text-danger">{{errorsRoute.lob_er}}</small>
-                </div> -->
+               
 
               </div>
 
@@ -224,7 +216,7 @@ onMounted(async () => {
     </div>
 
  
-  </div>
+  </div> -->
 </template>
 
 <style scoped>
