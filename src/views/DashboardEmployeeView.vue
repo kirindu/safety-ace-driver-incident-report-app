@@ -2050,7 +2050,13 @@ const getDenverTimeAsUTCISOString = () => {
                             </button>
                           </div>
 
-                          <div class="col-md-auto ms-auto">
+       
+                        </div>
+
+                        <div class="row">
+
+
+                                            <div class="d-flex justify-content-center">
                             <button
                               type="button"
                               class="btn btn-primary btn-md"
@@ -2069,6 +2075,7 @@ const getDenverTimeAsUTCISOString = () => {
                               </span>
                             </button>
                           </div>
+                        
                         </div>
 
                       </div>
