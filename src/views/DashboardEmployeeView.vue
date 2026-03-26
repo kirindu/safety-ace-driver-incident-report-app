@@ -2033,7 +2033,7 @@ const getDenverTimeAsUTCISOString = () => {
                               <Vue3Signature
                                 ref="signature"
                                 :sigOption="options"
-                                :w="'800px'"
+                                :w="'600px'"
                                 :h="'200px'"
                               />
                             </div>
