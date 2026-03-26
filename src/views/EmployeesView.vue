@@ -13,10 +13,10 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
 // Importamos el api
-import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
-import SpareTruckInfoAPI from "@/api/Sections/SupervisorNoteAPI";
-import DowntimeAPI from "@/api/Sections/DuringTheIncidentAPI";
-import LoadAPI from "@/api/Sections/IncidentDetailAPI";
+// import CoverSheetAPI from "@/api/Sections/GeneralInformationAPI.js";
+// import SpareTruckInfoAPI from "@/api/Sections/SupervisorNoteAPI";
+// import DowntimeAPI from "@/api/Sections/DuringTheIncidentAPI";
+// import LoadAPI from "@/api/Sections/IncidentDetailAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -27,17 +27,13 @@ import Spinner from "@/components/Spinner.vue";
 import CoverSheetModal from "@/components/CoverSheetModal.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/typeIncidents.js";
-const storeRoute = useRoutesStore();
-
-import { useLandFillsStore } from "@/stores/directions";
-const storeLandFill = useLandFillsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useDriversStore } from "@/stores/employees.js";
-import DriverAPI from "@/api/Actors/EmployeeAPI";
+import { useEmployeesStore } from "@/stores/employees.js";
+import EmployeeAPI from "@/api/Actors/EmployeeAPI";
+
 const storeDriver = useDriversStore();
 
 const user = ref(null);

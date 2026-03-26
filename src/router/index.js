@@ -36,53 +36,54 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'dashboard-admin',
-          component: () => import('../views/DashboardAdminView.vue'),
+          // component: () => import('../views/DashboardAdminView.vue'),
+          component: () => import('../views/DashboardEmployeeView.vue'),
         },
         {
           path: 'reports/:type?',
           name: 'admin-reports',
           component: () => import('../views/ReportView.vue'),
         },
-        {
-          path: 'employee',
-          name: 'admin-employees',
-          component: () => import('../views/EmployeesView.vue'),
-        },
-        {
-          path: 'user',
-          name: 'admin-users',
-          component: () => import('../views/UsersView.vue'),
-        },
-        {
-          path: 'dept',
-          name: 'admin-depts',
-          component: () => import('../views/DeptsView.vue'),
-        },
-        {
-          path: 'type-of-incident',
-          name: 'admin-type-of-incidents',
-          component: () => import('../views/TypeOfIncidentsView.vue'),
-        },
-        {
-          path: 'truck',
-          name: 'admin-trucks',
-          component: () => import('../views/TrucksView.vue'),
-        },
-        {
-          path: 'safety-person-notified',
-          name: 'admin-safety-persons-notified',
-          component: () => import('../views/SafetyPersonNotifiedView.vue'),
-        },
-        {
-          path: 'who-did-you-send-the-picture-to',
-          name: 'admin-who-did-you-send-the-pictures-to',
-          component: () => import('../views/WhoDidYouSendThePicturesToView.vue'),
-        },
-        {
-          path: 'supervisor',
-          name: 'admin-supervisors',
-          component: () => import('../views/SupervisorsView.vue'),
-        },
+        // {
+        //   path: 'employee',
+        //   name: 'admin-employees',
+        //   component: () => import('../views/EmployeesView.vue'),
+        // },
+        // {
+        //   path: 'user',
+        //   name: 'admin-users',
+        //   component: () => import('../views/UsersView.vue'),
+        // },
+        // {
+        //   path: 'dept',
+        //   name: 'admin-depts',
+        //   component: () => import('../views/DeptsView.vue'),
+        // },
+        // {
+        //   path: 'type-of-incident',
+        //   name: 'admin-type-of-incidents',
+        //   component: () => import('../views/TypeOfIncidentsView.vue'),
+        // },
+        // {
+        //   path: 'truck',
+        //   name: 'admin-trucks',
+        //   component: () => import('../views/TrucksView.vue'),
+        // },
+        // {
+        //   path: 'safety-person-notified',
+        //   name: 'admin-safety-persons-notified',
+        //   component: () => import('../views/SafetyPersonNotifiedView.vue'),
+        // },
+        // {
+        //   path: 'who-did-you-send-the-picture-to',
+        //   name: 'admin-who-did-you-send-the-pictures-to',
+        //   component: () => import('../views/WhoDidYouSendThePicturesToView.vue'),
+        // },
+        // {
+        //   path: 'supervisor',
+        //   name: 'admin-supervisors',
+        //   component: () => import('../views/SupervisorsView.vue'),
+        // },
         {
           path: 'designer',
           name: 'admin-reports-designer',
