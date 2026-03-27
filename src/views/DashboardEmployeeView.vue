@@ -1378,7 +1378,7 @@ const getDenverTimeAsUTCISOString = () => {
 
               <div class="row">
 
-                <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Truck #</label>
                   <v-select :options="storeTruck.trucks" v-model="selectedTruck" placeholder="Choose your Truck"
                     :reduce="(truck) => truck.id" label="truckNumber" class="form-control p-0"
@@ -1388,7 +1388,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Time</label>
                   <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !time }">
                     <VueDatePicker light="true" v-model="time" time-picker placeholder="Select Time">
@@ -1402,7 +1402,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Time Day Started</label>
                   <div class="mt-0" :class="{ 'dp-error': formSubmittedGeneralInformation && !timeDayStarted }">
                     <VueDatePicker v-model="timeDayStarted" time-picker placeholder="Select Time">
@@ -1416,7 +1416,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-3">
+                           <div class="mb-3 col-md-3">
                   <label class="form-label">Dept</label>
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
@@ -1426,7 +1426,12 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-3">
+              </div>
+               <div class="row">
+
+     
+
+                <div class="mb-3 col-md-4">
                   <label class="form-label">Type of Incident</label>
                   <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedTypeOfIncident"
                     placeholder="Choose Incident Type" :reduce="(incidentType) => incidentType.id"
@@ -1437,11 +1442,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-              </div>
-
-              <div class="row">
-
-                <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-4">
                   <label class="form-label">Supervisor</label>
                   <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor"
                     placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
@@ -1452,7 +1453,7 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-3">
+                        <div class="mb-3 col-md-4">
                   <label class="form-label">Trainee</label>
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }"
@@ -1462,7 +1463,17 @@ const getDenverTimeAsUTCISOString = () => {
                   }}</small>
                 </div>
 
-                <div class="mb-3 col-md-7">
+              </div>
+
+
+
+              <div class="row">
+
+    
+
+        
+
+                <div class="mb-3 col-md-12">
                   <label class="form-label">Location</label>
                   <div style="position: relative;">
                     <input
@@ -1512,7 +1523,7 @@ const getDenverTimeAsUTCISOString = () => {
               </div>
 
               <div class="row">
-                <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Time Worked (Years)</label>
                   <input type="number" step="any" v-model="timeWorkedYears"
                     class="form-control form-control-md border border-primary"
@@ -1522,7 +1533,7 @@ const getDenverTimeAsUTCISOString = () => {
                     errorsGeneralInformation.timeWorkedYears_er }}</small>
                 </div>
 
-                <div class="mb-3 col-md-2">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Time Worked (Months)</label>
                   <input type="number" step="any" v-model="timeWorkedMonths"
                     class="form-control form-control-md border border-primary"
@@ -1579,7 +1590,7 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-4">
+                          <div class="mb-3 col-md-5">
                             <label class="form-label">Were you using an electronic device when the incident occurred?</label>
                             <div class="form-check form-switch">
                               <input class="form-check-input" type="checkbox" id="checkNativeSwitch"
@@ -1593,7 +1604,7 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsDuringTheIncident.usingElectronicDevice_er }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-8">
+                          <div class="mb-3 col-md-7">
                             <label class="form-label">Task being performed when incident occurred</label>
                             <input type="text" v-model="taskPerfomed" class="form-control form-control-md border border-primary"
                               :class="{ 'border-danger': formSubmittedDuringTheIncident && !taskPerfomed }"
@@ -1602,9 +1613,12 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsDuringTheIncident.taskPerfomed_er }}</small>
                           </div>
 
+                        </div>
+
+
                           <div class="row">
 
-                            <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-5">
                               <label class="form-label">Was Safety Dept Notified?</label>
                               <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="switchSafetyDeptNotified"
@@ -1618,7 +1632,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.wasSafetyDeptNotified_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-7 ">
                               <label class="form-label">Safety Person Notified</label>
                               <v-select
                                 :options="storeSafetyPerson.safetyPersonsNotified"
@@ -1635,7 +1649,11 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.SelectedSafetyPersonNotified_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
+
+                          </div>
+                           <div class="row">
+
+                            <div class="mb-3 col-md-5">
                               <label class="form-label">Did you take pictures of the damages?</label>
                               <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="switchDidYouTakePictures"
@@ -1649,7 +1667,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.didYouTakePictures_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-7">
                               <label class="form-label">Who did you send the pictures to?</label>
                               <v-select
                                 :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo"
@@ -1666,27 +1684,11 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
-                              <label class="form-label">How fast were you traveling? (MPH)</label>
-                              <input type="number" step="any" v-model="howFastWereYouGoing"
-                                class="form-control form-control-md border border-primary"
-                                :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
-                                style="color: black;" />
-                              <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
-                                errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
-                            </div>
+                           </div>
 
-                            <div class="mb-3 col-md-2">
-                              <label class="form-label">Direction you were traveling</label>
-                              <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
-                                placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName"
-                                class="form-control p-0"
-                                :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
-                              <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
-                            </div>
+                           <div class="row">
 
-                            <div class="mb-3 col-md-2">
+                          <div class="mb-3 col-md-5">
                               <label class="form-label">Was this incident in an intersection?</label>
                               <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="switchWasThisIncidentInAnIntersection"
@@ -1700,27 +1702,59 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.wasThisIncidentInAnIntersection_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-7">
+                              <label class="form-label">How fast were you traveling? (MPH)</label>
+                              <input type="number" step="any" v-model="howFastWereYouGoing"
+                                class="form-control form-control-md border border-primary"
+                                :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
+                                style="color: black;" />
+                              <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
+                                errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
+                            </div>
+
+
+         
+
+
+                           </div>
+
+                           <div class="row">
+
+
+                            <div class="mb-3 col-md-4">
                               <label class="form-label">Weather</label>
                               <v-select :options="storeWeatherCondition.weatherConditions" v-model="SelectedWeatherCondition"
-                                placeholder="Choose weather condition"
+                                placeholder="Choose weather"
                                 :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
                                 :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedWeatherCondition }" />
                               <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{
                                 errorsDuringTheIncident.SelectedWeatherCondition_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-2">
+                            <div class="mb-3 col-md-4">
                               <label class="form-label">Road Conditions</label>
                               <v-select :options="storeRoadCondition.roadConditions" v-model="SelectedRoadCondition"
-                                placeholder="Choose road condition"
+                                placeholder="Choose road"
                                 :reduce="(roadCondition) => roadCondition.id" label="roadConditionName" class="form-control p-0"
                                 :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedRoadCondition }" />
                               <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{
                                 errorsDuringTheIncident.SelectedRoadCondition_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-3">
+                            <div class="mb-3 col-md-4">
+                              <label class="form-label">Direction you were traveling</label>
+                              <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
+                                placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName"
+                                class="form-control p-0"
+                                :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
+                              <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{
+                                errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
+                            </div>
+
+                           </div>
+                           <div class="row">
+
+                            <div class="mb-3 col-md-8">
                               <label class="form-label">Witness</label>
                               <input type="text" v-model="witness" class="form-control form-control-md border border-primary"
                                 :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }"
@@ -1729,7 +1763,7 @@ const getDenverTimeAsUTCISOString = () => {
                                 errorsDuringTheIncident.witness_er }}</small>
                             </div>
 
-                            <div class="mb-3 col-md-3">
+                            <div class="mb-3 col-md-4">
                               <label class="form-label">Witness Phone #</label>
                               <input
                                 type="text"
@@ -1760,7 +1794,7 @@ const getDenverTimeAsUTCISOString = () => {
                                             </div>
                           </div>
 
-                        </div>
+                        
 
         
 
@@ -1804,21 +1838,8 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-3">
-                            <label class="form-label">Was any vehicles towed?</label>
-                            <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchWereAnyVehiclesTowed"
-                                v-model="wereAnyVehiclesTowed" />
-                              <label class="form-check-label fw-semibold" for="switchWereAnyVehiclesTowed"
-                                :style="{ color: wereAnyVehiclesTowed ? '#198754' : '#dc3545' }">
-                                {{ wereAnyVehiclesTowed ? 'YES' : 'NO' }}
-                              </label>
-                            </div>
-                            <small v-if="errorsIncidentDetail.wereAnyVehiclesTowed_er" class="text-danger">{{
-                              errorsIncidentDetail.wereAnyVehiclesTowed_er }}</small>
-                          </div>
 
-                          <div class="mb-3 col-md-3">
+                          <div class="mb-3 col-md-4">
                             <label class="form-label">Was anyone hurt?</label>
                             <div class="form-check form-switch">
                               <input class="form-check-input" type="checkbox" id="switchWasAnyoneHurt"
@@ -1832,8 +1853,8 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsIncidentDetail.wasAnyOneHurt_er }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-6">
-                            <label class="form-label">If YES please describe?</label>
+                          <div class="mb-3 col-md-8">
+                            <label class="form-label">If YES please describe</label>
                             <textarea v-model="describeAnyInjuries" :disabled="!wasAnyOneHurt"
                               class="form-control border border-primary"
                               :class="{ 'border-danger': errorsIncidentDetail.describeAnyInjuries_er }"
@@ -1855,7 +1876,23 @@ const getDenverTimeAsUTCISOString = () => {
                         </div>
 
                         <div class="row">
-                          <div class="mb-3 col-md-12">
+
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Was any vehicles towed?</label>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="switchWereAnyVehiclesTowed"
+                                v-model="wereAnyVehiclesTowed" />
+                              <label class="form-check-label fw-semibold" for="switchWereAnyVehiclesTowed"
+                                :style="{ color: wereAnyVehiclesTowed ? '#198754' : '#dc3545' }">
+                                {{ wereAnyVehiclesTowed ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="errorsIncidentDetail.wereAnyVehiclesTowed_er" class="text-danger">{{
+                              errorsIncidentDetail.wereAnyVehiclesTowed_er }}</small>
+                          </div>
+
+
+                          <div class="mb-3 col-md-8">
                             <label class="form-label">What damage was done</label>
                             <textarea v-model="whatDamageWasDone" class="form-control border border-primary"
                               style="color: black;" rows="3"></textarea>
@@ -1866,7 +1903,10 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
 
-                          <div class="mb-3 col-md-3">
+                        
+                
+
+                          <div class="mb-3 col-md-4">
                             <label class="form-label">Have you had any incidents in the past year?</label>
                             <div class="form-check form-switch">
                               <input class="form-check-input" type="checkbox" id="switchIncidentInThePastYear"
@@ -1880,7 +1920,7 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsIncidentDetail.incidentInThePastYear_er }}</small>
                           </div>
 
-                          <div class="mb-3 col-md-9">
+                          <div class="mb-3 col-md-8">
                             <label class="form-label">If YES, please list dates of incidents</label>
                             <textarea v-model="listDatesOfIncidents" :disabled="!incidentInThePastYear"
                               class="form-control border border-primary"
@@ -2121,6 +2161,14 @@ const getDenverTimeAsUTCISOString = () => {
 
 .v-select {
   font-size: 1rem;
+}
+
+textarea:disabled {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  border-color: #ced4da !important;
 }
 
 .v-select .vs__dropdown-toggle {
