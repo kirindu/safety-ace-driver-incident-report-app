@@ -37,7 +37,7 @@ export default {
       />
 
       <div class="brand-title-container">
-        <span class="brand-title-text">ACE Driver Incident Report</span>
+        <span class="brand-title-text">Incident Report</span>
       </div>
     </a>
   </div>
