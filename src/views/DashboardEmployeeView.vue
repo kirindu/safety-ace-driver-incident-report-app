@@ -19,7 +19,7 @@ import GeneralInformationAPI from "@/api/Sections/GeneralInformationAPI";
 import DuringTheIncidentAPI from "@/api/Sections/DuringTheIncidentAPI";
 import IncidentDetailAPI from "@/api/Sections/IncidentDetailAPI";
 import SupervisorNoteAPI from "@/api/Sections/SupervisorNoteAPI";
-import EmployeeSignatureAPI from "@/api/Sections/EmployeeSignatureAPI"; // ✅ NUEVO
+import EmployeeSignatureAPI from "@/api/Sections/EmployeeSignatureAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -77,7 +77,6 @@ const options = reactive({
   backgroundColor: "rgb(255, 255, 255)",
 });
 
-// ✅ Estado propio de la sección de firma
 const signatureError = ref("");
 const isSubmittingReport = ref(false);
 
@@ -786,7 +785,7 @@ const HandleIncidentDetail = async (event) => {
   }
 };
 
-// ── ✅ Submit Incident Report (con firma) ────────────────────────────────────
+// ── ✅ Submit Incident Report (con firma + signedByEmployee) ─────────────────
 const SubmitIncidentReport = async () => {
 
   // 1. Validar secciones previas completadas
@@ -823,7 +822,7 @@ const SubmitIncidentReport = async () => {
   }
   signatureError.value = "";
 
-  // 3. Confirmar el envío — usando .then() como el resto del código
+  // 3. Confirmar el envío
   showSweetAlert({
     title: "Submit Incident Report?",
     text: "Once submitted, you will not be able to edit this report.",
@@ -868,10 +867,15 @@ const SubmitIncidentReport = async () => {
     try {
       isSubmittingReport.value = true;
 
+      // 6. Guardar la firma en employeeSignatures
       const response = await EmployeeSignatureAPI.add(employeeSignatureData);
 
       if (response.data.ok) {
-        // ✅ Limpiar localStorage
+
+        // ✅ 7. Marcar el reporte como firmado por el empleado en generalinformations
+        await GeneralInformationAPI.signEmployee(generalInformation_id);
+
+        // 8. Limpiar localStorage y redirigir al login
         localStorage.removeItem("ACE-INCIDENT-REPORT");
         localStorage.removeItem("USER-SAFETY-ACE");
 
@@ -884,7 +888,6 @@ const SubmitIncidentReport = async () => {
           confirmButtonText: "Ok",
           allowOutsideClick: false,
         }).then(() => {
-          // ✅ Push directo a login — no depender del guard
           router.push({ name: "login" });
         });
 
@@ -915,6 +918,7 @@ const SubmitIncidentReport = async () => {
     }
   });
 };
+
 // ── Supervisor Note submit ───────────────────────────────────────────────────
 const HandleSupervisorNote = async (event) => {
   event.preventDefault();
@@ -1384,8 +1388,7 @@ const getDenverTimeAsUTCISOString = () => {
                     :reduce="(truck) => truck.id" label="truckNumber" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTruck }" />
                   <small v-if="errorsGeneralInformation.truck_er" class="text-danger">{{
-                    errorsGeneralInformation.truck_er
-                  }}</small>
+                    errorsGeneralInformation.truck_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -1398,8 +1401,7 @@ const getDenverTimeAsUTCISOString = () => {
                     </VueDatePicker>
                   </div>
                   <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{
-                    errorsGeneralInformation.time_er
-                  }}</small>
+                    errorsGeneralInformation.time_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -1412,24 +1414,21 @@ const getDenverTimeAsUTCISOString = () => {
                     </VueDatePicker>
                   </div>
                   <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
-                    errorsGeneralInformation.timeDayStarted_er
-                  }}</small>
+                    errorsGeneralInformation.timeDayStarted_er }}</small>
                 </div>
 
-                           <div class="mb-3 col-md-3">
+                <div class="mb-3 col-md-3">
                   <label class="form-label">Dept</label>
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedDept }" />
                   <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{
-                    errorsGeneralInformation.dept_er
-                  }}</small>
+                    errorsGeneralInformation.dept_er }}</small>
                 </div>
 
               </div>
-               <div class="row">
 
-     
+              <div class="row">
 
                 <div class="mb-3 col-md-4">
                   <label class="form-label">Type of Incident</label>
@@ -1438,41 +1437,31 @@ const getDenverTimeAsUTCISOString = () => {
                     label="typeOfIncidentName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTypeOfIncident }" />
                   <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{
-                    errorsGeneralInformation.typeOfIncident_er
-                  }}</small>
+                    errorsGeneralInformation.typeOfIncident_er }}</small>
                 </div>
 
-                            <div class="mb-3 col-md-4">
+                <div class="mb-3 col-md-4">
                   <label class="form-label">Supervisor</label>
                   <v-select :options="storeSupervisor.supervisors" v-model="selectedSupervisor"
                     placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
                     class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
                   <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
-                    errorsGeneralInformation.supervisor_er
-                  }}</small>
+                    errorsGeneralInformation.supervisor_er }}</small>
                 </div>
 
-                        <div class="mb-3 col-md-4">
+                <div class="mb-3 col-md-4">
                   <label class="form-label">Trainee</label>
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }"
                     style="color: black;" />
                   <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{
-                    errorsGeneralInformation.trainee_er
-                  }}</small>
+                    errorsGeneralInformation.trainee_er }}</small>
                 </div>
 
               </div>
 
-
-
               <div class="row">
-
-    
-
-        
-
                 <div class="mb-3 col-md-12">
                   <label class="form-label">Location</label>
                   <div style="position: relative;">
@@ -1504,10 +1493,7 @@ const getDenverTimeAsUTCISOString = () => {
                         v-for="item in locationSuggestions"
                         :key="item.place_id"
                         @mousedown.prevent="selectLocation(item)"
-                        style="
-                          padding: 8px 12px; cursor: pointer; font-size: 0.875rem;
-                          color: #212529; border-bottom: 1px solid #f0f0f0;
-                        "
+                        style="padding: 8px 12px; cursor: pointer; font-size: 0.875rem; color: #212529; border-bottom: 1px solid #f0f0f0;"
                         @mouseover="$event.target.style.backgroundColor='#e9f0ff'"
                         @mouseleave="$event.target.style.backgroundColor='white'"
                       >
@@ -1516,10 +1502,8 @@ const getDenverTimeAsUTCISOString = () => {
                     </ul>
                   </div>
                   <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{
-                    errorsGeneralInformation.location_er
-                  }}</small>
+                    errorsGeneralInformation.location_er }}</small>
                 </div>
-
               </div>
 
               <div class="row">
@@ -1589,7 +1573,6 @@ const getDenverTimeAsUTCISOString = () => {
                       <div class="accordion-body">
 
                         <div class="row">
-
                           <div class="mb-3 col-md-5">
                             <label class="form-label">Were you using an electronic device when the incident occurred?</label>
                             <div class="form-check form-switch">
@@ -1612,191 +1595,165 @@ const getDenverTimeAsUTCISOString = () => {
                             <small v-if="errorsDuringTheIncident.taskPerfomed_er" class="text-danger">{{
                               errorsDuringTheIncident.taskPerfomed_er }}</small>
                           </div>
-
                         </div>
 
-
-                          <div class="row">
-
-                            <div class="mb-3 col-md-5">
-                              <label class="form-label">Was Safety Dept Notified?</label>
-                              <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="switchSafetyDeptNotified"
-                                  v-model="wasSafetyDeptNotified" />
-                                <label class="form-check-label fw-semibold" for="switchSafetyDeptNotified"
-                                  :style="{ color: wasSafetyDeptNotified ? '#198754' : '#dc3545' }">
-                                  {{ wasSafetyDeptNotified ? 'YES' : 'NO' }}
-                                </label>
-                              </div>
-                              <small v-if="errorsDuringTheIncident.wasSafetyDeptNotified_er" class="text-danger">{{
-                                errorsDuringTheIncident.wasSafetyDeptNotified_er }}</small>
-                            </div>
-
-                            <div class="mb-3 col-md-7 ">
-                              <label class="form-label">Safety Person Notified</label>
-                              <v-select
-                                :options="storeSafetyPerson.safetyPersonsNotified"
-                                v-model="SelectedSafetyPersonNotified"
-                                placeholder="Choose Safety Person"
-                                :reduce="(safetyPerson) => safetyPerson.id"
-                                label="safetyPersonNotifiedName"
-                                class="form-control p-0"
-                                :disabled="!wasSafetyDeptNotified"
-                                :class="{
-                                  'is-invalid': formSubmittedDuringTheIncident && wasSafetyDeptNotified && !SelectedSafetyPersonNotified
-                                }" />
-                              <small v-if="errorsDuringTheIncident.SelectedSafetyPersonNotified_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedSafetyPersonNotified_er }}</small>
-                            </div>
-
-
-                          </div>
-                           <div class="row">
-
-                            <div class="mb-3 col-md-5">
-                              <label class="form-label">Did you take pictures of the damages?</label>
-                              <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="switchDidYouTakePictures"
-                                  v-model="didYouTakePictures" />
-                                <label class="form-check-label fw-semibold" for="switchDidYouTakePictures"
-                                  :style="{ color: didYouTakePictures ? '#198754' : '#dc3545' }">
-                                  {{ didYouTakePictures ? 'YES' : 'NO' }}
-                                </label>
-                              </div>
-                              <small v-if="errorsDuringTheIncident.didYouTakePictures_er" class="text-danger">{{
-                                errorsDuringTheIncident.didYouTakePictures_er }}</small>
-                            </div>
-
-                            <div class="mb-3 col-md-7">
-                              <label class="form-label">Who did you send the pictures to?</label>
-                              <v-select
-                                :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo"
-                                v-model="SelectedWhoDidYouSendThePicturesTo"
-                                placeholder="Choose a person"
-                                :reduce="(person) => person.id"
-                                label="whoDidYouSendThePictureToName"
-                                class="form-control p-0"
-                                :disabled="!didYouTakePictures"
-                                :class="{
-                                  'is-invalid': formSubmittedDuringTheIncident && didYouTakePictures && !SelectedWhoDidYouSendThePicturesTo
-                                }" />
-                              <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er }}</small>
-                            </div>
-
-                           </div>
-
-                           <div class="row">
-
+                        <div class="row">
                           <div class="mb-3 col-md-5">
-                              <label class="form-label">Was this incident in an intersection?</label>
-                              <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="switchWasThisIncidentInAnIntersection"
-                                  v-model="wasThisIncidentInAnIntersection" />
-                                <label class="form-check-label fw-semibold" for="switchWasThisIncidentInAnIntersection"
-                                  :style="{ color: wasThisIncidentInAnIntersection ? '#198754' : '#dc3545' }">
-                                  {{ wasThisIncidentInAnIntersection ? 'YES' : 'NO' }}
-                                </label>
-                              </div>
-                              <small v-if="errorsDuringTheIncident.wasThisIncidentInAnIntersection_er" class="text-danger">{{
-                                errorsDuringTheIncident.wasThisIncidentInAnIntersection_er }}</small>
+                            <label class="form-label">Was Safety Dept Notified?</label>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="switchSafetyDeptNotified"
+                                v-model="wasSafetyDeptNotified" />
+                              <label class="form-check-label fw-semibold" for="switchSafetyDeptNotified"
+                                :style="{ color: wasSafetyDeptNotified ? '#198754' : '#dc3545' }">
+                                {{ wasSafetyDeptNotified ? 'YES' : 'NO' }}
+                              </label>
                             </div>
-
-                            <div class="mb-3 col-md-7">
-                              <label class="form-label">How fast were you traveling? (MPH)</label>
-                              <input type="number" step="any" v-model="howFastWereYouGoing"
-                                class="form-control form-control-md border border-primary"
-                                :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
-                                style="color: black;" />
-                              <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
-                                errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
-                            </div>
-
-
-         
-
-
-                           </div>
-
-                           <div class="row">
-
-
-                            <div class="mb-3 col-md-4">
-                              <label class="form-label">Weather</label>
-                              <v-select :options="storeWeatherCondition.weatherConditions" v-model="SelectedWeatherCondition"
-                                placeholder="Choose weather"
-                                :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
-                                :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedWeatherCondition }" />
-                              <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedWeatherCondition_er }}</small>
-                            </div>
-
-                            <div class="mb-3 col-md-4">
-                              <label class="form-label">Road Conditions</label>
-                              <v-select :options="storeRoadCondition.roadConditions" v-model="SelectedRoadCondition"
-                                placeholder="Choose road"
-                                :reduce="(roadCondition) => roadCondition.id" label="roadConditionName" class="form-control p-0"
-                                :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedRoadCondition }" />
-                              <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedRoadCondition_er }}</small>
-                            </div>
-
-                            <div class="mb-3 col-md-4">
-                              <label class="form-label">Direction you were traveling</label>
-                              <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
-                                placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName"
-                                class="form-control p-0"
-                                :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
-                              <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{
-                                errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
-                            </div>
-
-                           </div>
-                           <div class="row">
-
-                            <div class="mb-3 col-md-8">
-                              <label class="form-label">Witness</label>
-                              <input type="text" v-model="witness" class="form-control form-control-md border border-primary"
-                                :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }"
-                                style="color: black;" />
-                              <small v-if="errorsDuringTheIncident.witness_er" class="text-danger">{{
-                                errorsDuringTheIncident.witness_er }}</small>
-                            </div>
-
-                            <div class="mb-3 col-md-4">
-                              <label class="form-label">Witness Phone #</label>
-                              <input
-                                type="text"
-                                :value="witnessPhone"
-                                @input="formatPhone"
-                                placeholder="(XXX) XXX-XXXX"
-                                maxlength="14"
-                                class="form-control form-control-md border border-primary"
-                                :class="{ 'border-danger': formSubmittedDuringTheIncident && !witnessPhone }"
-                                style="color: black;" />
-                              <small v-if="errorsDuringTheIncident.witnessPhone_er" class="text-danger">{{
-                                errorsDuringTheIncident.witnessPhone_er }}</small>
-                            </div>
-
+                            <small v-if="errorsDuringTheIncident.wasSafetyDeptNotified_er" class="text-danger">{{
+                              errorsDuringTheIncident.wasSafetyDeptNotified_er }}</small>
                           </div>
 
-                          <div class="row">
-                                            <div class="d-flex justify-content-center">
+                          <div class="mb-3 col-md-7">
+                            <label class="form-label">Safety Person Notified</label>
+                            <v-select
+                              :options="storeSafetyPerson.safetyPersonsNotified"
+                              v-model="SelectedSafetyPersonNotified"
+                              placeholder="Choose Safety Person"
+                              :reduce="(safetyPerson) => safetyPerson.id"
+                              label="safetyPersonNotifiedName"
+                              class="form-control p-0"
+                              :disabled="!wasSafetyDeptNotified"
+                              :class="{ 'is-invalid': formSubmittedDuringTheIncident && wasSafetyDeptNotified && !SelectedSafetyPersonNotified }" />
+                            <small v-if="errorsDuringTheIncident.SelectedSafetyPersonNotified_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedSafetyPersonNotified_er }}</small>
+                          </div>
+                        </div>
 
-                                                            <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident"
-                          class="btn btn-primary btn-md">
-                          {{ isEditingDuringTheIncident ? "Update" : "Save" }}
-                          <span class="btn-icon-end">
-                            <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
-                          </span>
-                        </button>
-
-                                            </div>
+                        <div class="row">
+                          <div class="mb-3 col-md-5">
+                            <label class="form-label">Did you take pictures of the damages?</label>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="switchDidYouTakePictures"
+                                v-model="didYouTakePictures" />
+                              <label class="form-check-label fw-semibold" for="switchDidYouTakePictures"
+                                :style="{ color: didYouTakePictures ? '#198754' : '#dc3545' }">
+                                {{ didYouTakePictures ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="errorsDuringTheIncident.didYouTakePictures_er" class="text-danger">{{
+                              errorsDuringTheIncident.didYouTakePictures_er }}</small>
                           </div>
 
-                        
+                          <div class="mb-3 col-md-7">
+                            <label class="form-label">Who did you send the pictures to?</label>
+                            <v-select
+                              :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo"
+                              v-model="SelectedWhoDidYouSendThePicturesTo"
+                              placeholder="Choose a person"
+                              :reduce="(person) => person.id"
+                              label="whoDidYouSendThePictureToName"
+                              class="form-control p-0"
+                              :disabled="!didYouTakePictures"
+                              :class="{ 'is-invalid': formSubmittedDuringTheIncident && didYouTakePictures && !SelectedWhoDidYouSendThePicturesTo }" />
+                            <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er }}</small>
+                          </div>
+                        </div>
 
-        
+                        <div class="row">
+                          <div class="mb-3 col-md-5">
+                            <label class="form-label">Was this incident in an intersection?</label>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="switchWasThisIncidentInAnIntersection"
+                                v-model="wasThisIncidentInAnIntersection" />
+                              <label class="form-check-label fw-semibold" for="switchWasThisIncidentInAnIntersection"
+                                :style="{ color: wasThisIncidentInAnIntersection ? '#198754' : '#dc3545' }">
+                                {{ wasThisIncidentInAnIntersection ? 'YES' : 'NO' }}
+                              </label>
+                            </div>
+                            <small v-if="errorsDuringTheIncident.wasThisIncidentInAnIntersection_er" class="text-danger">{{
+                              errorsDuringTheIncident.wasThisIncidentInAnIntersection_er }}</small>
+                          </div>
+
+                          <div class="mb-3 col-md-7">
+                            <label class="form-label">How fast were you traveling? (MPH)</label>
+                            <input type="number" step="any" v-model="howFastWereYouGoing"
+                              class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
+                              errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Weather</label>
+                            <v-select :options="storeWeatherCondition.weatherConditions" v-model="SelectedWeatherCondition"
+                              placeholder="Choose weather"
+                              :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
+                              :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedWeatherCondition }" />
+                            <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedWeatherCondition_er }}</small>
+                          </div>
+
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Road Conditions</label>
+                            <v-select :options="storeRoadCondition.roadConditions" v-model="SelectedRoadCondition"
+                              placeholder="Choose road"
+                              :reduce="(roadCondition) => roadCondition.id" label="roadConditionName" class="form-control p-0"
+                              :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedRoadCondition }" />
+                            <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedRoadCondition_er }}</small>
+                          </div>
+
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Direction you were traveling</label>
+                            <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
+                              placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName"
+                              class="form-control p-0"
+                              :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
+                            <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="mb-3 col-md-8">
+                            <label class="form-label">Witness</label>
+                            <input type="text" v-model="witness" class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.witness_er" class="text-danger">{{
+                              errorsDuringTheIncident.witness_er }}</small>
+                          </div>
+
+                          <div class="mb-3 col-md-4">
+                            <label class="form-label">Witness Phone #</label>
+                            <input
+                              type="text"
+                              :value="witnessPhone"
+                              @input="formatPhone"
+                              placeholder="(XXX) XXX-XXXX"
+                              maxlength="14"
+                              class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witnessPhone }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.witnessPhone_er" class="text-danger">{{
+                              errorsDuringTheIncident.witnessPhone_er }}</small>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="d-flex justify-content-center">
+                            <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident"
+                              class="btn btn-primary btn-md">
+                              {{ isEditingDuringTheIncident ? "Update" : "Save" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i>
+                              </span>
+                            </button>
+                          </div>
+                        </div>
 
                       </div>
                     </div>
@@ -1837,8 +1794,6 @@ const getDenverTimeAsUTCISOString = () => {
                         </div>
 
                         <div class="row">
-
-
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Was anyone hurt?</label>
                             <div class="form-check form-switch">
@@ -1862,7 +1817,6 @@ const getDenverTimeAsUTCISOString = () => {
                             <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{
                               errorsIncidentDetail.describeAnyInjuries_er }}</small>
                           </div>
-
                         </div>
 
                         <div class="row">
@@ -1876,7 +1830,6 @@ const getDenverTimeAsUTCISOString = () => {
                         </div>
 
                         <div class="row">
-
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Was any vehicles towed?</label>
                             <div class="form-check form-switch">
@@ -1891,7 +1844,6 @@ const getDenverTimeAsUTCISOString = () => {
                               errorsIncidentDetail.wereAnyVehiclesTowed_er }}</small>
                           </div>
 
-
                           <div class="mb-3 col-md-8">
                             <label class="form-label">What damage was done</label>
                             <textarea v-model="whatDamageWasDone" class="form-control border border-primary"
@@ -1902,10 +1854,6 @@ const getDenverTimeAsUTCISOString = () => {
                         </div>
 
                         <div class="row">
-
-                        
-                
-
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Have you had any incidents in the past year?</label>
                             <div class="form-check form-switch">
@@ -1929,7 +1877,6 @@ const getDenverTimeAsUTCISOString = () => {
                             <small v-if="errorsIncidentDetail.listDatesOfIncidents_er" class="text-danger">{{
                               errorsIncidentDetail.listDatesOfIncidents_er }}</small>
                           </div>
-
                         </div>
 
                         <div class="row">
@@ -1976,21 +1923,17 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
                         </div>
 
-                                            <div class="row">
-                                            <div class="d-flex justify-content-center">
-                                                         <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail"
-                          class="btn btn-primary btn-md">
-                          {{ isEditingIncidentDetail ? "Update" : "Save" }}
-                          <span class="btn-icon-end">
-                            <i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i>
-                          </span>
-                        </button>
-                                            </div>
-                                            </div>
-
-
-
-           
+                        <div class="row">
+                          <div class="d-flex justify-content-center">
+                            <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail"
+                              class="btn btn-primary btn-md">
+                              {{ isEditingIncidentDetail ? "Update" : "Save" }}
+                              <span class="btn-icon-end">
+                                <i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i>
+                              </span>
+                            </button>
+                          </div>
+                        </div>
 
                       </div>
                     </div>
@@ -2057,15 +2000,13 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <hr />
 
-                              <label class="form-label fw-semibold">
-                              Employee Signature <span class="text-danger">*</span>
-                            </label>
+                        <label class="form-label fw-semibold">
+                          Employee Signature <span class="text-danger">*</span>
+                        </label>
 
                         <!-- ── Pad de firma ── -->
-                        <!-- <div class="row">
-                          <div class="mb-2 col-md-12 "> -->
-                          <div class="row justify-content-center">
-                            <div class="mb-2 col-md-auto text-center">
+                        <div class="row justify-content-center">
+                          <div class="mb-2 col-md-auto text-center">
                             <div
                               :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']"
                               style="display: inline-block; line-height: 0;"
@@ -2085,7 +2026,7 @@ const getDenverTimeAsUTCISOString = () => {
                           </div>
                         </div>
 
-                        <!-- ── Botones de la firma + Submit ── -->
+                        <!-- ── Botones de la firma ── -->
                         <div class="row align-items-end mt-2">
                           <div class="col-md-auto">
                             <button
@@ -2103,14 +2044,11 @@ const getDenverTimeAsUTCISOString = () => {
                               <i class="fa fa-undo me-1"></i> Undo
                             </button>
                           </div>
-
-       
                         </div>
 
+                        <!-- ── Botón Submit ── -->
                         <div class="row">
-
-
-                                            <div class="d-flex justify-content-center">
+                          <div class="d-flex justify-content-center mt-3">
                             <button
                               type="button"
                               class="btn btn-danger btn-md"
@@ -2129,7 +2067,6 @@ const getDenverTimeAsUTCISOString = () => {
                               </span>
                             </button>
                           </div>
-                        
                         </div>
 
                       </div>

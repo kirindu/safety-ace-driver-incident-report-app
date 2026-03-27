@@ -143,4 +143,17 @@ export default {
       headers: getAuthHeader()
     });
   },
+
+  // --- FIRMAS ---
+
+  /**
+   * ✅ Marca el reporte como firmado por el empleado (signedByEmployee = true)
+   * Se llama automáticamente al hacer Submit del Incident Report.
+   * @param {string} id - ID de la general information
+   */
+  async signEmployee(id) {
+    return api.patch(`/generalinformations/${id}/sign-employee`, {}, {
+      headers: getAuthHeader()
+    });
+  },
 };
