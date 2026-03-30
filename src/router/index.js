@@ -36,8 +36,8 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'dashboard-admin',
-          // component: () => import('../views/DashboardAdminView.vue'),
-          component: () => import('../views/DashboardEmployeeView.vue'),
+           component: () => import('../views/DashboardAdminView.vue'),
+          // component: () => import('../views/DashboardEmployeeView.vue'),
         },
         {
           path: 'reports/:type?',

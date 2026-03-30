@@ -24,7 +24,7 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos componentes
 import Spinner from "@/components/Spinner.vue";
-import CoverSheetModal from "@/components/CoverSheetModal.vue";
+// import CoverSheetModal from "@/components/CoverSheetModal.vue";
 
 // Importamos Stores
 import { useRoutesStore } from "@/stores/typeIncidents.js";
