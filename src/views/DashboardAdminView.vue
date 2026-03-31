@@ -231,7 +231,7 @@ const changeItemsPerPage = () => {
 
 const deleteGeneralInformation = async (item) => {
   const result = await showSweetAlert({
-    title: "Are you sure you want to delete this GeneralInformation?",
+    title: "Are you sure you want to delete this Incident Report?",
     //text: "This action will deactivate the general information (soft delete)",
     icon: "warning",
     showCancelButton: true,
@@ -250,7 +250,7 @@ const deleteGeneralInformation = async (item) => {
       if (response.data.ok) {
         await showSweetAlert({
           title: "Deleted!",
-          text: "GeneralInformation has been deleted successfully.",
+          text: "Incident Report has been deleted successfully.",
           icon: "success",
           confirmButtonText: "Ok",
         });
@@ -266,10 +266,10 @@ const deleteGeneralInformation = async (item) => {
         });
       }
     } catch (error) {
-      console.error("Error deleting GeneralInformation:", error);
+      console.error("Error deleting Incident Report:", error);
       await showSweetAlert({
         title: "Error!",
-        text: error.response?.data?.message || "Error deleting GeneralInformation!",
+        text: error.response?.data?.message || "Error deleting Incident Report!",
         icon: "error",
         confirmButtonText: "Ok",
       });
