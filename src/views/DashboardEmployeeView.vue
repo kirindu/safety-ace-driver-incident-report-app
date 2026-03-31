@@ -23,6 +23,8 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 import Spinner from "@/components/Spinner.vue";
 
+// Importamos Stores
+
 import { useDirectionsStore } from "@/stores/directions.js";
 const storeDirection = useDirectionsStore();
 
@@ -946,7 +948,7 @@ const getDenverTimeAsUTCISOString = () => {
                 </div>
 
                 <div class="mb-3 col-md-4">
-                  <label class="form-label">Trainee</label>
+                  <label class="form-label">Trainer</label>
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }" style="color: black;" />
                   <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{ errorsGeneralInformation.trainee_er }}</small>

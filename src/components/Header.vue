@@ -85,9 +85,9 @@ console.log('🟢 Header: Componente cargado completamente');
     <div v-show="menu_visible" class="header-left">
 
       <nav class="main-menu">
-        <a @click.prevent="router.push({ name: 'admin-drivers' })" class="menu-item">Drivers</a>
-        <a @click.prevent="router.push({ name: 'admin-users' })" class="menu-item">Users</a>
-        <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trailers' })" class="menu-item">Trailers</a>
+         <a @click.prevent="router.push({ name: 'admin-drivers' })" class="menu-item">Employees</a> 
+         <a @click.prevent="router.push({ name: 'admin-users' })" class="menu-item">Users</a> 
+        <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trailers' })" class="menu-item">Type of Incidents</a>
         <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trucks' })" class="menu-item">Trucks</a>
 
         <div class="dropdown-container">
@@ -367,7 +367,7 @@ console.log('🟢 Header: Componente cargado completamente');
 }
 
 .menu-item {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 500;
   color: #28a2eb;
   padding-right: 18px;
