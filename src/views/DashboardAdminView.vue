@@ -278,6 +278,24 @@ const deleteGeneralInformation = async (item) => {
     }
   }
 };
+
+const openGeneralInformationModal = async (item) => {
+  await openModal(
+    defineAsyncComponent(() => import("@/modals/GeneralInformationModal.vue")),
+    {
+      item: item,
+      onUpdateSuccess: () => SearchGeneralInformation(null, currentPage.value),
+    }
+  )
+    .then((data) => {
+      console.log("success", data);
+    })
+    .catch(() => {
+      console.log("catch");
+    });
+};  
+
+
 // const openCoverSheetModal = async (item) => {
 //   await openModal(
 //     defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
