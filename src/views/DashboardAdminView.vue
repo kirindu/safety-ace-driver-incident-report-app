@@ -255,8 +255,8 @@ const deleteGeneralInformation = async (item) => {
           confirmButtonText: "Ok",
         });
 
-        // ✅ CORRECCIÓN: Llamar a SearchIncident
-        SearchIncident(null, currentPage.value);
+        // ✅ CORRECCIÓN: Llamar a SearchGeneralInformation
+        SearchGeneralInformation(null, currentPage.value);
       } else {
         await showSweetAlert({
           title: "Error!",
@@ -266,7 +266,7 @@ const deleteGeneralInformation = async (item) => {
         });
       }
     } catch (error) {
-      console.error("Error deleting Incident Report:", error);
+      // console.error("Error deleting Incident Report:", error);
       await showSweetAlert({
         title: "Error!",
         text: error.response?.data?.message || "Error deleting Incident Report!",
