@@ -2,6 +2,8 @@
 import { ref, onMounted } from "vue";
 import { defineAsyncComponent } from "vue";
 
+import GeneralInformationModal from "@/modals/GeneralInformationModal.vue";
+
 import { useRouter } from "vue-router";
 const router = useRouter();
 
@@ -281,20 +283,15 @@ const deleteGeneralInformation = async (item) => {
 
 const openGeneralInformationModal = async (item) => {
   await openModal(
-    defineAsyncComponent(() => import("@/modals/GeneralInformationModal.vue")),
+    GeneralInformationModal,
     {
       item: item,
       onUpdateSuccess: () => SearchGeneralInformation(null, currentPage.value),
     }
   )
-    .then((data) => {
-      console.log("success", data);
-    })
-    .catch(() => {
-      console.log("catch");
-    });
-};  
-
+  .then((data) => { console.log("success", data); })
+  .catch(() => { console.log("catch"); });
+};
 
 // const openCoverSheetModal = async (item) => {
 //   await openModal(

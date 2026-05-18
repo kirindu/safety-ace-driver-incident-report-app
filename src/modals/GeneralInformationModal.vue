@@ -61,10 +61,10 @@ const storeDept = useDeptsStore();
 
 const user = ref(null);
 
-watch(authUser, (newUser) => {
-  user.value = newUser;
-  console.log('Usuario actualizado en dashboard:', newUser);
-}, { immediate: true });
+// watch(authUser, (newUser) => {
+//   user.value = newUser;
+//   console.log('Usuario actualizado en dashboard:', newUser);
+// }, { immediate: true });
 
 
 // ── VUE3-SIGNATURE ──────────────────────────────────────────────────────────
@@ -368,7 +368,6 @@ const onSubmit = async (event) => {
   const generalInformationData = {
     date: getDenverTimeAsUTCISOString(),
     trainerName: trainee.value,
-    employee_id: user.value.id,
     truck_id: selectedTruck.value,
     dept_id: selectedDept.value,
     supervisor_id: selectedSupervisor.value,
@@ -378,34 +377,55 @@ const onSubmit = async (event) => {
     timeWorkedYears: timeWorkedYears.value.toString(),
     timeWorkedMonths: timeWorkedMonths.value.toString(),
     timeDayStarted: formatTime(timeDayStarted.value),
+
+    employee_id: reactiveProps.item.value.employee_id,
   };
 
   try {
-    isLoadingGeneralInformation.value = true;
-    if (!isEditingGeneralInformation.value) {
-      const response = await GeneralInformationAPI.add(generalInformationData);
-      if (response.data.ok) {
-        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
-        isEditingGeneralInformation.value = true;
-        showSweetAlert({ title: "General information saved successfully!", icon: "success", showDenyButton: false, showCancelButton: false, confirmButtonText: "Ok", allowOutsideClick: false })
-          .then(() => { isVisibleAcordion.value = true; });
-      } else {
-        showSweetAlert({ title: "Error saving General Information!", icon: "warning", showDenyButton: false, showCancelButton: false, confirmButtonText: "Ok", allowOutsideClick: false });
-      }
+
+    let generalInformationId = reactiveProps.item.value.id;
+    const response = await GeneralInformationAPI.edit(generalInformationId, generalInformationData);
+
+    if (response.data.ok) {
+      localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
+      const coversheet = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
+
+      showSweetAlert({
+        title: "General information edited successfully!",
+        icon: "success",
+        showDenyButton: false,
+        showCancelButton: false,
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      }).then(() => {
+        props.onUpdateSuccess();
+        return;
+      });
     } else {
-      let generalInformation_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.id || null;
-      const response = await GeneralInformationAPI.edit(generalInformation_id, generalInformationData);
-      if (response.data.ok) {
-        localStorage.setItem("ACE-INCIDENT-REPORT", JSON.stringify(response.data.data));
-        showSweetAlert({ title: "General information edited successfully!", icon: "success", showDenyButton: false, showCancelButton: false, confirmButtonText: "Ok", allowOutsideClick: false });
-      } else {
-        showSweetAlert({ title: "Error editing General Information!", icon: "warning", showDenyButton: false, showCancelButton: false, confirmButtonText: "Ok", allowOutsideClick: false });
-      }
+      showSweetAlert({
+        title: "Error editing General Information!",
+        icon: "warning",
+        showDenyButton: false,
+        showCancelButton: false,
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      }).then(() => {
+        return;
+      });
+
     }
+
   } catch (error) {
-    showSweetAlert({ title: "Error editing General Information!", icon: "warning", showDenyButton: false, showCancelButton: false, confirmButtonText: "Ok", allowOutsideClick: false });
-  } finally {
-    isLoadingGeneralInformation.value = false;
+    showSweetAlert({
+      title: "Error editing General Information!",
+      icon: "warning",
+      showDenyButton: false,
+      showCancelButton: false,
+      confirmButtonText: "Ok",
+      allowOutsideClick: false,
+    }).then(() => {
+      return;
+    });
   }
 };
 
