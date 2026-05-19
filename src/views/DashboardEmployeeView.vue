@@ -661,7 +661,6 @@ const EditDuringTheIncident = (item) => {
   witness.value = item.witness || "";
   witnessPhone.value = item.witnessPhone || "";
   isEditingDuringTheIncident.value = true;
-  selectedDuringTheIncidentId.value = item.id || item._id;
 };
 
 const EditIncidentDetail = async (item) => {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRefs, reactive, onMounted, computed, watch, nextTick, defineAsyncComponent } from "vue";
-import { closeModal, confirmModal, openModal  } from "@kolirt/vue-modal";
+import { closeModal, confirmModal, openModal } from "@kolirt/vue-modal";
 
 import { useRouter } from 'vue-router'
 const router = useRouter()
@@ -57,6 +57,7 @@ import { useWhoDidYouSendThePictureToStore } from "@/stores/whoDidYouSendThePict
 const storeWhoDidYouSendThePicturesTo = useWhoDidYouSendThePictureToStore();
 
 import { useDeptsStore } from "@/stores/depts.js";
+import { is } from "@vee-validate/rules";
 const storeDept = useDeptsStore();
 
 const user = ref(null);
@@ -94,7 +95,7 @@ const props = defineProps({
   },
   onUpdateSuccess: {
     type: Function,
-    default: () => {},
+    default: () => { },
   },
 });
 
@@ -244,7 +245,7 @@ onMounted(async () => {
 const CargamosGeneralInformation = async () => {
 
   try {
-    isLoadingGeneralInformation.value = true; 
+    isLoadingGeneralInformation.value = true;
 
     selectedTruck.value = reactiveProps.item.value.truck_id || "";
     selectedDept.value = reactiveProps.item.value.dept_id || "";
@@ -271,33 +272,43 @@ const CargamosGeneralInformation = async () => {
 
 const CargamosDuringTheIncident = async () => {
 
-    // isLoadingDuringTheIncident.value = true;
-    // try {
-    //   await storeDuringTheIncident.fetchDuringTheIncidentById(props.item.id);
-    //   const info = storeDuringTheIncident.duringTheIncident;
-    //   if (info) {
-    //     usingElectronicDevice.value = info.using_electronic_device || false;
-    //     taskPerfomed.value = info.task_perfomed || "";
-    //     wasSafetyDeptNotified.value = info.was_safety_dept_notified || false;
-    //     didYouTakePictures.value = info.did_you_take_pictures || false;
-    //     howFastWereYouGoing.value = info.how_fast_were_you_going || "";
-    //     SelectedSafetyPersonNotified.value = info.safety_person_notified_id || "";
-    //     SelectedWhoDidYouSendThePicturesTo.value = info.who_did_you_send_the_pictures_to_id || "";
-    //     SelectedDirectionYouWereTraveling.value = info.direction_you_were_traveling_id || "";
-    //     SelectedWeatherCondition.value = info.weather_condition_id || "";
-    //     SelectedRoadCondition.value = info.road_condition_id || "";
-    //     wasThisIncidentInAnIntersection.value = info.was_this_incident_in_an_intersection || false;
-    //     witness.value = info.witness || "";
-    //     witnessPhone.value = formatPhone({ target: { value: info.witness_phone || "" } });
-    //   }
-    // } catch (error) {
-    //   console.error("Error loading During The Incident:", error);
-    //   showSweetAlert("Error", "Failed to load During The Incident.", "error");
-    // } finally {
-    //   isLoadingDuringTheIncident.value = false;
-    // }
-  
-};  
+  isLoadingDuringTheIncident.value = true;
+
+  const response = await GeneralInformationAPI.getDuringTheIncident(reactiveProps.item.value.id);
+  duringTheIncidentList.value = response.data.data || [];
+
+  try {
+    if (response.data.data && response.data.data.length > 0) {
+      isDuringTheIncidentVisible.value = true;
+      isEditingDuringTheIncident.value = true;
+
+      usingElectronicDevice.value = response.data.data[0].usingElectronicDevice || false;
+      taskPerfomed.value = response.data.data[0].taskPerfomed || "";
+      wasSafetyDeptNotified.value = response.data.data[0].wasSafetyDeptNotified || false;
+      didYouTakePictures.value = response.data.data[0].didYouTakePictures || false;
+      howFastWereYouGoing.value = response.data.data[0].howFastWereYouGoing || "";
+      SelectedSafetyPersonNotified.value = response.data.data[0].safetyPersonNotified_id || "";
+      SelectedWhoDidYouSendThePicturesTo.value = response.data.data[0].whoDidYouSendThePicturesTo_id || "";
+      SelectedDirectionYouWereTraveling.value = response.data.data[0].directionYouWereTraveling_id || "";
+      SelectedWeatherCondition.value = response.data.data[0].weatherCondition_id || "";
+      SelectedRoadCondition.value = response.data.data[0].roadCondition_id || "";
+      wasThisIncidentInAnIntersection.value = response.data.data[0].wasThisIncidentInAnIntersection || false;
+      witness.value = response.data.data[0].witness || "";
+      witnessPhone.value = response.data.data[0].witnessPhone || "";
+
+      isLoadingDuringTheIncident.value = false;
+    }
+    else {
+      isDuringTheIncidentVisible.value = false;
+    }
+  } catch (error) {
+    console.error("Error al obtener During The Incident:", error);
+    isLoadingDuringTheIncident.value = false;
+    isDuringTheIncidentVisible.value = false;
+
+  }
+
+};
 
 const CargamosIncidentDetail = async () => {
   //  if (props.item && props.item.id) {
@@ -461,71 +472,168 @@ const hideLocationDropdown = () => {
 };
 
 
+const HandleDuringTheIncident = async (event) => {
+  event.preventDefault();
+
+  // Limpiar errores
+  Object.keys(errorsDuringTheIncident.value).forEach(k => errorsDuringTheIncident.value[k] = "");
+  let hasError = false;
+  if (hasError) return;
+
+
+  const duringTheIncidentData = {
+    usingElectronicDevice: usingElectronicDevice.value,
+    taskPerfomed: taskPerfomed.value,
+    wasSafetyDeptNotified: wasSafetyDeptNotified.value,
+    didYouTakePictures: didYouTakePictures.value,
+    howFastWereYouGoing: howFastWereYouGoing.value,
+    safetyPersonNotified_id: SelectedSafetyPersonNotified.value || null,
+    whoDidYouSendThePicturesTo_id: SelectedWhoDidYouSendThePicturesTo.value || null,
+    directionYouWereTraveling_id: SelectedDirectionYouWereTraveling.value || null,
+    weatherCondition_id: SelectedWeatherCondition.value || null,
+    roadCondition_id: SelectedRoadCondition.value || null,
+    wasThisIncidentInAnIntersection: wasThisIncidentInAnIntersection.value,
+    witness: witness.value,
+    witnessPhone: witnessPhone.value,
+
+    generalInformation_id: reactiveProps.item.value.id,
+
+
+  };
+
+  try {
+    // Editar o crear During The Incident según corresponda
+    if (isEditingDuringTheIncident) {
+
+      const response = await DuringTheIncidentAPI.edit(selectedDuringTheIncidentId.value, duringTheIncidentData);
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "During The Incident updated successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+          CargamosDuringTheIncident(); // Refresh the data to reflect changes
+
+        });
+      } else {
+        showSweetAlert({
+          title: "Error updating During The Incident!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+        });
+      }
+
+    } else {
+
+      const response = await DuringTheIncidentAPI.add(duringTheIncidentData);
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "During The Incident added successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+          CargamosDuringTheIncident(); // Refresh the data to reflect changes
+
+        });
+      } else {
+        showSweetAlert({
+          title: "Error adding During The Incident!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingDuringTheIncident.value = false; // Hide loading spinner
+        });
 
 
 
+      }
 
-
-
-// ── File handlers ────────────────────────────────────────────────────────────
-const handleFileChange = (event) => {
-  if (!event.target.files.length || event.target.files[0]?.type.indexOf("image/") !== 0) {
-    showSweetAlert({ title: "Camera Error", text: "Unable to access the camera. Please ensure permissions are granted or select an image from the gallery.", icon: "warning", allowOutsideClick: false });
-    return;
+    }
   }
-  const files = Array.from(event.target.files);
-  const newImages = [];
-  for (let file of files) {
-    if (file.size > 5242880) {
-      showSweetAlert({ title: "Image with excess size!", text: `You cannot upload the image ${file.name}, the maximum allowed is 5Mb`, icon: "warning", allowOutsideClick: false })
-        .then(() => { fileInput.value.value = ""; selectedImages.value = []; selectedFiles.value = []; });
+
+  catch (error) {
+    console.error("Error submitting During The Incident:", error);
+    showSweetAlert("Error", "Failed to submit During The Incident.", "error");
+  }
+
+}
+
+
+  // ── File handlers ────────────────────────────────────────────────────────────
+  const handleFileChange = (event) => {
+    if (!event.target.files.length || event.target.files[0]?.type.indexOf("image/") !== 0) {
+      showSweetAlert({ title: "Camera Error", text: "Unable to access the camera. Please ensure permissions are granted or select an image from the gallery.", icon: "warning", allowOutsideClick: false });
       return;
     }
-    newImages.push({ name: file.name, size: file.size, url: URL.createObjectURL(file) });
-  }
-  if (newImages.length + selectedImages.value.length > 15) {
-    showSweetAlert({ title: "Upload not completed!", text: "At most you can add up to 15 images.", icon: "warning", allowOutsideClick: false }).then(() => { fileInput.value.value = ""; });
-    return;
-  }
-  selectedFiles.value = [...selectedFiles.value, ...files];
-  selectedImages.value = [...selectedImages.value, ...newImages];
-  fileInput.value.value = "";
-};
+    const files = Array.from(event.target.files);
+    const newImages = [];
+    for (let file of files) {
+      if (file.size > 5242880) {
+        showSweetAlert({ title: "Image with excess size!", text: `You cannot upload the image ${file.name}, the maximum allowed is 5Mb`, icon: "warning", allowOutsideClick: false })
+          .then(() => { fileInput.value.value = ""; selectedImages.value = []; selectedFiles.value = []; });
+        return;
+      }
+      newImages.push({ name: file.name, size: file.size, url: URL.createObjectURL(file) });
+    }
+    if (newImages.length + selectedImages.value.length > 15) {
+      showSweetAlert({ title: "Upload not completed!", text: "At most you can add up to 15 images.", icon: "warning", allowOutsideClick: false }).then(() => { fileInput.value.value = ""; });
+      return;
+    }
+    selectedFiles.value = [...selectedFiles.value, ...files];
+    selectedImages.value = [...selectedImages.value, ...newImages];
+    fileInput.value.value = "";
+  };
 
-const removeImage = (index) => { selectedImages.value.splice(index, 1); selectedFiles.value.splice(index, 1); };
+  const removeImage = (index) => { selectedImages.value.splice(index, 1); selectedFiles.value.splice(index, 1); };
 
-const getProxyImageUrl = (imageUrl) => {
-  if (!imageUrl) return '';
-  return `https://safetybackendstaging.kizunadata.cloud/api/media/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-};
+  const getProxyImageUrl = (imageUrl) => {
+    if (!imageUrl) return '';
+    return `https://safetybackendstaging.kizunadata.cloud/api/media/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  };
 
-const downloadImage = (imageUrl) => { window.open(getProxyImageUrl(imageUrl), '_blank'); };
+  const downloadImage = (imageUrl) => { window.open(getProxyImageUrl(imageUrl), '_blank'); };
 
-// ── Utility methods ──────────────────────────────────────────────────────────
-const currentDate = ref(new Date().toLocaleDateString("en-US", { weekday: "short", year: "numeric", month: "short", day: "numeric" }));
+  // ── Utility methods ──────────────────────────────────────────────────────────
+  const currentDate = ref(new Date().toLocaleDateString("en-US", { weekday: "short", year: "numeric", month: "short", day: "numeric" }));
 
-const formatTime = (controlTimeValue) => {
-  if (!controlTimeValue) return "";
-  const hours = String(controlTimeValue.hours).padStart(2, "0");
-  const minutes = String(controlTimeValue.minutes).padStart(2, "0");
-  return `${hours}:${minutes}`;
-};
+  const formatTime = (controlTimeValue) => {
+    if (!controlTimeValue) return "";
+    const hours = String(controlTimeValue.hours).padStart(2, "0");
+    const minutes = String(controlTimeValue.minutes).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
 
-const setTimeFromDB = (timeString) => {
-  const [hours, minutes] = timeString.split(":").map(Number);
-  if (!isNaN(hours) && !isNaN(minutes)) return { hours, minutes };
-};
+  const setTimeFromDB = (timeString) => {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    if (!isNaN(hours) && !isNaN(minutes)) return { hours, minutes };
+  };
 
-const logout = () => {
-  localStorage.removeItem("USER-SAFETY-ACE");
-  localStorage.removeItem("ACE-INCIDENT-REPORT2");
-  router.push({ name: 'login' });
-};
+  const logout = () => {
+    localStorage.removeItem("USER-SAFETY-ACE");
+    localStorage.removeItem("ACE-INCIDENT-REPORT2");
+    router.push({ name: 'login' });
+  };
 
-const getDenverTimeAsUTCISOString = () => {
-  const now = DateTime.now().setZone('America/Denver');
-  return now.toFormat('yyyy-MM-dd');
-};
+  const getDenverTimeAsUTCISOString = () => {
+    const now = DateTime.now().setZone('America/Denver');
+    return now.toFormat('yyyy-MM-dd');
+  };
 
 </script>
 
@@ -541,25 +649,21 @@ const getDenverTimeAsUTCISOString = () => {
               {{ reactiveProps.item.value.employeeName }}
             </span>
           </div>
-          <button
-            @click.prevent="closeModal"
-            type="submit"
-            class="btn-close"
-            aria-label="Close"
-          ></button>
+          <button @click.prevent="closeModal" type="submit" class="btn-close" aria-label="Close"></button>
         </div>
-        
+
         <div class="card-body">
           <div class="basic-form">
             <form @submit="onSubmit" autocomplete="off">
 
-                         <div class="row">
+              <div class="row">
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Truck #</label>
                   <v-select :options="storeTruck.trucks" v-model="selectedTruck" placeholder="Choose your Truck"
                     :reduce="(truck) => truck.id" label="truckNumber" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTruck }" />
-                  <small v-if="errorsGeneralInformation.truck_er" class="text-danger">{{ errorsGeneralInformation.truck_er }}</small>
+                  <small v-if="errorsGeneralInformation.truck_er" class="text-danger">{{
+                    errorsGeneralInformation.truck_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -569,7 +673,8 @@ const getDenverTimeAsUTCISOString = () => {
                       <template #input-icon><img class="input-slot-image" src="../assets/icons/clock2.png" /></template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{ errorsGeneralInformation.time_er }}</small>
+                  <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{ errorsGeneralInformation.time_er
+                    }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -579,7 +684,8 @@ const getDenverTimeAsUTCISOString = () => {
                       <template #input-icon><img class="input-slot-image" src="../assets/icons/clock2.png" /></template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{ errorsGeneralInformation.timeDayStarted_er }}</small>
+                  <small v-if="errorsGeneralInformation.timeDayStarted_er" class="text-danger">{{
+                    errorsGeneralInformation.timeDayStarted_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -587,7 +693,8 @@ const getDenverTimeAsUTCISOString = () => {
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedDept }" />
-                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{ errorsGeneralInformation.dept_er }}</small>
+                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{ errorsGeneralInformation.dept_er
+                    }}</small>
                 </div>
               </div>
 
@@ -598,7 +705,8 @@ const getDenverTimeAsUTCISOString = () => {
                     placeholder="Choose Incident Type" :reduce="(incidentType) => incidentType.id"
                     label="typeOfIncidentName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedTypeOfIncident }" />
-                  <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{ errorsGeneralInformation.typeOfIncident_er }}</small>
+                  <small v-if="errorsGeneralInformation.typeOfIncident_er" class="text-danger">{{
+                    errorsGeneralInformation.typeOfIncident_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-4">
@@ -607,14 +715,18 @@ const getDenverTimeAsUTCISOString = () => {
                     placeholder="Choose your Supervisor" :reduce="(supervisor) => supervisor.id" label="supervisorName"
                     class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
-                  <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{ errorsGeneralInformation.supervisor_er }}</small>
+                  <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
+                    errorsGeneralInformation.supervisor_er
+                    }}</small>
                 </div>
 
                 <div class="mb-3 col-md-4">
                   <label class="form-label">Trainer</label>
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{ errorsGeneralInformation.trainee_er }}</small>
+                  <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{
+                    errorsGeneralInformation.trainee_er
+                    }}</small>
                 </div>
               </div>
 
@@ -624,22 +736,26 @@ const getDenverTimeAsUTCISOString = () => {
                   <div style="position: relative;">
                     <input type="text" v-model="location" @input="searchLocation" @blur="hideLocationDropdown"
                       class="form-control form-control-md border border-primary"
-                      :class="{ 'border-danger': formSubmittedGeneralInformation && !location }"
-                      style="color: black;" placeholder="Start typing an address..." autocomplete="off" />
-                    <div v-if="locationLoading" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                      :class="{ 'border-danger': formSubmittedGeneralInformation && !location }" style="color: black;"
+                      placeholder="Start typing an address..." autocomplete="off" />
+                    <div v-if="locationLoading"
+                      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
                       <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
                     </div>
                     <ul v-if="showLocationDropdown && locationSuggestions.length"
                       style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; background: white; border: 1px solid #ced4da; border-top: none; border-radius: 0 0 0.375rem 0.375rem; max-height: 220px; overflow-y: auto; list-style: none; margin: 0; padding: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                      <li v-for="item in locationSuggestions" :key="item.place_id" @mousedown.prevent="selectLocation(item)"
+                      <li v-for="item in locationSuggestions" :key="item.place_id"
+                        @mousedown.prevent="selectLocation(item)"
                         style="padding: 8px 12px; cursor: pointer; font-size: 0.875rem; color: #212529; border-bottom: 1px solid #f0f0f0;"
-                        @mouseover="$event.target.style.backgroundColor='#e9f0ff'"
-                        @mouseleave="$event.target.style.backgroundColor='white'">
+                        @mouseover="$event.target.style.backgroundColor = '#e9f0ff'"
+                        @mouseleave="$event.target.style.backgroundColor = 'white'">
                         📍 {{ item.display_name }}
                       </li>
                     </ul>
                   </div>
-                  <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{ errorsGeneralInformation.location_er }}</small>
+                  <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{
+                    errorsGeneralInformation.location_er
+                    }}</small>
                 </div>
               </div>
 
@@ -648,16 +764,20 @@ const getDenverTimeAsUTCISOString = () => {
                   <label class="form-label">Time Worked (Years)</label>
                   <input type="number" step="any" v-model="timeWorkedYears"
                     class="form-control form-control-md border border-primary"
-                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedYears }" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.timeWorkedYears_er" class="text-danger">{{ errorsGeneralInformation.timeWorkedYears_er }}</small>
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedYears }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.timeWorkedYears_er" class="text-danger">{{
+                    errorsGeneralInformation.timeWorkedYears_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
                   <label class="form-label">Time Worked (Months)</label>
                   <input type="number" step="any" v-model="timeWorkedMonths"
                     class="form-control form-control-md border border-primary"
-                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedMonths }" style="color: black;" />
-                  <small v-if="errorsGeneralInformation.timeWorkedMonths_er" class="text-danger">{{ errorsGeneralInformation.timeWorkedMonths_er }}</small>
+                    :class="{ 'border-danger': formSubmittedGeneralInformation && !timeWorkedMonths }"
+                    style="color: black;" />
+                  <small v-if="errorsGeneralInformation.timeWorkedMonths_er" class="text-danger">{{
+                    errorsGeneralInformation.timeWorkedMonths_er }}</small>
                 </div>
 
                 <!-- <div class="mb-3 col-md-3 d-flex align-items-end">
@@ -679,18 +799,13 @@ const getDenverTimeAsUTCISOString = () => {
 
               </div>
 
-            
+
 
               <button type="submit" class="btn btn-primary">
                 Update General Information
               </button>
 
-              <button
-                @click.prevent="closeModal"
-                style="margin-left: 20px"
-                type="submit"
-                class="btn btn-danger"
-              >
+              <button @click.prevent="closeModal" style="margin-left: 20px" type="submit" class="btn btn-danger">
                 Close
               </button>
             </form>
@@ -710,20 +825,20 @@ const getDenverTimeAsUTCISOString = () => {
           <div class="basic-form">
             <form autocomplete="off">
               <div class="row">
-                <div
-                  class="accordion accordion-primary-solid" id="accordion-two">     
+                <div class="accordion accordion-primary-solid" id="accordion-two">
 
 
-                   <hr>
+                  <hr>
 
-                                    <Spinner v-if="isLoadingDuringTheIncident" />
+                  <Spinner v-if="isLoadingDuringTheIncident" />
 
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <!--  DURING THE INCIDENT                                      -->
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <div v-if="isDuringTheIncidentVisible" class="accordion-item">
                     <h2 class="accordion-header">
-                      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#bordered_collapseOne">
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#bordered_collapseOne">
                         During The Incident
                       </button>
                     </h2>
@@ -733,19 +848,25 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
                           <div class="mb-3 col-md-5">
-                            <label class="form-label">Were you using an electronic device when the incident occurred?</label>
+                            <label class="form-label">Were you using an electronic device when the incident
+                              occurred?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="checkNativeSwitch" v-model="usingElectronicDevice" />
-                              <label class="form-check-label fw-semibold" for="checkNativeSwitch" :style="{ color: usingElectronicDevice ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="checkNativeSwitch"
+                                v-model="usingElectronicDevice" />
+                              <label class="form-check-label fw-semibold" for="checkNativeSwitch"
+                                :style="{ color: usingElectronicDevice ? '#198754' : '#dc3545' }">
                                 {{ usingElectronicDevice ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-7">
                             <label class="form-label">Task being performed when incident occurred</label>
-                            <input type="text" v-model="taskPerfomed" class="form-control form-control-md border border-primary"
-                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !taskPerfomed }" style="color: black;" />
-                            <small v-if="errorsDuringTheIncident.taskPerfomed_er" class="text-danger">{{ errorsDuringTheIncident.taskPerfomed_er }}</small>
+                            <input type="text" v-model="taskPerfomed"
+                              class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !taskPerfomed }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.taskPerfomed_er" class="text-danger">{{
+                              errorsDuringTheIncident.taskPerfomed_er }}</small>
                           </div>
                         </div>
 
@@ -753,19 +874,23 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-5">
                             <label class="form-label">Was Safety Dept Notified?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchSafetyDeptNotified" v-model="wasSafetyDeptNotified" />
-                              <label class="form-check-label fw-semibold" for="switchSafetyDeptNotified" :style="{ color: wasSafetyDeptNotified ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchSafetyDeptNotified"
+                                v-model="wasSafetyDeptNotified" />
+                              <label class="form-check-label fw-semibold" for="switchSafetyDeptNotified"
+                                :style="{ color: wasSafetyDeptNotified ? '#198754' : '#dc3545' }">
                                 {{ wasSafetyDeptNotified ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-7">
                             <label class="form-label">Safety Person Notified</label>
-                            <v-select :options="storeSafetyPerson.safetyPersonsNotified" v-model="SelectedSafetyPersonNotified"
-                              placeholder="Choose Safety Person" :reduce="(safetyPerson) => safetyPerson.id" label="safetyPersonNotifiedName"
+                            <v-select :options="storeSafetyPerson.safetyPersonsNotified"
+                              v-model="SelectedSafetyPersonNotified" placeholder="Choose Safety Person"
+                              :reduce="(safetyPerson) => safetyPerson.id" label="safetyPersonNotifiedName"
                               class="form-control p-0" :disabled="!wasSafetyDeptNotified"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && wasSafetyDeptNotified && !SelectedSafetyPersonNotified }" />
-                            <small v-if="errorsDuringTheIncident.SelectedSafetyPersonNotified_er" class="text-danger">{{ errorsDuringTheIncident.SelectedSafetyPersonNotified_er }}</small>
+                            <small v-if="errorsDuringTheIncident.SelectedSafetyPersonNotified_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedSafetyPersonNotified_er }}</small>
                           </div>
                         </div>
 
@@ -773,19 +898,24 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-5">
                             <label class="form-label">Did you take pictures of the damages?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchDidYouTakePictures" v-model="didYouTakePictures" />
-                              <label class="form-check-label fw-semibold" for="switchDidYouTakePictures" :style="{ color: didYouTakePictures ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchDidYouTakePictures"
+                                v-model="didYouTakePictures" />
+                              <label class="form-check-label fw-semibold" for="switchDidYouTakePictures"
+                                :style="{ color: didYouTakePictures ? '#198754' : '#dc3545' }">
                                 {{ didYouTakePictures ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-7">
                             <label class="form-label">Who did you send the pictures to?</label>
-                            <v-select :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo" v-model="SelectedWhoDidYouSendThePicturesTo"
-                              placeholder="Choose a person" :reduce="(person) => person.id" label="whoDidYouSendThePictureToName"
+                            <v-select :options="storeWhoDidYouSendThePicturesTo.whoDidYouSendThePicturesTo"
+                              v-model="SelectedWhoDidYouSendThePicturesTo" placeholder="Choose a person"
+                              :reduce="(person) => person.id" label="whoDidYouSendThePictureToName"
                               class="form-control p-0" :disabled="!didYouTakePictures"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && didYouTakePictures && !SelectedWhoDidYouSendThePicturesTo }" />
-                            <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er" class="text-danger">{{ errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er }}</small>
+                            <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er"
+                              class="text-danger">{{ errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er
+                              }}</small>
                           </div>
                         </div>
 
@@ -793,8 +923,10 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-5">
                             <label class="form-label">Was this incident in an intersection?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchWasThisIncidentInAnIntersection" v-model="wasThisIncidentInAnIntersection" />
-                              <label class="form-check-label fw-semibold" for="switchWasThisIncidentInAnIntersection" :style="{ color: wasThisIncidentInAnIntersection ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchWasThisIncidentInAnIntersection"
+                                v-model="wasThisIncidentInAnIntersection" />
+                              <label class="form-check-label fw-semibold" for="switchWasThisIncidentInAnIntersection"
+                                :style="{ color: wasThisIncidentInAnIntersection ? '#198754' : '#dc3545' }">
                                 {{ wasThisIncidentInAnIntersection ? 'YES' : 'NO' }}
                               </label>
                             </div>
@@ -803,56 +935,72 @@ const getDenverTimeAsUTCISOString = () => {
                             <label class="form-label">How fast were you traveling? (MPH)</label>
                             <input type="number" step="any" v-model="howFastWereYouGoing"
                               class="form-control form-control-md border border-primary"
-                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }" style="color: black;" />
-                            <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{ errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !howFastWereYouGoing }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.howFastWereYouGoing_er" class="text-danger">{{
+                              errorsDuringTheIncident.howFastWereYouGoing_er }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Weather</label>
-                            <v-select :options="storeWeatherCondition.weatherConditions" v-model="SelectedWeatherCondition"
-                              placeholder="Choose weather" :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
+                            <v-select :options="storeWeatherCondition.weatherConditions"
+                              v-model="SelectedWeatherCondition" placeholder="Choose weather"
+                              :reduce="(weather) => weather.id" label="weatherName" class="form-control p-0"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedWeatherCondition }" />
-                            <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{ errorsDuringTheIncident.SelectedWeatherCondition_er }}</small>
+                            <small v-if="errorsDuringTheIncident.SelectedWeatherCondition_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedWeatherCondition_er }}</small>
                           </div>
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Road Conditions</label>
                             <v-select :options="storeRoadCondition.roadConditions" v-model="SelectedRoadCondition"
-                              placeholder="Choose road" :reduce="(roadCondition) => roadCondition.id" label="roadConditionName" class="form-control p-0"
+                              placeholder="Choose road" :reduce="(roadCondition) => roadCondition.id"
+                              label="roadConditionName" class="form-control p-0"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedRoadCondition }" />
-                            <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{ errorsDuringTheIncident.SelectedRoadCondition_er }}</small>
+                            <small v-if="errorsDuringTheIncident.SelectedRoadCondition_er" class="text-danger">{{
+                              errorsDuringTheIncident.SelectedRoadCondition_er }}</small>
                           </div>
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Direction you were traveling</label>
                             <v-select :options="storeDirection.directions" v-model="SelectedDirectionYouWereTraveling"
-                              placeholder="Choose a direction" :reduce="(direction) => direction.id" label="directionName" class="form-control p-0"
+                              placeholder="Choose a direction" :reduce="(direction) => direction.id"
+                              label="directionName" class="form-control p-0"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
-                            <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er" class="text-danger">{{ errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
+                            <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er"
+                              class="text-danger">{{ errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er
+                              }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="mb-3 col-md-8">
                             <label class="form-label">Witness</label>
-                            <input type="text" v-model="witness" class="form-control form-control-md border border-primary"
-                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }" style="color: black;" />
-                            <small v-if="errorsDuringTheIncident.witness_er" class="text-danger">{{ errorsDuringTheIncident.witness_er }}</small>
+                            <input type="text" v-model="witness"
+                              class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witness }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.witness_er" class="text-danger">{{
+                              errorsDuringTheIncident.witness_er }}</small>
                           </div>
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Witness Phone #</label>
-                            <input type="text" :value="witnessPhone" @input="formatPhone" placeholder="(XXX) XXX-XXXX" maxlength="14"
-                              class="form-control form-control-md border border-primary"
-                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witnessPhone }" style="color: black;" />
-                            <small v-if="errorsDuringTheIncident.witnessPhone_er" class="text-danger">{{ errorsDuringTheIncident.witnessPhone_er }}</small>
+                            <input type="text" :value="witnessPhone" @input="formatPhone" placeholder="(XXX) XXX-XXXX"
+                              maxlength="14" class="form-control form-control-md border border-primary"
+                              :class="{ 'border-danger': formSubmittedDuringTheIncident && !witnessPhone }"
+                              style="color: black;" />
+                            <small v-if="errorsDuringTheIncident.witnessPhone_er" class="text-danger">{{
+                              errorsDuringTheIncident.witnessPhone_er }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="d-flex justify-content-center">
-                            <button type="button" @click="HandleDuringTheIncident" :disabled="isLoadingDuringTheIncident" class="btn btn-primary btn-md">
+                            <button type="button" @click="HandleDuringTheIncident"
+                              :disabled="isLoadingDuringTheIncident" class="btn btn-primary btn-md">
                               {{ isEditingDuringTheIncident ? "Update" : "Save" }}
-                              <span class="btn-icon-end"><i :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i></span>
+                              <span class="btn-icon-end"><i
+                                  :class="isEditingDuringTheIncident ? 'fa fa-edit' : 'fa fa-save'"></i></span>
                             </button>
                           </div>
                         </div>
@@ -867,7 +1015,8 @@ const getDenverTimeAsUTCISOString = () => {
                   <Spinner v-if="isLoadingIncidentDetail" />
                   <div v-if="isIncidentDetailVisible" class="accordion-item">
                     <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bordered_collapseTwo">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#bordered_collapseTwo">
                         Incident Detail
                       </button>
                     </h2>
@@ -876,17 +1025,23 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
-                            <label class="form-label">Incident Description: How did the incident occur? What happened?</label>
-                            <textarea v-model="incidentDescription" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
-                            <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{ errorsIncidentDetail.incidentDescription_er }}</small>
+                            <label class="form-label">Incident Description: How did the incident occur? What
+                              happened?</label>
+                            <textarea v-model="incidentDescription" class="form-control border border-primary"
+                              style="color: black;" rows="3"></textarea>
+                            <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{
+                              errorsIncidentDetail.incidentDescription_er }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
-                            <label class="form-label">What Action, Event or Condition contributed most to this incident?</label>
-                            <textarea v-model="actionEventConditions" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
-                            <small v-if="errorsIncidentDetail.actionEventConditions_er" class="text-danger">{{ errorsIncidentDetail.actionEventConditions_er }}</small>
+                            <label class="form-label">What Action, Event or Condition contributed most to this
+                              incident?</label>
+                            <textarea v-model="actionEventConditions" class="form-control border border-primary"
+                              style="color: black;" rows="3"></textarea>
+                            <small v-if="errorsIncidentDetail.actionEventConditions_er" class="text-danger">{{
+                              errorsIncidentDetail.actionEventConditions_er }}</small>
                           </div>
                         </div>
 
@@ -894,24 +1049,30 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Was anyone hurt?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchWasAnyoneHurt" v-model="wasAnyOneHurt" />
-                              <label class="form-check-label fw-semibold" for="switchWasAnyoneHurt" :style="{ color: wasAnyOneHurt ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchWasAnyoneHurt"
+                                v-model="wasAnyOneHurt" />
+                              <label class="form-check-label fw-semibold" for="switchWasAnyoneHurt"
+                                :style="{ color: wasAnyOneHurt ? '#198754' : '#dc3545' }">
                                 {{ wasAnyOneHurt ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-8">
                             <label class="form-label">If YES please describe</label>
-                            <textarea v-model="describeAnyInjuries" :disabled="!wasAnyOneHurt" class="form-control border border-primary"
-                              :class="{ 'border-danger': errorsIncidentDetail.describeAnyInjuries_er }" style="color: black;" rows="3"></textarea>
-                            <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{ errorsIncidentDetail.describeAnyInjuries_er }}</small>
+                            <textarea v-model="describeAnyInjuries" :disabled="!wasAnyOneHurt"
+                              class="form-control border border-primary"
+                              :class="{ 'border-danger': errorsIncidentDetail.describeAnyInjuries_er }"
+                              style="color: black;" rows="3"></textarea>
+                            <small v-if="errorsIncidentDetail.describeAnyInjuries_er" class="text-danger">{{
+                              errorsIncidentDetail.describeAnyInjuries_er }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
                             <label class="form-label">Damage to Ace Truck</label>
-                            <textarea v-model="damageToAceTruck" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                            <textarea v-model="damageToAceTruck" class="form-control border border-primary"
+                              style="color: black;" rows="3"></textarea>
                           </div>
                         </div>
 
@@ -919,15 +1080,18 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Was any vehicles towed?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchWereAnyVehiclesTowed" v-model="wereAnyVehiclesTowed" />
-                              <label class="form-check-label fw-semibold" for="switchWereAnyVehiclesTowed" :style="{ color: wereAnyVehiclesTowed ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchWereAnyVehiclesTowed"
+                                v-model="wereAnyVehiclesTowed" />
+                              <label class="form-check-label fw-semibold" for="switchWereAnyVehiclesTowed"
+                                :style="{ color: wereAnyVehiclesTowed ? '#198754' : '#dc3545' }">
                                 {{ wereAnyVehiclesTowed ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-8">
                             <label class="form-label">What damage was done</label>
-                            <textarea v-model="whatDamageWasDone" class="form-control border border-primary" style="color: black;" rows="3"></textarea>
+                            <textarea v-model="whatDamageWasDone" class="form-control border border-primary"
+                              style="color: black;" rows="3"></textarea>
                           </div>
                         </div>
 
@@ -935,27 +1099,34 @@ const getDenverTimeAsUTCISOString = () => {
                           <div class="mb-3 col-md-4">
                             <label class="form-label">Have you had any incidents in the past year?</label>
                             <div class="form-check form-switch">
-                              <input class="form-check-input" type="checkbox" id="switchIncidentInThePastYear" v-model="incidentInThePastYear" />
-                              <label class="form-check-label fw-semibold" for="switchIncidentInThePastYear" :style="{ color: incidentInThePastYear ? '#198754' : '#dc3545' }">
+                              <input class="form-check-input" type="checkbox" id="switchIncidentInThePastYear"
+                                v-model="incidentInThePastYear" />
+                              <label class="form-check-label fw-semibold" for="switchIncidentInThePastYear"
+                                :style="{ color: incidentInThePastYear ? '#198754' : '#dc3545' }">
                                 {{ incidentInThePastYear ? 'YES' : 'NO' }}
                               </label>
                             </div>
                           </div>
                           <div class="mb-3 col-md-8">
                             <label class="form-label">If YES, please list dates of incidents</label>
-                            <textarea v-model="listDatesOfIncidents" :disabled="!incidentInThePastYear" class="form-control border border-primary"
-                              :class="{ 'border-danger': errorsIncidentDetail.listDatesOfIncidents_er }" style="color: black;" rows="3"></textarea>
-                            <small v-if="errorsIncidentDetail.listDatesOfIncidents_er" class="text-danger">{{ errorsIncidentDetail.listDatesOfIncidents_er }}</small>
+                            <textarea v-model="listDatesOfIncidents" :disabled="!incidentInThePastYear"
+                              class="form-control border border-primary"
+                              :class="{ 'border-danger': errorsIncidentDetail.listDatesOfIncidents_er }"
+                              style="color: black;" rows="3"></textarea>
+                            <small v-if="errorsIncidentDetail.listDatesOfIncidents_er" class="text-danger">{{
+                              errorsIncidentDetail.listDatesOfIncidents_er }}</small>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="row d-flex align-items-center">
                             <div class="mb-3 col-md-9">
-                              <input v-show="false" type="file" ref="fileInput" class="form-control form-control-sm border border-primary"
-                                multiple accept="image/*" capture="environment" @change="handleFileChange"
+                              <input v-show="false" type="file" ref="fileInput"
+                                class="form-control form-control-sm border border-primary" multiple accept="image/*"
+                                capture="environment" @change="handleFileChange"
                                 style="height: 38px; padding: 0.375rem 0.75rem;" />
-                              <button @click.prevent="fileInput.click()" style="height: 30px;" type="button" class="btn btn-info btn-rounded btn-sm">
+                              <button @click.prevent="fileInput.click()" style="height: 30px;" type="button"
+                                class="btn btn-info btn-rounded btn-sm">
                                 Add Photos<span class="btn-icon-end"><i class="fa fa-camera"></i></span>
                               </button>
 
@@ -963,7 +1134,8 @@ const getDenverTimeAsUTCISOString = () => {
                                 <div v-for="(image, index) in selectedImages" :key="index" class="col-md-3">
                                   <img :src="image.url" alt="Preview" style="max-width: 100px; margin-bottom: 10px;" />
                                   <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
-                                  <button @click.prevent="removeImage(index)" class="btn btn-danger btn-xs">Remove</button>
+                                  <button @click.prevent="removeImage(index)"
+                                    class="btn btn-danger btn-xs">Remove</button>
                                 </div>
                               </div>
 
@@ -971,22 +1143,26 @@ const getDenverTimeAsUTCISOString = () => {
                                 <h6 style="color: #000;">Existing Images:</h6>
                                 <div class="col-md-12">
                                   <div class="d-flex flex-wrap">
-                                    <img v-for="(image, index) in existingIncidentDetailImages" :key="'existing-' + index"
-                                      :src="getProxyImageUrl(image)" style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
+                                    <img v-for="(image, index) in existingIncidentDetailImages"
+                                      :key="'existing-' + index" :src="getProxyImageUrl(image)"
+                                      style="max-width: 100px; margin: 10px; cursor: pointer; border: 2px solid #007bff;"
                                       @click="downloadImage(image)" alt="Existing Incident Detail Image" />
                                   </div>
                                 </div>
                               </div>
-                              <small v-if="errorsIncidentDetail.imagesIncidentDetail_er" class="text-danger">{{ errorsIncidentDetail.imagesIncidentDetail_er }}</small>
+                              <small v-if="errorsIncidentDetail.imagesIncidentDetail_er" class="text-danger">{{
+                                errorsIncidentDetail.imagesIncidentDetail_er }}</small>
                             </div>
                           </div>
                         </div>
 
                         <div class="row">
                           <div class="d-flex justify-content-center">
-                            <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail" class="btn btn-primary btn-md">
+                            <button type="button" @click="HandleIncidentDetail" :disabled="isLoadingIncidentDetail"
+                              class="btn btn-primary btn-md">
                               {{ isEditingIncidentDetail ? "Update" : "Save" }}
-                              <span class="btn-icon-end"><i :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i></span>
+                              <span class="btn-icon-end"><i
+                                  :class="isEditingIncidentDetail ? 'fa fa-edit' : 'fa fa-save'"></i></span>
                             </button>
                           </div>
                         </div>
@@ -1002,11 +1178,13 @@ const getDenverTimeAsUTCISOString = () => {
 
                   <div v-if="isSupervisorNoteVisible" class="accordion-item">
                     <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bordered_collapseThree">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#bordered_collapseThree">
                         Employee Signature
                       </button>
                     </h2>
-                    <div id="bordered_collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordion-two">
+                    <div id="bordered_collapseThree" class="accordion-collapse collapse"
+                      data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
                         <div class="mb-4">
@@ -1016,16 +1194,22 @@ const getDenverTimeAsUTCISOString = () => {
                           </p>
                           <ul class="list-unstyled ms-2">
                             <li class="mb-1">
-                              <i :class="isEditingGeneralInformation ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'" class="me-2"></i>
-                              <span :class="isEditingGeneralInformation ? 'text-success' : 'text-danger'">General Information</span>
+                              <i :class="isEditingGeneralInformation ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
+                                class="me-2"></i>
+                              <span :class="isEditingGeneralInformation ? 'text-success' : 'text-danger'">General
+                                Information</span>
                             </li>
                             <li class="mb-1">
-                              <i :class="duringTheIncidentList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'" class="me-2"></i>
-                              <span :class="duringTheIncidentList.length ? 'text-success' : 'text-danger'">During The Incident</span>
+                              <i :class="duringTheIncidentList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
+                                class="me-2"></i>
+                              <span :class="duringTheIncidentList.length ? 'text-success' : 'text-danger'">During The
+                                Incident</span>
                             </li>
                             <li class="mb-1">
-                              <i :class="incidentDetailList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'" class="me-2"></i>
-                              <span :class="incidentDetailList.length ? 'text-success' : 'text-danger'">Incident Detail</span>
+                              <i :class="incidentDetailList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
+                                class="me-2"></i>
+                              <span :class="incidentDetailList.length ? 'text-success' : 'text-danger'">Incident
+                                Detail</span>
                             </li>
                           </ul>
                         </div>
@@ -1038,11 +1222,13 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row justify-content-center">
                           <div class="mb-2 col-md-auto text-center">
-                            <div :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']" style="display: inline-block; line-height: 0;">
+                            <div :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']"
+                              style="display: inline-block; line-height: 0;">
                               <Vue3Signature ref="signature" :sigOption="options" :w="'650px'" :h="'200px'" />
                             </div>
                             <div v-if="signatureError" class="mt-1">
-                              <small class="text-danger"><i class="fa fa-exclamation-circle me-1"></i>{{ signatureError }}</small>
+                              <small class="text-danger"><i class="fa fa-exclamation-circle me-1"></i>{{ signatureError
+                                }}</small>
                             </div>
                           </div>
                         </div>
@@ -1060,12 +1246,14 @@ const getDenverTimeAsUTCISOString = () => {
 
                         <div class="row">
                           <div class="d-flex justify-content-center mt-3">
-                            <button type="button" class="btn btn-danger btn-md" :disabled="isSubmittingReport" @click="SubmitIncidentReport">
+                            <button type="button" class="btn btn-danger btn-md" :disabled="isSubmittingReport"
+                              @click="SubmitIncidentReport">
                               <span v-if="isSubmittingReport">
                                 <span class="spinner-border spinner-border-sm me-1" role="status"></span> Submitting...
                               </span>
                               <span v-else>
-                                Submit Incident Report <span class="btn-icon-end"><i class="fa fa-paper-plane"></i></span>
+                                Submit Incident Report <span class="btn-icon-end"><i
+                                    class="fa fa-paper-plane"></i></span>
                               </span>
                             </button>
                           </div>
@@ -1074,7 +1262,7 @@ const getDenverTimeAsUTCISOString = () => {
                       </div>
                     </div>
                   </div>
-          
+
 
                 </div>
 
