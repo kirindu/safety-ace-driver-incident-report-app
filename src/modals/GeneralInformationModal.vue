@@ -282,6 +282,8 @@ const CargamosDuringTheIncident = async () => {
       isDuringTheIncidentVisible.value = true;
       isEditingDuringTheIncident.value = true;
 
+      selectedDuringTheIncidentId.value = response.data.data[0].id;
+
       usingElectronicDevice.value = response.data.data[0].usingElectronicDevice || false;
       taskPerfomed.value = response.data.data[0].taskPerfomed || "";
       wasSafetyDeptNotified.value = response.data.data[0].wasSafetyDeptNotified || false;
@@ -503,7 +505,7 @@ const HandleDuringTheIncident = async (event) => {
 
   try {
     // Editar o crear During The Incident según corresponda
-    if (isEditingDuringTheIncident) {
+    if (isEditingDuringTheIncident.value) {
 
       const response = await DuringTheIncidentAPI.edit(selectedDuringTheIncidentId.value, duringTheIncidentData);
       if (response.data.ok) {
