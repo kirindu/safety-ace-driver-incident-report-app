@@ -11,7 +11,7 @@ export default {
   },
   
   async add(values) {
-
+``
 
     const data = await api.post('/duringtheincidents/', values);
     return data;

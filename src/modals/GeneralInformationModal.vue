@@ -193,7 +193,7 @@ const existingIncidentDetailImages = ref([]);
 const fileInput = ref(null);
 const incidentDetailList = ref([]);
 const incidentDescription = ref("");
-const actionEventConditions = ref("");
+const actionEventCondition = ref("");
 const wereAnyVehiclesTowed = ref(false);
 const wasAnyOneHurt = ref(false);
 const describeAnyInjuries = ref("");
@@ -211,22 +211,32 @@ watch(wasAnyOneHurt, (newValue) => { if (!newValue) describeAnyInjuries.value = 
 watch(incidentInThePastYear, (newValue) => { if (!newValue) listDatesOfIncidents.value = ""; });
 
 const errorsIncidentDetail = ref({
-  incidentDescription_er: "", actionEventConditions_er: "", wereAnyVehiclesTowed_er: "",
+  incidentDescription_er: "", actionEventCondition_er: "", wereAnyVehiclesTowed_er: "",
   wasAnyOneHurt_er: "", describeAnyInjuries_er: "", damageToAceTruck_er: "",
   whatDamageWasDone_er: "", incidentInThePastYear_er: "", listDatesOfIncidents_er: "",
   anyVehicleTowed_er: "", imagesIncidentDetail_er: "",
 });
 
-// Supervisor Note
-const supervisorNoteList = ref([]);
-const selectedSupervisorNoteId = ref(null);
+// ── SUPERVISOR NOTE ──────────────────────────────────────────────────────────
 const supervisorNote = ref("");
+const supervisorNoteError = ref("");
+const supervisorSignatureError = ref("");
+const selectedSupervisorNoteId = ref(null);
 const isEditingSupervisorNote = ref(false);
 const isLoadingSupervisorNote = ref(false);
+const isSupervisorNoteVisible = ref(false);
+
+
+// Supervisor Note
+const supervisorNoteList = ref([]);
+// const selectedSupervisorNoteId = ref(null);
+// const supervisorNote = ref("");
+// const isEditingSupervisorNote = ref(false);
+// const isLoadingSupervisorNote = ref(false);
 const formSubmittedSupervisorNote = ref(false);
 const errorsSupervisorNote = ref({ supervisorNote_er: "" });
 
-const isSupervisorNoteVisible = ref(false);
+// const isSupervisorNoteVisible = ref(false);
 
 
 // Una vez que se complete el mounted pintamos los campos con su informacion
@@ -237,8 +247,8 @@ onMounted(async () => {
   await CargamosGeneralInformation(); // Invoke the function  
   await CargamosDuringTheIncident();
   await CargamosIncidentDetail();
-  // await CargamosSupervisorNote();
-  // await CargamosEmployeeSignature();
+  await CargamosSupervisorNote();
+
 
 });
 
@@ -313,50 +323,72 @@ const CargamosDuringTheIncident = async () => {
 };
 
 const CargamosIncidentDetail = async () => {
-  //  if (props.item && props.item.id) {
-  //   isLoadingIncidentDetail.value = true;
-  //   try {
-  //     await storeIncidentDetail.fetchIncidentDetailById(props.item.id);
-  //     const info = storeIncidentDetail.incidentDetail;
-  //     if (info) {
-  //       incidentDescription.value = info.incident_description || "";
-  //       actionEventConditions.value = info.action_event_conditions || "";
-  //       wereAnyVehiclesTowed.value = info.were_any_vehicles_towed || false;
-  //       wasAnyOneHurt.value = info.was_any_one_hurt || false;
-  //       describeAnyInjuries.value = info.describe_any_injuries || "";
-  //       damageToAceTruck.value = info.damage_to_ace_truck || "";
-  //       whatDamageWasDone.value = info.what_damage_was_done || "";
-  //       incidentInThePastYear.value = info.incident_in_the_past_year || false;
-  //       listDatesOfIncidents.value = info.list_dates_of_incidents || "";
-  //       existingIncidentDetailImages.value = info.images ? JSON.parse(info.images) : [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Error loading Incident Detail:", error);
-  //     showSweetAlert("Error", "Failed to load Incident Detail.", "error");
-  //   } finally {
-  //     isLoadingIncidentDetail.value = false;
-  //   }
-  // }
+
+  isLoadingIncidentDetail.value = true;
+  const response = await GeneralInformationAPI.getIncidentDetail(reactiveProps.item.value.id);
+  incidentDetailList.value = response.data.data || [];
+
+  try {
+    if (response.data.data && response.data.data.length > 0) {
+      isIncidentDetailVisible.value = true;
+      isEditingIncidentDetail.value = true;
+
+
+      const incidentDetail = response.data.data[0];
+      selectedIncidentDetailId.value = incidentDetail.id;
+
+      incidentDescription.value = incidentDetail.incidentDescription || "";
+      actionEventCondition.value = incidentDetail.actionEventCondition || "";
+      wereAnyVehiclesTowed.value = incidentDetail.wereAnyVehiclesTowed || false;
+      wasAnyOneHurt.value = incidentDetail.wasAnyOneHurt || false;
+      describeAnyInjuries.value = incidentDetail.describeAnyInjuries || "";
+      damageToAceTruck.value = incidentDetail.damageToAceTruck || "";
+      whatDamageWasDone.value = incidentDetail.whatDamageWasDone || "";
+      incidentInThePastYear.value = incidentDetail.incidentInThePastYear || false;
+      listDatesOfIncidents.value = incidentDetail.listDatesOfIncidents || "";
+
+      existingIncidentDetailImages.value = incidentDetail.images || [];
+
+      isLoadingIncidentDetail.value = false;
+    }
+    else {
+      isIncidentDetailVisible.value = false;
+    }
+  } catch (error) {
+    console.error("Error loading Incident Detail:", error);
+    isLoadingIncidentDetail.value = false;
+    isIncidentDetailVisible.value = false;
+
+  }
+
 };
 
-// const CargamosSupervisorNote = async () => {
-//   if (props.item && props.item.id) {
-//     isLoadingSupervisorNote.value = true;
-//     try {
-//       await storeSupervisorNote.fetchSupervisorNoteById(props.item.id);
-//       const info = storeSupervisorNote.supervisorNote;
-//       if (info) {
-//         supervisorNote.value = info.supervisor_note || "";
-//       }
-//     } catch (error) {
-//       console.error("Error loading Supervisor Note:", error);
-//       showSweetAlert("Error", "Failed to load Supervisor Note.", "error");
-//     } finally {
-//       isLoadingSupervisorNote.value = false;
-//     }
-//   }
-// };
+const CargamosSupervisorNote = async () => {
+  isLoadingSupervisorNote.value = true;
+  try {
+    const response = await GeneralInformationAPI.getSupervisorNote(reactiveProps.item.value.id);
+    const data = response.data.data || [];
 
+    if (data.length > 0) {
+      isSupervisorNoteVisible.value = true;
+      isEditingSupervisorNote.value = true;
+      selectedSupervisorNoteId.value = data[0].id;
+      supervisorNote.value = data[0].supervisorNote || "";
+      // Restaurar firma si existe
+      if (data[0].supervisorSignature && signature.value) {
+        await nextTick();
+        signature.value.fromDataURL(data[0].supervisorSignature);
+      }
+    } else {
+      isSupervisorNoteVisible.value = true;
+      isEditingSupervisorNote.value = false;
+    }
+  } catch (error) {
+    console.error("Error loading Supervisor Note:", error);
+  } finally {
+    isLoadingSupervisorNote.value = false;
+  }
+};
 
 // ── General Information submit ──────────────────────────────────────────────
 const onSubmit = async (event) => {
@@ -576,6 +608,170 @@ const HandleDuringTheIncident = async (event) => {
 
 }
 
+const HandleIncidentDetail = async (event) => {
+  event.preventDefault();
+
+  // Limpiar errores
+  Object.keys(errorsIncidentDetail.value).forEach(k => errorsIncidentDetail.value[k] = "");
+  let hasError = false;
+  if (hasError) return;
+
+  const incidentDetailData = {
+  incidentDescription: incidentDescription.value,
+  actionEventCondition: actionEventCondition.value,
+  wereAnyVehiclesTowed: String(wereAnyVehiclesTowed.value),   // ✅ "true"/"false"
+  wasAnyOneHurt: String(wasAnyOneHurt.value),                  // ✅ "true"/"false"
+  describeAnyInjuries: describeAnyInjuries.value,
+  damageToAceTruck: damageToAceTruck.value,
+  whatDamageWasDone: whatDamageWasDone.value,
+  incidentInThePastYear: String(incidentInThePastYear.value),  // ✅ "true"/"false"
+  listDatesOfIncidents: listDatesOfIncidents.value,
+  images: selectedFiles.value,   // ✅ array de File objects
+  generalInformation_ref_id: reactiveProps.item.value.id,
+  };
+
+  try {
+    // Editar o crear Incident Detail según corresponda
+    if (isEditingIncidentDetail.value) {
+
+      const response = await IncidentDetailAPI.edit(selectedIncidentDetailId.value, incidentDetailData, selectedFiles.value);
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "Incident Detail updated successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingIncidentDetail.value = false; // Hide loading spinner
+          CargamosIncidentDetail(); // Refresh the data to reflect changes
+
+        });
+      } else {
+        showSweetAlert({
+          title: "Error updating Incident Detail!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingIncidentDetail.value = false; // Hide loading spinner
+        });
+      }
+
+    } else {
+
+      const response = await IncidentDetailAPI.add(incidentDetailData, selectedFiles.value);
+      if (response.data.ok) {
+        showSweetAlert({
+          title: "Incident Detail added successfully!",
+          icon: "success",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingIncidentDetail.value = false; // Hide loading spinner
+          CargamosIncidentDetail(); // Refresh the data to reflect changes
+
+        });
+      } else {
+        showSweetAlert({
+          title: "Error adding Incident Detail!",
+          icon: "warning",
+          showDenyButton: false,
+          showCancelButton: false,
+          confirmButtonText: "Ok",
+          allowOutsideClick: false,
+        }).then(() => {
+          isLoadingIncidentDetail.value = false; // Hide loading spinner
+        });
+
+      }
+
+    }
+}
+
+catch (error) {
+    console.error("Error submitting Incident Detail:", error);
+    showSweetAlert("Error", "Failed to submit Incident Detail.", "error");
+  }
+
+}
+
+const HandleSupervisorNote = async (event) => {
+  event.preventDefault();
+
+  // Reset errores
+  supervisorNoteError.value = "";
+  supervisorSignatureError.value = "";
+
+  // Validaciones
+  let hasError = false;
+  if (!supervisorNote.value || supervisorNote.value.trim() === "") {
+    supervisorNoteError.value = "Supervisor note is required.";
+    hasError = true;
+  }
+  if (signature.value.isEmpty()) {
+    supervisorSignatureError.value = "Supervisor signature is required.";
+    hasError = true;
+  }
+  if (hasError) return;
+
+  const signatureData = signature.value.save("image/png"); // base64
+
+  const payload = {
+    supervisorNote: supervisorNote.value.trim(),
+    supervisorSignature: signatureData,
+    generalInformation_ref_id: reactiveProps.item.value.id,
+  };
+
+  isLoadingSupervisorNote.value = true;
+  try {
+    let response;
+    if (isEditingSupervisorNote.value) {
+      response = await SupervisorNoteAPI.edit(selectedSupervisorNoteId.value, payload);
+    } else {
+      response = await SupervisorNoteAPI.add(payload);
+    }
+
+    if (response.data.ok) {
+      showSweetAlert({
+        title: "Supervisor Note saved successfully!",
+        icon: "success",
+        showDenyButton: false,
+        showCancelButton: false,
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      }).then(() => {
+        CargamosSupervisorNote();
+      });
+    } else {
+      showSweetAlert({
+        title: "Error saving Supervisor Note!",
+        icon: "warning",
+        showDenyButton: false,
+        showCancelButton: false,
+        confirmButtonText: "Ok",
+        allowOutsideClick: false,
+      });
+    }
+  } catch (error) {
+    console.error("Error saving Supervisor Note:", error);
+    showSweetAlert({
+      title: "Error saving Supervisor Note!",
+      icon: "warning",
+      showDenyButton: false,
+      showCancelButton: false,
+      confirmButtonText: "Ok",
+      allowOutsideClick: false,
+    });
+  } finally {
+    isLoadingSupervisorNote.value = false;
+  }
+};
 
   // ── File handlers ────────────────────────────────────────────────────────────
   const handleFileChange = (event) => {
@@ -825,6 +1021,7 @@ const HandleDuringTheIncident = async (event) => {
       <div class="card">
         <div class="card-body">
           <div class="basic-form">
+
             <form autocomplete="off">
               <div class="row">
                 <div class="accordion accordion-primary-solid" id="accordion-two">
@@ -1040,10 +1237,10 @@ const HandleDuringTheIncident = async (event) => {
                           <div class="mb-3 col-md-12">
                             <label class="form-label">What Action, Event or Condition contributed most to this
                               incident?</label>
-                            <textarea v-model="actionEventConditions" class="form-control border border-primary"
+                            <textarea v-model="actionEventCondition" class="form-control border border-primary"
                               style="color: black;" rows="3"></textarea>
-                            <small v-if="errorsIncidentDetail.actionEventConditions_er" class="text-danger">{{
-                              errorsIncidentDetail.actionEventConditions_er }}</small>
+                            <small v-if="errorsIncidentDetail.actionEventCondition_er" class="text-danger">{{
+                              errorsIncidentDetail.actionEventCondition_er }}</small>
                           </div>
                         </div>
 
@@ -1174,7 +1371,7 @@ const HandleDuringTheIncident = async (event) => {
                   </div>
 
                   <!-- ══════════════════════════════════════════════════════════ -->
-                  <!--  EMPLOYEE SIGNATURE  ✅                                   -->
+                  <!--  SUPERVISOR SIGNATURE  ✅                                   -->
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <Spinner v-if="isLoadingSupervisorNote" />
 
@@ -1182,14 +1379,84 @@ const HandleDuringTheIncident = async (event) => {
                     <h2 class="accordion-header">
                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseThree">
-                        Employee Signature
+                        Supervisor Signature
                       </button>
                     </h2>
                     <div id="bordered_collapseThree" class="accordion-collapse collapse"
                       data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
-                        <div class="mb-4">
+
+<!-- ── SUPERVISOR NOTE ──────────────────────────────────────────────── -->
+<div class="card mt-3" v-if="isSupervisorNoteVisible">
+
+
+  <div class="card-body">
+    <Spinner v-if="isLoadingSupervisorNote" />
+
+    <form v-else @submit="HandleSupervisorNote" autocomplete="off">
+
+      <!-- Nota del supervisor -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">
+          Supervisor Note <span class="text-danger">*</span>
+        </label>
+        <textarea
+          v-model="supervisorNote"
+          class="form-control"
+          :class="{ 'is-invalid': supervisorNoteError }"
+          rows="4"
+          placeholder="Write the supervisor note here..."
+        ></textarea>
+        <small v-if="supervisorNoteError" class="text-danger">
+          {{ supervisorNoteError }}
+        </small>
+      </div>
+
+      <!-- Firma del supervisor -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">
+          Supervisor Signature <span class="text-danger">*</span>
+        </label>
+        <div :class="{ 'border border-danger rounded': supervisorSignatureError }">
+          <Vue3Signature
+            ref="signature"
+            :sigOption="options"
+            :w="'100%'"
+            :h="'200px'"
+            :disabled="false"
+          />
+        </div>
+        <small v-if="supervisorSignatureError" class="text-danger">
+          {{ supervisorSignatureError }}
+        </small>
+        <div class="mt-2 d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="undo">
+            Undo
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" @click="clear">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary" :disabled="isLoadingSupervisorNote">
+          <span v-if="isLoadingSupervisorNote"
+                class="spinner-border spinner-border-sm me-1" role="status"></span>
+          {{ isEditingSupervisorNote ? 'Update Supervisor Note' : 'Submit Supervisor Note' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+
+                        <!-- <div class="mb-4">
                           <p class="fw-semibold mb-2">
                             <i class="fa fa-clipboard-list me-1"></i>
                             Before signing, please confirm all sections are saved:
@@ -1219,7 +1486,7 @@ const HandleDuringTheIncident = async (event) => {
                         <hr />
 
                         <label class="form-label fw-semibold">
-                          Employee Signature <span class="text-danger">*</span>
+                          Supervisor Signature <span class="text-danger">*</span>
                         </label>
 
                         <div class="row justify-content-center">
@@ -1259,7 +1526,7 @@ const HandleDuringTheIncident = async (event) => {
                               </span>
                             </button>
                           </div>
-                        </div>
+                        </div> -->
 
                       </div>
                     </div>
