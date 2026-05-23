@@ -78,13 +78,13 @@ const options = reactive({
 const signatureError = ref("");
 const isSubmittingReport = ref(false);
 
-const clear = () => {
-  signature.value.clear();
-  signatureError.value = "";
+const clearSupervisorSignature = () => {
+  supervisorSignatureRef.value.clear();
+  supervisorSignatureError.value = "";
 };
 
-const undo = () => {
-  signature.value.undo();
+const undoSupervisorSignature = () => {
+  supervisorSignatureRef.value.undo();
 };
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -218,6 +218,7 @@ const errorsIncidentDetail = ref({
 });
 
 // ── SUPERVISOR NOTE ──────────────────────────────────────────────────────────
+
 const supervisorNote = ref("");
 const supervisorNoteError = ref("");
 const supervisorSignatureError = ref("");
@@ -225,6 +226,8 @@ const selectedSupervisorNoteId = ref(null);
 const isEditingSupervisorNote = ref(false);
 const isLoadingSupervisorNote = ref(false);
 const isSupervisorNoteVisible = ref(false);
+const supervisorSignatureRef = ref(null);  // ✅ ref separado, no reutilizar "signature"
+const savedSupervisorSignature = ref(""); // ✅ base64 de la firma ya guardada
 
 
 // Supervisor Note
@@ -374,14 +377,12 @@ const CargamosSupervisorNote = async () => {
       isEditingSupervisorNote.value = true;
       selectedSupervisorNoteId.value = data[0].id;
       supervisorNote.value = data[0].supervisorNote || "";
-      // Restaurar firma si existe
-      if (data[0].supervisorSignature && signature.value) {
-        await nextTick();
-        signature.value.fromDataURL(data[0].supervisorSignature);
-      }
+      // ✅ Guardamos el base64 para mostrarlo como <img>, sin tocar el canvas
+      savedSupervisorSignature.value = data[0].supervisorSignature || "";
     } else {
       isSupervisorNoteVisible.value = true;
       isEditingSupervisorNote.value = false;
+      savedSupervisorSignature.value = "";
     }
   } catch (error) {
     console.error("Error loading Supervisor Note:", error);
@@ -389,7 +390,6 @@ const CargamosSupervisorNote = async () => {
     isLoadingSupervisorNote.value = false;
   }
 };
-
 // ── General Information submit ──────────────────────────────────────────────
 const onSubmit = async (event) => {
   event.preventDefault();
@@ -704,24 +704,30 @@ catch (error) {
 const HandleSupervisorNote = async (event) => {
   event.preventDefault();
 
-  // Reset errores
-  supervisorNoteError.value = "";
-  supervisorSignatureError.value = "";
+ // ✅ VALIDACIONES
+supervisorNoteError.value = "";
+supervisorSignatureError.value = "";
 
-  // Validaciones
-  let hasError = false;
-  if (!supervisorNote.value || supervisorNote.value.trim() === "") {
-    supervisorNoteError.value = "Supervisor note is required.";
-    hasError = true;
-  }
-  if (signature.value.isEmpty()) {
+let hasError = false; // ✅ declarado
+
+if (!supervisorNote.value || supervisorNote.value.trim() === "") {
+  supervisorNoteError.value = "Supervisor note is required.";
+  hasError = true;
+}
+
+let signatureData = "";
+if (savedSupervisorSignature.value) {
+  signatureData = savedSupervisorSignature.value;
+} else {
+  if (!supervisorSignatureRef.value || supervisorSignatureRef.value.isEmpty()) {
     supervisorSignatureError.value = "Supervisor signature is required.";
     hasError = true;
+  } else {
+    signatureData = supervisorSignatureRef.value.save("image/png");
   }
-  if (hasError) return;
+}
 
-  const signatureData = signature.value.save("image/png"); // base64
-
+if (hasError) return;
   const payload = {
     supervisorNote: supervisorNote.value.trim(),
     supervisorSignature: signatureData,
@@ -737,18 +743,18 @@ const HandleSupervisorNote = async (event) => {
       response = await SupervisorNoteAPI.add(payload);
     }
 
-    if (response.data.ok) {
-      showSweetAlert({
-        title: "Supervisor Note saved successfully!",
-        icon: "success",
-        showDenyButton: false,
-        showCancelButton: false,
-        confirmButtonText: "Ok",
-        allowOutsideClick: false,
-      }).then(() => {
-        CargamosSupervisorNote();
-      });
-    } else {
+if (response.data.ok) {
+  showSweetAlert({
+    title: "Supervisor Note saved successfully!",
+    icon: "success",
+    showDenyButton: false,
+    showCancelButton: false,
+    confirmButtonText: "Ok",
+    allowOutsideClick: false,
+  }).then(() => {
+    closeModal(); // ✅ Cierra el modal — al reabrirlo mostrará la firma como imagen
+  });
+} else {
       showSweetAlert({
         title: "Error saving Supervisor Note!",
         icon: "warning",
@@ -871,8 +877,7 @@ const HandleSupervisorNote = async (event) => {
                       <template #input-icon><img class="input-slot-image" src="../assets/icons/clock2.png" /></template>
                     </VueDatePicker>
                   </div>
-                  <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{ errorsGeneralInformation.time_er
-                    }}</small>
+                  <small v-if="errorsGeneralInformation.time_er" class="text-danger">{{ errorsGeneralInformation.time_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-3">
@@ -891,8 +896,7 @@ const HandleSupervisorNote = async (event) => {
                   <v-select :options="storeDept.depts" v-model="selectedDept" placeholder="Choose your Dept"
                     :reduce="(dept) => dept.id" label="deptName" class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedDept }" />
-                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{ errorsGeneralInformation.dept_er
-                    }}</small>
+                  <small v-if="errorsGeneralInformation.dept_er" class="text-danger">{{ errorsGeneralInformation.dept_er }}</small>
                 </div>
               </div>
 
@@ -914,8 +918,7 @@ const HandleSupervisorNote = async (event) => {
                     class="form-control p-0"
                     :class="{ 'is-invalid': formSubmittedGeneralInformation && !selectedSupervisor }" />
                   <small v-if="errorsGeneralInformation.supervisor_er" class="text-danger">{{
-                    errorsGeneralInformation.supervisor_er
-                    }}</small>
+                    errorsGeneralInformation.supervisor_er }}</small>
                 </div>
 
                 <div class="mb-3 col-md-4">
@@ -923,8 +926,7 @@ const HandleSupervisorNote = async (event) => {
                   <input type="text" v-model="trainee" class="form-control form-control-md border border-primary"
                     :class="{ 'border-danger': formSubmittedGeneralInformation && !trainee }" style="color: black;" />
                   <small v-if="errorsGeneralInformation.trainee_er" class="text-danger">{{
-                    errorsGeneralInformation.trainee_er
-                    }}</small>
+                    errorsGeneralInformation.trainee_er }}</small>
                 </div>
               </div>
 
@@ -952,8 +954,7 @@ const HandleSupervisorNote = async (event) => {
                     </ul>
                   </div>
                   <small v-if="errorsGeneralInformation.location_er" class="text-danger">{{
-                    errorsGeneralInformation.location_er
-                    }}</small>
+                    errorsGeneralInformation.location_er }}</small>
                 </div>
               </div>
 
@@ -977,27 +978,7 @@ const HandleSupervisorNote = async (event) => {
                   <small v-if="errorsGeneralInformation.timeWorkedMonths_er" class="text-danger">{{
                     errorsGeneralInformation.timeWorkedMonths_er }}</small>
                 </div>
-
-                <!-- <div class="mb-3 col-md-3 d-flex align-items-end">
-                  <button type="submit" :disabled="isLoadingGeneralInformation" class="btn btn-primary btn-md">
-                    <span v-if="isLoadingGeneralInformation" class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    {{ isLoadingGeneralInformation ? 'Saving...' : (isEditingGeneralInformation ? "Update" : "Save") }}
-                    <span v-if="!isLoadingGeneralInformation" class="btn-icon-end">
-                      <i :class="isEditingGeneralInformation ? 'fa fa-edit' : 'fa fa-save'"></i>
-                    </span>
-                  </button>
-                </div> -->
-
-                <!-- ✅ Contact Us button -->
-                <!-- <div class="mb-3 col-md-3 d-flex align-items-end">
-                  <button type="button" class="btn btn-contact-us" @click="showContactModal = true">
-                    <i class="fa fa-phone me-2"></i> Contact Us
-                  </button>
-                </div> -->
-
               </div>
-
-
 
               <button type="submit" class="btn btn-primary">
                 Update General Information
@@ -1006,34 +987,28 @@ const HandleSupervisorNote = async (event) => {
               <button @click.prevent="closeModal" style="margin-left: 20px" type="submit" class="btn btn-danger">
                 Close
               </button>
+
             </form>
           </div>
         </div>
       </div>
     </div>
 
-
-
-
-
-
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
           <div class="basic-form">
-
             <form autocomplete="off">
               <div class="row">
                 <div class="accordion accordion-primary-solid" id="accordion-two">
 
-
                   <hr>
-
-                  <Spinner v-if="isLoadingDuringTheIncident" />
 
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <!--  DURING THE INCIDENT                                      -->
                   <!-- ══════════════════════════════════════════════════════════ -->
+                  <Spinner v-if="isLoadingDuringTheIncident" />
+
                   <div v-if="isDuringTheIncidentVisible" class="accordion-item">
                     <h2 class="accordion-header">
                       <button class="accordion-button" type="button" data-bs-toggle="collapse"
@@ -1047,8 +1022,7 @@ const HandleSupervisorNote = async (event) => {
 
                         <div class="row">
                           <div class="mb-3 col-md-5">
-                            <label class="form-label">Were you using an electronic device when the incident
-                              occurred?</label>
+                            <label class="form-label">Were you using an electronic device when the incident occurred?</label>
                             <div class="form-check form-switch">
                               <input class="form-check-input" type="checkbox" id="checkNativeSwitch"
                                 v-model="usingElectronicDevice" />
@@ -1113,8 +1087,7 @@ const HandleSupervisorNote = async (event) => {
                               class="form-control p-0" :disabled="!didYouTakePictures"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && didYouTakePictures && !SelectedWhoDidYouSendThePicturesTo }" />
                             <small v-if="errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er"
-                              class="text-danger">{{ errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er
-                              }}</small>
+                              class="text-danger">{{ errorsDuringTheIncident.SelectedWhoDidYouSendThePicturesTo_er }}</small>
                           </div>
                         </div>
 
@@ -1167,8 +1140,7 @@ const HandleSupervisorNote = async (event) => {
                               label="directionName" class="form-control p-0"
                               :class="{ 'is-invalid': formSubmittedDuringTheIncident && !SelectedDirectionYouWereTraveling }" />
                             <small v-if="errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er"
-                              class="text-danger">{{ errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er
-                              }}</small>
+                              class="text-danger">{{ errorsDuringTheIncident.SelectedDirectionYouWereTraveling_er }}</small>
                           </div>
                         </div>
 
@@ -1212,6 +1184,7 @@ const HandleSupervisorNote = async (event) => {
                   <!--  INCIDENT DETAIL                                          -->
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <Spinner v-if="isLoadingIncidentDetail" />
+
                   <div v-if="isIncidentDetailVisible" class="accordion-item">
                     <h2 class="accordion-header">
                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -1224,8 +1197,7 @@ const HandleSupervisorNote = async (event) => {
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
-                            <label class="form-label">Incident Description: How did the incident occur? What
-                              happened?</label>
+                            <label class="form-label">Incident Description: How did the incident occur? What happened?</label>
                             <textarea v-model="incidentDescription" class="form-control border border-primary"
                               style="color: black;" rows="3"></textarea>
                             <small v-if="errorsIncidentDetail.incidentDescription_er" class="text-danger">{{
@@ -1235,8 +1207,7 @@ const HandleSupervisorNote = async (event) => {
 
                         <div class="row">
                           <div class="mb-3 col-md-12">
-                            <label class="form-label">What Action, Event or Condition contributed most to this
-                              incident?</label>
+                            <label class="form-label">What Action, Event or Condition contributed most to this incident?</label>
                             <textarea v-model="actionEventCondition" class="form-control border border-primary"
                               style="color: black;" rows="3"></textarea>
                             <small v-if="errorsIncidentDetail.actionEventCondition_er" class="text-danger">{{
@@ -1333,8 +1304,7 @@ const HandleSupervisorNote = async (event) => {
                                 <div v-for="(image, index) in selectedImages" :key="index" class="col-md-3">
                                   <img :src="image.url" alt="Preview" style="max-width: 100px; margin-bottom: 10px;" />
                                   <p>{{ image.name }} ({{ (image.size / 1024).toFixed(2) }} KB)</p>
-                                  <button @click.prevent="removeImage(index)"
-                                    class="btn btn-danger btn-xs">Remove</button>
+                                  <button @click.prevent="removeImage(index)" class="btn btn-danger btn-xs">Remove</button>
                                 </div>
                               </div>
 
@@ -1371,7 +1341,7 @@ const HandleSupervisorNote = async (event) => {
                   </div>
 
                   <!-- ══════════════════════════════════════════════════════════ -->
-                  <!--  SUPERVISOR SIGNATURE  ✅                                   -->
+                  <!--  SUPERVISOR NOTE                                  -->
                   <!-- ══════════════════════════════════════════════════════════ -->
                   <Spinner v-if="isLoadingSupervisorNote" />
 
@@ -1379,176 +1349,113 @@ const HandleSupervisorNote = async (event) => {
                     <h2 class="accordion-header">
                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#bordered_collapseThree">
-                        Supervisor Signature
+                        Supervisor 
                       </button>
                     </h2>
-                    <div id="bordered_collapseThree" class="accordion-collapse collapse"
-                      data-bs-parent="#accordion-two">
+                    <div id="bordered_collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordion-two">
                       <div class="accordion-body">
 
+                        <form @submit="HandleSupervisorNote" autocomplete="off">
 
-<!-- ── SUPERVISOR NOTE ──────────────────────────────────────────────── -->
-<div class="card mt-3" v-if="isSupervisorNoteVisible">
+                          <!-- Supervisor Note -->
+                          <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                              Supervisor Note <span class="text-danger">*</span>
+                            </label>
+                            <textarea
+                              v-model="supervisorNote"
+                              class="form-control"
+                              :class="{ 'is-invalid': supervisorNoteError }"
+                              rows="4"
+                              placeholder="Write the supervisor note here..."
+                            ></textarea>
+                            <small v-if="supervisorNoteError" class="text-danger">
+                              {{ supervisorNoteError }}
+                            </small>
+                          </div>
 
+                          <!-- Firma del supervisor -->
+                          <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                              Supervisor Signature <span class="text-danger">*</span>
+                            </label>
 
-  <div class="card-body">
-    <Spinner v-if="isLoadingSupervisorNote" />
-
-    <form v-else @submit="HandleSupervisorNote" autocomplete="off">
-
-      <!-- Nota del supervisor -->
-      <div class="mb-3">
-        <label class="form-label fw-semibold">
-          Supervisor Note <span class="text-danger">*</span>
-        </label>
-        <textarea
-          v-model="supervisorNote"
-          class="form-control"
-          :class="{ 'is-invalid': supervisorNoteError }"
-          rows="4"
-          placeholder="Write the supervisor note here..."
-        ></textarea>
-        <small v-if="supervisorNoteError" class="text-danger">
-          {{ supervisorNoteError }}
-        </small>
-      </div>
-
-      <!-- Firma del supervisor -->
-      <div class="mb-3">
-        <label class="form-label fw-semibold">
-          Supervisor Signature <span class="text-danger">*</span>
-        </label>
-        <div :class="{ 'border border-danger rounded': supervisorSignatureError }">
-          <Vue3Signature
-            ref="signature"
-            :sigOption="options"
-            :w="'100%'"
-            :h="'200px'"
-            :disabled="false"
-          />
-        </div>
-        <small v-if="supervisorSignatureError" class="text-danger">
-          {{ supervisorSignatureError }}
-        </small>
-        <div class="mt-2 d-flex gap-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="undo">
-            Undo
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-danger" @click="clear">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      <!-- Submit -->
-      <div class="d-flex justify-content-end">
-        <button type="submit" class="btn btn-primary" :disabled="isLoadingSupervisorNote">
-          <span v-if="isLoadingSupervisorNote"
-                class="spinner-border spinner-border-sm me-1" role="status"></span>
-          {{ isEditingSupervisorNote ? 'Update Supervisor Note' : 'Submit Supervisor Note' }}
-        </button>
-      </div>
-
-    </form>
-  </div>
-</div>
-
-
-
-
-                        <!-- <div class="mb-4">
-                          <p class="fw-semibold mb-2">
-                            <i class="fa fa-clipboard-list me-1"></i>
-                            Before signing, please confirm all sections are saved:
-                          </p>
-                          <ul class="list-unstyled ms-2">
-                            <li class="mb-1">
-                              <i :class="isEditingGeneralInformation ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
-                                class="me-2"></i>
-                              <span :class="isEditingGeneralInformation ? 'text-success' : 'text-danger'">General
-                                Information</span>
-                            </li>
-                            <li class="mb-1">
-                              <i :class="duringTheIncidentList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
-                                class="me-2"></i>
-                              <span :class="duringTheIncidentList.length ? 'text-success' : 'text-danger'">During The
-                                Incident</span>
-                            </li>
-                            <li class="mb-1">
-                              <i :class="incidentDetailList.length ? 'fa fa-check-circle text-success' : 'fa fa-times-circle text-danger'"
-                                class="me-2"></i>
-                              <span :class="incidentDetailList.length ? 'text-success' : 'text-danger'">Incident
-                                Detail</span>
-                            </li>
-                          </ul>
-                        </div>
-
-                        <hr />
-
-                        <label class="form-label fw-semibold">
-                          Supervisor Signature <span class="text-danger">*</span>
-                        </label>
-
-                        <div class="row justify-content-center">
-                          <div class="mb-2 col-md-auto text-center">
-                            <div :class="['border rounded', signatureError ? 'border-danger' : 'border-secondary']"
-                              style="display: inline-block; line-height: 0;">
-                              <Vue3Signature ref="signature" :sigOption="options" :w="'650px'" :h="'200px'" />
+                            <!-- Si ya hay firma guardada: mostrar como imagen -->
+                            <div v-if="savedSupervisorSignature" class="border rounded p-2 bg-white text-center">
+                              <img
+                                :src="savedSupervisorSignature"
+                                alt="Supervisor Signature"
+                                style="max-width: 100%; height: auto; max-height: 200px; object-fit: contain;"
+                              />
+                              <div class="mt-2">
+                                <small class="text-muted">
+                                  <i class="fa fa-check-circle text-success me-1"></i>
+                                  Signature saved. Clear below to re-sign.
+                                </small>
+                              </div>
+                              <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger mt-2"
+                                @click="savedSupervisorSignature = ''"
+                              >
+                                <i class="fa fa-eraser me-1"></i> Clear & Re-sign
+                              </button>
                             </div>
-                            <div v-if="signatureError" class="mt-1">
-                              <small class="text-danger"><i class="fa fa-exclamation-circle me-1"></i>{{ signatureError
-                                }}</small>
+
+                            <!-- Si NO hay firma guardada: mostrar canvas para firmar -->
+                            <div v-else>
+                              <div
+                                :class="['border rounded', supervisorSignatureError ? 'border-danger' : 'border-secondary']"
+                                style="line-height: 0;"
+                              >
+                                <Vue3Signature
+                                  ref="supervisorSignatureRef"
+                                  :sigOption="options"
+                                  :w="'100%'"
+                                  :h="'200px'"
+                                  :disabled="false"
+                                />
+                              </div>
+                              <div class="mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="undoSupervisorSignature">
+                                  <i class="fa fa-undo me-1"></i> Undo
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" @click="clearSupervisorSignature">
+                                  <i class="fa fa-eraser me-1"></i> Clear
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </div>
 
-                        <div class="row align-items-end mt-2">
-                          <div class="col-md-auto">
-                            <button type="button" class="btn btn-outline-secondary btn-sm me-2" @click="clear">
-                              <i class="fa fa-eraser me-1"></i> Clear
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" @click="undo">
-                              <i class="fa fa-undo me-1"></i> Undo
-                            </button>
+                            <small v-if="supervisorSignatureError" class="text-danger">
+                              {{ supervisorSignatureError }}
+                            </small>
                           </div>
-                        </div>
 
-                        <div class="row">
-                          <div class="d-flex justify-content-center mt-3">
-                            <button type="button" class="btn btn-danger btn-md" :disabled="isSubmittingReport"
-                              @click="SubmitIncidentReport">
-                              <span v-if="isSubmittingReport">
-                                <span class="spinner-border spinner-border-sm me-1" role="status"></span> Submitting...
-                              </span>
-                              <span v-else>
-                                Submit Incident Report <span class="btn-icon-end"><i
-                                    class="fa fa-paper-plane"></i></span>
-                              </span>
+                          <!-- Submit -->
+                          <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" :disabled="isLoadingSupervisorNote">
+                              <span v-if="isLoadingSupervisorNote"
+                                    class="spinner-border spinner-border-sm me-1" role="status"></span>
+                              {{ isEditingSupervisorNote ? 'Update' : 'Submit' }}
                             </button>
                           </div>
-                        </div> -->
+
+                        </form>
 
                       </div>
                     </div>
                   </div>
 
-
                 </div>
-
               </div>
             </form>
           </div>
-
-
-
-
-
-
         </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .input-slot-image {
