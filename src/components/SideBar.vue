@@ -19,11 +19,10 @@
 						</ul>
 					</li>
 
-
 				</ul>
 
 				<div class="copyright">
-					<p><strong>AIRC CoverSheet Admin Dashboard</strong></p>
+					<p><strong>ACE Driver Incident Report Admin Dashboard</strong></p>
 					<p class="fs-12">Developed by ACE DISPOSAL</p>
 				</div>
 			</div>

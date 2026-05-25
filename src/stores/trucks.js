@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 import { defineStore } from "pinia";
-import TruckAPI from "@/api/TruckAPI.js";
+import TruckAPI from "@/api/Combos/TruckAPI.js";
 
 export const useTrucksStore = defineStore("trucks", () => {
   const trucks = ref([]);

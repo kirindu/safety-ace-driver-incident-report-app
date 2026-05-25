@@ -2,6 +2,8 @@
 import { ref, onMounted } from "vue";
 import { defineAsyncComponent } from "vue";
 
+import GeneralInformationModal from "@/modals/GeneralInformationModal.vue";
+
 import { useRouter } from "vue-router";
 const router = useRouter();
 
@@ -13,10 +15,11 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
 // Importamos el api
-import CoverSheetAPI from "@/api/CoverSheetAPI.js";
-import SpareTruckInfoAPI from "@/api/SpareTruckInfoAPI";
-import DowntimeAPI from "@/api/DowntimeAPI";
-import LoadAPI from "@/api/LoadAPI";
+import GeneralInformationAPI from "@/api/Sections/GeneralInformationAPI";
+import DuringTheIncidentAPI from "@/api/Sections/DuringTheIncidentAPI";
+import IncidentDetailAPI from "@/api/Sections/IncidentDetailAPI";
+import SupervisorNoteAPI from "@/api/Sections/SupervisorNoteAPI";
+import EmployeeSignatureAPI from "@/api/Sections/EmployeeSignatureAPI";
 
 // Import composables
 import useSweetAlert2Notification from "@/composables/useSweetAlert2";
@@ -24,46 +27,49 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Importamos componentes
 import Spinner from "@/components/Spinner.vue";
-import CoverSheetModal from "@/components/CoverSheetModal.vue";
 
 // Importamos Stores
-import { useRoutesStore } from "@/stores/routes.js";
-const storeRoute = useRoutesStore();
 
-import { useHomeBasesStore } from "@/stores/homebase.js";
-const storeHomeBase = useHomeBasesStore();
+import { useDirectionsStore } from "@/stores/directions.js";
+const storeDirection = useDirectionsStore();
 
-import { useOperatorsStore } from "@/stores/operator.js";
-const storeOperator = useOperatorsStore();
+import { useEmployeesStore } from "@/stores/employees.js";
+const storeEmployee = useEmployeesStore();
 
-import { useSourcesStore } from "@/stores/source.js";
-const storeSource = useSourcesStore();
+import { useGeneralInformationsStore } from "@/stores/generalInformations";
+const storeGeneralInformation = useGeneralInformationsStore();
 
-import { useDestinationsStore } from "@/stores/destination.js";
-const storeDestination = useDestinationsStore();
+import { useRoadConditionsStore } from "@/stores/roadConditions";
+const storeRoadCondition = useRoadConditionsStore();
 
-import { useMaterialsStore } from "@/stores/material.js";
-const storeMaterial = useMaterialsStore();
+import { useSafetyPersonsNotifiedStore } from "@/stores/safetyPersonsNotified";
+const storeSafetyPerson = useSafetyPersonsNotifiedStore();
 
-import { useTrailersStore } from "@/stores/trailers.js";
-const storeTrailer = useTrailersStore();
-
-import { useTypeDownTimeStore } from "@/stores/typeDowntime.js";
-const storeTypeDowntime = useTypeDownTimeStore();
-
-import { useLandFillsStore } from "@/stores/landfills";
-const storeLandFill = useLandFillsStore();
+import { useSupervisorsStore } from "@/stores/supervisors";
+const storeSupervisor = useSupervisorsStore();
 
 import { useTrucksStore } from "@/stores/trucks.js";
 const storeTruck = useTrucksStore();
 
-import { useDriversStore } from "@/stores/drivers.js";
-const storeDriver = useDriversStore();
+import { useTypeIncidentsStore } from "@/stores/typeIncidents";
+const storeTypeIncident = useTypeIncidentsStore();
+
+import { useWeatherConditionsStore } from "@/stores/weatherConditions";
+const storeWeatherCondition = useWeatherConditionsStore();
+
+import { useWhoDidYouSendThePictureToStore } from "@/stores/whoDidYouSendThePicturesTo";
+const storeWhoDidYouSendThePicturesTo = useWhoDidYouSendThePictureToStore();
+
+import { useDeptsStore } from "@/stores/depts.js";
+const storeDept = useDeptsStore();
+
+
+
 
 const user = ref(null);
 
 // Recuperamos el usuario
-const storedUser = localStorage.getItem("USER");
+const storedUser = localStorage.getItem("USER-SAFETY-ACE");
 
 if (storedUser) {
   try {
@@ -80,15 +86,16 @@ if (storedUser) {
 }
 
 // General Info
-const selectedRoute = ref("");
-const selectedTrailer = ref("");
+const selectedEmployee = ref("");
 const selectedTruck = ref("");
-const selectedDriver = ref("");
+const selectedType = ref("");
+
+
 
 const startDate = ref(new Date());
 const endDate = ref(new Date());
 
-const coverSheetList = ref([]);
+const generalInformationList = ref([]);
 const isLoading = ref(false);
 
 const formSubmitted = ref(false);
@@ -107,7 +114,7 @@ const hasNextPage = ref(false);
 const hasPrevPage = ref(false);
 
 // 🆕 FUNCIÓN PRINCIPAL DE BÚSQUEDA CON PAGINACIÓN
-const SearchCoverSheet = async (event = null, page = 1) => {
+const SearchGeneralInformation = async (event = null, page = 1) => {
   if (event) {
     event.preventDefault();
   }
@@ -133,7 +140,7 @@ const SearchCoverSheet = async (event = null, page = 1) => {
     const end = new Date(endDate.value);
 
     if (end < start) {
-      errors.value.endDate_er = "End date cannot be before start date";
+      errors.value.endDate_er = "Incident End Date cannot be before Incident Start Date";
       hasError = true;
     }
   }
@@ -150,26 +157,26 @@ const SearchCoverSheet = async (event = null, page = 1) => {
     const endDateStr = formatToYYYYMMDD(endDate.value);
 
     // 🆕 Construir parámetros para la API con paginación
-    const params = {
-      page: page,
-      limit: itemsPerPage.value,
-      start_date: startDateStr,
-      end_date: endDateStr,
-      truck_id: selectedTruck.value || null,
-      trailer_id: selectedTrailer.value || null,
-      driver_id: selectedDriver.value || null,
-      sort_by: 'date',
-      sort_order: -1 // Descendente (más reciente primero)
-    };
+const params = {
+  page: page,
+  limit: itemsPerPage.value,
+  start_date: startDateStr,
+  end_date: endDateStr,
+  employee_id: selectedEmployee.value || null,
+  truck_id: selectedTruck.value || null,
+  typeOfIncident_id: selectedType.value || null,
+  sort_by: 'date',
+  sort_order: -1
+};
 
     // 🆕 Llamar al nuevo endpoint paginado
-    const response = await CoverSheetAPI.allPaginated(params);
+    const response = await GeneralInformationAPI.allPaginated(params);
 
     // 🆕 La estructura de respuesta ahora es: response.data.data
     const responseData = response.data.data;
 
-    // Actualizar la lista de coversheets
-    coverSheetList.value = responseData.data || [];
+    // Actualizar la lista de general information
+    generalInformationList.value = responseData.data || [];
 
     // 🆕 Actualizar información de paginación
     const pagination = responseData.pagination;
@@ -182,8 +189,8 @@ const SearchCoverSheet = async (event = null, page = 1) => {
     console.log(`📄 Página ${currentPage.value} de ${totalPages.value} (${totalRecords.value} registros totales)`);
 
   } catch (error) {
-    console.error("Error al obtener CoverSheet:", error);
-    coverSheetList.value = [];
+    console.error("Error al obtener GeneralInformation:", error);
+    generalInformationList.value = [];
     totalRecords.value = 0;
     totalPages.value = 0;
   } finally {
@@ -195,7 +202,7 @@ const SearchCoverSheet = async (event = null, page = 1) => {
 const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
-    SearchCoverSheet(null, page);
+    SearchGeneralInformation(null, page);
   }
 };
 
@@ -222,13 +229,13 @@ const goToNextPage = () => {
 // 🆕 Cambiar cantidad de registros por página
 const changeItemsPerPage = () => {
   currentPage.value = 1; // Reset a página 1 al cambiar el límite
-  SearchCoverSheet(null, 1);
+  SearchGeneralInformation(null, 1);
 };
 
-const deleteCoverSheet = async (item) => {
+const deleteGeneralInformation = async (item) => {
   const result = await showSweetAlert({
-    title: "Are you sure you want to delete this CoverSheet?",
-    //text: "This action will deactivate the coversheet (soft delete)",
+    title: "Are you sure you want to delete this Incident Report?",
+    //text: "This action will deactivate the general information (soft delete)",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
@@ -241,31 +248,31 @@ const deleteCoverSheet = async (item) => {
   if (result?.isConfirmed) {
     try {
       isLoading.value = true;
-      const response = await CoverSheetAPI.delete(item.id);
+      const response = await GeneralInformationAPI.delete(item.id);
 
       if (response.data.ok) {
         await showSweetAlert({
           title: "Deleted!",
-          text: "CoverSheet has been deleted successfully.",
+          text: "Incident Report has been deleted successfully.",
           icon: "success",
           confirmButtonText: "Ok",
         });
 
-        // ✅ CORRECCIÓN: Llamar a SearchCoverSheet, no SearchDriver
-        SearchCoverSheet(null, currentPage.value);
+        // ✅ CORRECCIÓN: Llamar a SearchGeneralInformation
+        SearchGeneralInformation(null, currentPage.value);
       } else {
         await showSweetAlert({
           title: "Error!",
-          text: "Error deleting CoverSheet.",
+          text: "Error deleting Incident.",
           icon: "error",
           confirmButtonText: "Ok",
         });
       }
     } catch (error) {
-      console.error("Error deleting CoverSheet:", error);
+      // console.error("Error deleting Incident Report:", error);
       await showSweetAlert({
         title: "Error!",
-        text: error.response?.data?.message || "Error deleting CoverSheet!",
+        text: error.response?.data?.message || "Error deleting Incident Report!",
         icon: "error",
         confirmButtonText: "Ok",
       });
@@ -274,51 +281,64 @@ const deleteCoverSheet = async (item) => {
     }
   }
 };
-const openCoverSheetModal = async (item) => {
+
+const openGeneralInformationModal = async (item) => {
   await openModal(
-    defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
+    GeneralInformationModal,
     {
       item: item,
-      onUpdateSuccess: () => SearchCoverSheet(null, currentPage.value),
+      onUpdateSuccess: () => SearchGeneralInformation(null, currentPage.value),
     }
   )
-    .then((data) => {
-      console.log("success", data);
-    })
-    .catch(() => {
-      console.log("catch");
-    });
+  .then((data) => { console.log("success", data); })
+  .catch(() => { console.log("catch"); });
 };
 
-const openNewCoverSheetModal = async () => {
-  await openModal(
-    defineAsyncComponent(() => import("@/components/NewCoverSheetModal.vue")),
-    {}
-  )
-    .then((data) => {
-      // ✅ Solo recargar si el modal se cerró con confirmModal (finalizó exitosamente)
-      if (data?.finalized) {
-        console.log("CoverSheet finalized successfully");
-        SearchCoverSheet(null, currentPage.value);
-      } else {
-        console.log("Modal closed without finalizing");
-      }
-    })
-    .catch(() => {
-      console.log("Modal cancelled");
-    });
-};
+// const openCoverSheetModal = async (item) => {
+//   await openModal(
+//     defineAsyncComponent(() => import("@/components/CoverSheetModal.vue")),
+//     {
+//       item: item,
+//       onUpdateSuccess: () => SearchCoverSheet(null, currentPage.value),
+//     }
+//   )
+//     .then((data) => {
+//       console.log("success", data);
+//     })
+//     .catch(() => {
+//       console.log("catch");
+//     });
+// };
 
-const downloadPDF = () => {
-  const pdfUrl = '/documents/AIRC-Coversheet-2026.pdf';
-  const link = document.createElement('a');
-  link.href = pdfUrl;
-  link.download = 'CoverSheet-Guide.pdf';
-  link.target = '_blank';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+// const openNewCoverSheetModal = async () => {
+//   await openModal(
+//     defineAsyncComponent(() => import("@/components/NewCoverSheetModal.vue")),
+//     {}
+//   )
+//     .then((data) => {
+//       // ✅ Solo recargar si el modal se cerró con confirmModal (finalizó exitosamente)
+//       if (data?.finalized) {
+//         console.log("CoverSheet finalized successfully");
+//         SearchCoverSheet(null, currentPage.value);
+//       } else {
+//         console.log("Modal closed without finalizing");
+//       }
+//     })
+//     .catch(() => {
+//       console.log("Modal cancelled");
+//     });
+// };
+
+// const downloadPDF = () => {
+//   const pdfUrl = '/documents/AIRC-Coversheet-2026.pdf';
+//   const link = document.createElement('a');
+//   link.href = pdfUrl;
+//   link.download = 'CoverSheet-Guide.pdf';
+//   link.target = '_blank';
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// };
 
 const currentDate = ref(
   new Date().toLocaleDateString("en-US", {
@@ -349,7 +369,7 @@ const formatToYYYYMMDD = (inputDate) => {
 };
 
 onMounted(() => {
-  SearchCoverSheet();
+  SearchGeneralInformation();
 });
 </script>
 
@@ -363,7 +383,7 @@ onMounted(() => {
       </ol>
     </div>
 
-    <Spinner v-if="storeRoute.loading || storeTruck.loading || isLoading" />
+    <Spinner v-if="storeTruck.loading || isLoading" />
 
     <div class="col-lg-12">
       <div class="card">
@@ -371,7 +391,7 @@ onMounted(() => {
           <div class="basic-form">
             <div class="row">
               <div class="mb-3 col-md-3">
-                <label class="form-label">Start Date</label>
+                <label class="form-label">Incident Start Date</label>
                 <div class="mt-0">
                   <VueDatePicker v-model="startDate" week-start="0" :enable-time-picker="false" :max-date="new Date()"
                     placeholder="Select Start Date">
@@ -386,7 +406,7 @@ onMounted(() => {
               </div>
 
               <div class="mb-3 col-md-3">
-                <label class="form-label">End Date</label>
+                <label class="form-label">Incident End Date</label>
                 <div class="mt-0">
                   <VueDatePicker v-model="endDate" week-start="0" :enable-time-picker="false" :max-date="new Date()"
                     :min-date="startDate" placeholder="Select End Date">
@@ -400,6 +420,15 @@ onMounted(() => {
                 }}</small>
               </div>
 
+
+
+              <div class="mb-3 col-md-2">
+                <label class="form-label">Employee</label>
+                <v-select :options="storeEmployee.employees" v-model="selectedEmployee" placeholder="Choose Employee"
+                  :reduce="(employee) => employee.id" label="employeeName" class="form-control p-0"
+                  :class="{ 'is-invalid': formSubmitted && !selectedEmployee }" />
+              </div>
+
               <div class="mb-3 col-md-2">
                 <label class="form-label">Truck #</label>
                 <v-select :options="storeTruck.trucks" v-model="selectedTruck" placeholder="Choose Truck"
@@ -411,21 +440,15 @@ onMounted(() => {
               </div>
 
               <div class="mb-3 col-md-2">
-                <label class="form-label">Trailer #</label>
-                <v-select :options="storeTrailer.trailers" v-model="selectedTrailer" placeholder="Choose Trailer"
-                  :reduce="(trailer) => trailer.id" label="trailerNumber" class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedTrailer }" />
-                <small v-if="errors.trailer_er" class="text-danger">{{
-                  errors.trailer_er
+                <label class="form-label">Type of Incident</label>
+                <v-select :options="storeTypeIncident.typeIncidents" v-model="selectedType" placeholder="Choose Type"
+                  :reduce="(type) => type.id" label="typeOfIncidentName" class="form-control p-0"
+                  :class="{ 'is-invalid': formSubmitted && !selectedType }" />
+                <small v-if="errors.type_er" class="text-danger">{{
+                  errors.type_er
                 }}</small>
               </div>
 
-              <div class="mb-3 col-md-2">
-                <label class="form-label">Driver</label>
-                <v-select :options="storeDriver.drivers" v-model="selectedDriver" placeholder="Choose Driver"
-                  :reduce="(driver) => driver.id" label="name" class="form-control p-0"
-                  :class="{ 'is-invalid': formSubmitted && !selectedDriver }" />
-              </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -433,34 +456,28 @@ onMounted(() => {
 
             <div>
 
-                        <button style="margin-bottom: -5px !important" @click="SearchCoverSheet" type="button" class="btn btn-info"
+                        <button style="margin-bottom: -5px !important" @click="SearchGeneralInformation" type="button" class="btn btn-info"
               :disabled="isLoading">
-              {{ isLoading ? 'Searching...' : 'Search CoverSheet' }}
+              {{ isLoading ? 'Searching...' : 'Search Incident Reports' }}
               <span class="btn-icon-end">
                 <i class="fa fa-search"></i>
               </span>
             </button>
 
-            <button style="margin-bottom: -5px !important; margin-left: 15px" @click="openNewCoverSheetModal"
+            <!-- <button style="margin-bottom: -5px !important; margin-left: 15px" @click="openNewGeneralInformationModal"
               type="button" class="btn btn-primary">
-              New CoverSheet
+              New General Information
               <span class="btn-icon-end">
                 <i class="fa fa-table"></i>
               </span>
-            </button>
+            </button> -->
             
             
             </div>
 
             <div>
 
-                        <button style="margin-bottom: -5px !important; margin-left: 15px" @click="downloadPDF" type="button"
-              class="btn btn-success">
-              Download AIRC Blank CoverSheet
-              <span class="btn-icon-end">
-                <i class="fa fa-download"></i>
-              </span>
-            </button>
+
             
             </div>
 
@@ -482,7 +499,7 @@ onMounted(() => {
               <!-- 🆕 Información de registros y paginación -->
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div style="color: blueviolet; font-weight: 600;">
-                  Showing {{ coverSheetList.length }} of {{ totalRecords }} total records
+                  Showing {{ generalInformationList.length }} of {{ totalRecords }} total records
                   <span v-if="totalPages > 1"> (Page {{ currentPage }} of {{ totalPages }})</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -503,40 +520,39 @@ onMounted(() => {
                   <thead class="thead-primary">
                     <tr>
                       <th>Date</th>
-                      <th>HomeBase</th>
-                      <th>Driver</th>
+                      <th>Employee</th>
+                      <th>Type Of Incident</th>
+                      <th>Dept</th>
                       <th>Truck #</th>
-                      <th>Trailer #</th>
-                      <th>Clock In</th>
-                      <th>Clock Out</th>
-                      <th>Trainee / Trainer</th>
-                      <th>Notes</th>
+                      <th>Time</th>
+                      <th>Supervisor</th>
+                      <th>Location</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="coverSheetList.length === 0 && !isLoading">
+                    <tr v-if="generalInformationList.length === 0 && !isLoading">
                       <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
                         No records found for the selected filters
                       </td>
                     </tr>
-                    <tr v-for="(item, index) in coverSheetList" :key="index">
+                    <tr v-for="(item, index) in generalInformationList" :key="index">
                       <td class="td">{{ formatDate(item.date) }}</td>
-                      <td class="td">{{ item.homeBaseName || 'N/A' }}</td>
-                      <td class="td">{{ item.driverName }}</td>
+                      <td class="td">{{ item.employeeName }}</td>
+                      <td class="td">{{ item.typeOfIncidentName }}</td>
+                      <td class="td">{{ item.deptName }}</td>
                       <td class="td">{{ item.truckNumber }}</td>
-                      <td class="td">{{ item.trailerNumber }}</td>
-                      <td class="td">{{ item.clockIn }}</td>
-                      <td class="td">{{ item.clockOut }}</td>
-                      <td class="td">{{ item.trainee || '-' }}</td>
-                      <td class="td">{{ item.notes || '-' }}</td>
+                      <td class="td">{{ item.time }}</td>
+                      <td class="td">{{ item.supervisorName }}</td>          
+                      <td class="td">{{ item.location }}</td>
+
                       <td>
                         <div>
-                          <a @click="openCoverSheetModal(item)" class="btn btn-primary shadow btn-xs sharp me-1">
+                          <a @click="openGeneralInformationModal(item)" class="btn btn-primary shadow btn-xs sharp me-1">
                             <i class="fa fa-eye"></i>
                           </a>
 
-                          <a @click="deleteCoverSheet(item)" class="btn btn-danger shadow btn-xs sharp me-1">
+                          <a @click="deleteGeneralInformation(item)" class="btn btn-danger shadow btn-xs sharp me-1">
                             <i class="fa fa-trash"></i>
                           </a>
                         </div>

@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 // Importamos el api
-import UserAPI from "@/api/UserAPI";
+import UserAPI from "@/api/Actors/UserAPI";
 
 // Importamos utilidades
 import { DateTime } from "luxon";
@@ -23,7 +23,7 @@ const { showSweetAlert, alertResult } = useSweetAlert2Notification();
 
 // Reactividad
 const loading = ref(false);
-const rol = ref('Driver')  // valor por defecto
+const rol = ref('Employee')  // valor por defecto
 
 // Variables Reactivas
 const selectedRoute = ref("");
@@ -34,11 +34,12 @@ import * as yup from "yup";
 
 // Schema de validación dinámica según el rol
 const validationSchema = computed(() => {
-  if (rol.value === 'Driver') {
+  if (rol.value === 'Employee') {
     return yup.object({
       email: yup
         .string()
-        .required("Username is required"),
+        .email("Invalid email")
+        .required("Email is required"),
       password: yup.string().required("Password is required"),
     });
   } else {
@@ -73,15 +74,15 @@ const [password, passwordAttrs] = defineField("password", {
 
 // Computed para labels e iconos dinámicos
 const emailLabel = computed(() => {
-  return rol.value === 'Driver' ? 'Username' : 'Email';
+  return rol.value === 'Employee' ? 'Email' : 'Email';
 });
 
 const emailIcon = computed(() => {
-  return rol.value === 'Driver' ? 'fa fa-user' : 'fa fa-envelope';
+  return rol.value === 'Employee' ? 'fa fa-envelope' : 'fa fa-envelope';
 });
 
 const emailInputType = computed(() => {
-  return rol.value === 'Driver' ? 'text' : 'email';
+  return rol.value === 'Employee' ? 'text' : 'email';
 });
 
 // Metodos
@@ -89,18 +90,18 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
   loading.value = true;
   try {
 
-    if (rol.value === 'Driver') {
-      const { data } = await UserAPI.loginDriver({
-        username: values.email,
+    if (rol.value === 'Employee') {
+      const { data } = await UserAPI.loginEmployee({
+        email: values.email,
         password: values.password,
       });
 
       if (data.ok) {
         // ✅ PASO 1: Guardar en localStorage
-        localStorage.setItem("USER", JSON.stringify(data));
+        localStorage.setItem("USER-SAFETY-ACE", JSON.stringify(data));
 
         // ✅ PASO 2: Obtener el user_id de forma correcta
-        let user_id = null;
+        let user_id = null;           
         
         if (data.data?.user?.id) {
           user_id = data.data.user.id;
@@ -110,21 +111,21 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
 
         console.log('User ID obtenido:', user_id);
 
-        // ✅ PASO 3: Verificar coversheet
-        let coversheet_driver_id = JSON.parse(localStorage.getItem("COVERSHEET"))?.driver_id || null;
+        // ✅ PASO 3: Verificar incident-report asociado al usuario
+        let incident_report_employee_id = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"))?.employee_id || null;
 
-        if (coversheet_driver_id) {
+        if (incident_report_employee_id) {
 
-          if (user_id !== coversheet_driver_id) {
-            console.log('Coversheet de otro usuario, eliminando...');
-            localStorage.removeItem("COVERSHEET");
+          if (user_id !== incident_report_employee_id) {
+            console.log('Incident report de otro usuario, eliminando...');
+            localStorage.removeItem("ACE-INCIDENT-REPORT");
             // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
             window.location.href = '/';
             
           } else {
-            // El coversheet es del mismo usuario, verificar fecha
-            const coversheetData = JSON.parse(localStorage.getItem("COVERSHEET"));
-            const dbDate = DateTime.fromISO(coversheetData.date, { zone: 'utc' });
+            // El incident report es del mismo usuario, verificar fecha
+            const incidentReportData = JSON.parse(localStorage.getItem("ACE-INCIDENT-REPORT"));
+            const dbDate = DateTime.fromISO(incidentReportData.date, { zone: 'utc' });
             const today = DateTime.now();
 
             const dbDateDenver = dbDate.setZone('America/Denver');
@@ -135,34 +136,34 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
               dbDateDenver.month !== todayDenver.month ||
               dbDateDenver.day !== todayDenver.day
             ) {
-              console.log('Coversheet de otro día, eliminando...');
-              localStorage.removeItem("COVERSHEET");
+              console.log('Incident report de otro día, eliminando...');
+              localStorage.removeItem("ACE-INCIDENT-REPORT");
               // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
               window.location.href = '/';
               
             } else {
-              console.log('Coversheet válido encontrado');
+              console.log('Incident report válido encontrado');
               
               // ✅ Esperar la respuesta del SweetAlert ANTES de navegar
               const result = await showSweetAlert({
-                title: "A current cover sheet has been detected",
-                text: "Do you want to continue working with it or create a new cover sheet?",
+                title: "A current incident report has been detected",
+                text: "Do you want to continue working with it or create a new incident report?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#ff4949",
                 confirmButtonText: "Yes, continue working with it",
-                cancelButtonText: "Create a new cover sheet",
+                cancelButtonText: "Create a new incident report",
                 allowOutsideClick: false,
               });
 
               if (result.isConfirmed) {
-                console.log('Usuario quiere continuar con el coversheet existente');
+                console.log('Usuario quiere continuar con el incident report existente');
                 // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
                 window.location.href = '/';
               } else {
-                console.log('Usuario quiere crear un nuevo coversheet');
-                localStorage.removeItem("COVERSHEET");
+                console.log('Usuario quiere crear un nuevo incident report');
+                localStorage.removeItem("ACE-INCIDENT-REPORT");
                 // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
                 window.location.href = '/';
               }
@@ -170,7 +171,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
           }
 
         } else {
-          console.log('No hay coversheet previo');
+          console.log('No hay incident report previo');
           // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
           window.location.href = '/';
         }
@@ -186,7 +187,7 @@ const onSubmit = handleSubmit(async (values, { resetForm }) => {
         });
 
         if (data.ok) {
-          localStorage.setItem("USER", JSON.stringify(data));
+          localStorage.setItem("USER-SAFETY-ACE", JSON.stringify(data));
           // ✅ SOLUCIÓN: Usar window.location en lugar de router.push
           window.location.href = '/admin/dashboard';
         }
@@ -223,7 +224,7 @@ const togglePasswordVisibility = () => {
       <div class="d-flex flex-column-auto flex-column pt-lg-40 pt-15">
         <div class="text-center mb-4 pt-5">
           <a href="/" class="brand-logo">
-            <img fetchpriority="high" decoding="async" width="188" height="110" src="@/assets/logo/AIRC-logo.png" />
+            <img fetchpriority="high" decoding="async" width="188" height="110" src="@/assets/logo/acedisposal-logo.png" />
 
             <div>
               <div class="brand-title">
@@ -232,7 +233,7 @@ const togglePasswordVisibility = () => {
                     font-weight: bold;
                     margin-left: 10px;
                     color: black;
-                  ">AIRC CoverSheet</span>
+                  ">ACE Employee Incident Report</span>
               </div>
             </div>
           </a>
@@ -256,7 +257,7 @@ const togglePasswordVisibility = () => {
 
                   <a href="/" class="brand-logo">
                     <img fetchpriority="high" decoding="async" width="188" height="110"
-                      src="@/assets/logo/AIRC-logo.png" />
+                      src="@/assets/logo/acedisposal-logo.png" />
 
                     <div>
                       <div class="brand-title">
@@ -265,7 +266,7 @@ const togglePasswordVisibility = () => {
                             font-weight: bold;
                             margin-left: 10px;
                             color: black;
-                          ">AIRC CoverSheet</span>
+                          ">ACE Employee Incident Report</span>
                       </div>
                     </div>
                   </a>
@@ -319,9 +320,9 @@ const togglePasswordVisibility = () => {
                       <label class="col-form-label col-sm-3 pt-0">User Role</label>
                       <div class="col-sm-9">
                         <div class="form-check">
-                          <input class="form-check-input" type="radio" v-model="rol" name="gridRadios" value="Driver"
+                          <input class="form-check-input" type="radio" v-model="rol" name="gridRadios" value="Employee"
                             checked />
-                          <label class="form-check-label"> Driver </label>
+                          <label class="form-check-label"> Employee </label>
                         </div>
                         <div class="form-check">
                           <input class="form-check-input" type="radio" v-model="rol" name="gridRadios" value="Admin" />

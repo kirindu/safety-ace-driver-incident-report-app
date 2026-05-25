@@ -13,7 +13,7 @@ const user = ref(null)
 // Inicializar usuario desde localStorage directamente
 onMounted(() => {
   console.log('🟢 Header: onMounted ejecutado');
-  const storedUser = localStorage.getItem('USER');
+  const storedUser = localStorage.getItem("USER-SAFETY-ACE");
   
   if (storedUser) {
     try {
@@ -66,9 +66,9 @@ const currentDate = ref(
 // Método para manejar el logout
 const logout = () => {
   user.value = null;
-  localStorage.removeItem('USER');
-  localStorage.removeItem('COVERSHEET');
-  localStorage.removeItem('COVERSHEET2');
+  localStorage.removeItem("USER-SAFETY-ACE");
+  localStorage.removeItem("ACE-INCIDENT-REPORT");
+  localStorage.removeItem("ACE-INCIDENT-REPORT2");
   router.push({ name: 'login' });
 }
 
@@ -81,13 +81,13 @@ console.log('🟢 Header: Componente cargado completamente');
       <nav class="navbar navbar-expand">
         <div class="collapse navbar-collapse justify-content-between">
 
-
+<!-- 
     <div v-show="menu_visible" class="header-left">
 
       <nav class="main-menu">
-        <a @click.prevent="router.push({ name: 'admin-drivers' })" class="menu-item">Drivers</a>
-        <a @click.prevent="router.push({ name: 'admin-users' })" class="menu-item">Users</a>
-        <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trailers' })" class="menu-item">Trailers</a>
+         <a @click.prevent="router.push({ name: 'admin-drivers' })" class="menu-item">Employees</a> 
+         <a @click.prevent="router.push({ name: 'admin-users' })" class="menu-item">Users</a> 
+        <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trailers' })" class="menu-item">Type of Incidents</a>
         <a :class="{'disabled-link': links_disabled}" @click.prevent="links_disabled ? null : router.push({ name: 'admin-trucks' })" class="menu-item">Trucks</a>
 
         <div class="dropdown-container">
@@ -97,10 +97,7 @@ console.log('🟢 Header: Componente cargado completamente');
           </span>
 
 <div class="dropdown-menu reports-menu"> 
-    <!-- <a  @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'single-date' } })">General Report by Single Date</a> -->
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'date-range' } })">CoverSheet Report</a>
-    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a> -->
-    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-single-date' } })">Load Report by Single Date</a> -->
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-date-range' } })">Load Report</a>
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'downtime-date-range' } })">DownTime Report</a>
   </div>
@@ -112,7 +109,7 @@ console.log('🟢 Header: Componente cargado completamente');
       </nav>
 
 
-    </div>
+    </div> -->
 
 
 
@@ -367,7 +364,7 @@ console.log('🟢 Header: Componente cargado completamente');
 }
 
 .menu-item {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 500;
   color: #28a2eb;
   padding-right: 18px;
