@@ -157,16 +157,17 @@ const SearchGeneralInformation = async (event = null, page = 1) => {
     const endDateStr = formatToYYYYMMDD(endDate.value);
 
     // 🆕 Construir parámetros para la API con paginación
-    const params = {
-      page: page,
-      limit: itemsPerPage.value,
-      start_date: startDateStr,
-      end_date: endDateStr,
-
-      employee_id: selectedEmployee.value || null,
-      sort_by: 'date',
-      sort_order: -1 // Descendente (más reciente primero)
-    };
+const params = {
+  page: page,
+  limit: itemsPerPage.value,
+  start_date: startDateStr,
+  end_date: endDateStr,
+  employee_id: selectedEmployee.value || null,
+  truck_id: selectedTruck.value || null,
+  typeOfIncident_id: selectedType.value || null,
+  sort_by: 'date',
+  sort_order: -1
+};
 
     // 🆕 Llamar al nuevo endpoint paginado
     const response = await GeneralInformationAPI.allPaginated(params);

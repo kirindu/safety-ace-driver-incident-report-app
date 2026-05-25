@@ -81,7 +81,7 @@ console.log('🟢 Header: Componente cargado completamente');
       <nav class="navbar navbar-expand">
         <div class="collapse navbar-collapse justify-content-between">
 
-
+<!-- 
     <div v-show="menu_visible" class="header-left">
 
       <nav class="main-menu">
@@ -97,10 +97,7 @@ console.log('🟢 Header: Componente cargado completamente');
           </span>
 
 <div class="dropdown-menu reports-menu"> 
-    <!-- <a  @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'single-date' } })">General Report by Single Date</a> -->
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'date-range' } })">CoverSheet Report</a>
-    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'driver-name' } })">General Report by Driver Name</a> -->
-    <!-- <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-single-date' } })">Load Report by Single Date</a> -->
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'load-date-range' } })">Load Report</a>
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'downtime-date-range' } })">DownTime Report</a>
   </div>
@@ -112,7 +109,7 @@ console.log('🟢 Header: Componente cargado completamente');
       </nav>
 
 
-    </div>
+    </div> -->
 
 
 
