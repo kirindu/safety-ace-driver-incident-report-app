@@ -105,6 +105,7 @@ console.log('🟢 Header: Componente cargado completamente');
         </div>
       </nav>
 
+
     </div> -->
 
 
