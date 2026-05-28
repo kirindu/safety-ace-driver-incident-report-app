@@ -102,10 +102,7 @@ console.log('🟢 Header: Componente cargado completamente');
     <a @click.prevent="links_disabled ? null : router.push({ name: 'admin-reports', params: { type: 'downtime-date-range' } })">DownTime Report</a>
   </div>
 
-
         </div>
-
-        
       </nav>
 
 
