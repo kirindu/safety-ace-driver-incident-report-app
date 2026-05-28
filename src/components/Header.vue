@@ -105,9 +105,7 @@ console.log('🟢 Header: Componente cargado completamente');
         </div>
       </nav>
 
-
     </div> -->
-
 
 
           <ul class="navbar-nav header-right" style="display: flex; width: 100%;">
